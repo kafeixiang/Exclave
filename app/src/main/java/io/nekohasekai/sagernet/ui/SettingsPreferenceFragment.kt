@@ -93,7 +93,6 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             Theme.currentNightMode = (newTheme as String).toInt()
             Theme.applyNightTheme()
             requireActivity().apply {
-                // FIXME
                 this.finish()
                 startActivity(intent)
             }

@@ -1133,6 +1133,7 @@ public class V2RayConfig {
     public static class WebSocketObject {
 
         public Boolean acceptProxyProtocol;
+        public String host; // syntactic sugar of Host header from Xray
         public String path;
         public Map<String, String> headers;
         public Integer maxEarlyData;
