@@ -50,6 +50,8 @@ import org.yaml.snakeyaml.TypeDescription
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.error.YAMLException
 import java.io.StringReader
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 object RawUpdater : GroupUpdater() {
@@ -1307,7 +1309,7 @@ object RawUpdater : GroupUpdater() {
                             v2rayBean.uuid = it
                         }
                         outbound.getString("security")?.also {
-                            v2rayBean.security = it
+                            v2rayBean.encryption = it
                         }
                         outbound.getInteger("security")?.also {
                             v2rayBean.alterId = it
@@ -1346,7 +1348,17 @@ object RawUpdater : GroupUpdater() {
                     } ?: return proxies
                     outbound.getInteger("server_port")?.also {
                         serverPorts = it.toString()
+                    } ?: (outbound.getAny("server_ports") as? List<String>)?.also {
+                        serverPorts = it.joinToString(",").replace(":", "-")
+                    } ?: (outbound.getAny("server_ports") as? String)?.also {
+                        serverPorts = it.replace(":", "-")
                     } ?: return proxies
+                    outbound.getString("hop_interval")?.also {
+                        try {
+                            val duration = Duration.parse(it)
+                            hopInterval = duration.toInt(DurationUnit.SECONDS)
+                        } catch (_: Exception) {}
+                    }
                     outbound.getString("password")?.also {
                         auth = it
                     }
@@ -1369,10 +1381,10 @@ object RawUpdater : GroupUpdater() {
                             obfs = it
                         }
                     }
-                    outbound.getInteger("up_mbps")?.also {
+                    outbound.getInt("up_mbps")?.also {
                         uploadMbps = it
                     }
-                    outbound.getInteger("down_mbps")?.also {
+                    outbound.getInt("down_mbps")?.also {
                         downloadMbps = it
                     }
                 }
@@ -1415,12 +1427,14 @@ object RawUpdater : GroupUpdater() {
                             allowInsecure = it
                         }
                     } ?: return proxies
-                    uploadMbps = 10
-                    outbound.getInteger("up_mbps")?.also {
+                    outbound.getInt("up_mbps")?.also {
+                        uploadMbps = it
+                    } ?: outbound.getString("up")?.toMegaBits()?.also {
                         uploadMbps = it
                     }
-                    downloadMbps = 50
-                    outbound.getInteger("down_mbps")?.also {
+                    outbound.getInt("down_mbps")?.also {
+                        downloadMbps = it
+                    } ?: outbound.getString("down")?.toMegaBits()?.also {
                         downloadMbps = it
                     }
                 }
@@ -1838,7 +1852,6 @@ object RawUpdater : GroupUpdater() {
                                         v2rayBean.hy2DownMbps = it
                                     }
                                 }
-
                             }
                         }
                         else -> return proxies
@@ -2183,8 +2196,8 @@ object RawUpdater : GroupUpdater() {
                     }
                     authPayloadType = HysteriaBean.TYPE_STRING
                     authPayload = proxy["auth-str"] as? String
-                    uploadMbps = (proxy["up"] as? String)?.toIntOrNull()?: 10 // support int only
-                    downloadMbps = (proxy["down"] as? String)?.toIntOrNull()?: 50 // support int only
+                    uploadMbps = (proxy["up"] as? String)?.toMegaBitsPerSecond()
+                    downloadMbps = (proxy["down"] as? String)?.toMegaBitsPerSecond()
                     sni = proxy["sni"] as? String
                     allowInsecure = proxy["skip-cert-verify"] as? Boolean == true
                     obfuscation = proxy["obfs"] as? String
@@ -2197,8 +2210,8 @@ object RawUpdater : GroupUpdater() {
                     serverAddress = proxy["server"] as? String ?: return proxies
                     serverPorts = proxy["ports"] as? String ?: (proxy["port"] as? Int)?.toString() ?: return proxies
                     auth = proxy["password"] as? String
-                    uploadMbps = (proxy["up"] as? String)?.toIntOrNull()?: 0 // support int only
-                    downloadMbps = (proxy["down"] as? String)?.toIntOrNull()?: 0 // support int only
+                    uploadMbps = (proxy["up"] as? String)?.toMegaBitsPerSecond()
+                    downloadMbps = (proxy["down"] as? String)?.toMegaBitsPerSecond()
                     sni = proxy["sni"] as? String
                     allowInsecure = proxy["skip-cert-verify"] as? Boolean == true
                     obfs = if (proxy["obfs"] as? String == "salamander") proxy["obfs-password"] as? String else ""

@@ -265,7 +265,7 @@
     <string name="route_rules_official">Официальный</string>
     <string name="route_rules_provider">Поставщик ресурсов правил</string>
     <string name="route_assets">Ресурсы</string>
-    <string name="route_manage_assets">Управление ресурсами маршрутов</string>
+    <string name="route_manage_assets">Управление георесурсами</string>
     <string name="route_reverse_redirect">Обратное перенаправление</string>
     <string name="route_reverse">Обратный прокси</string>
     <string name="route_reset">Сброс</string>
@@ -467,7 +467,6 @@
     <string name="ech_doh_server">ECH DoH server</string>
     <string name="ws_max_early_data">Максимальный объём данных</string>
     <string name="hijack_dns">Перехват DNS</string>
-    <string name="hijack_dns_message">Перехват DNS в TUN вместо использования DNS-сниффера</string>
     <string name="connection_test_url_test">URL test</string>
     <string name="alter_id">Изменить ID</string>
     <string name="url">URL</string>
@@ -506,4 +505,17 @@
     <string name="backup_all_profiles">Бэкап всех профилей</string>
     <string name="donate_to_original_author">Пожертвовать автору</string>
     <string name="mieru_multiplexing_level">Уровень мультиплексирования</string>
+    <string name="hysteria_init_stream_receive_window">QUIC init stream receive window</string>
+    <string name="route_asset_add_url">Добавить URL-адрес</string>
+    <string name="route_asset_invalid_filename">Неверное имя файла: %s</string>
+    <string name="route_asset_reserved_filename">Имя файла не может быть %s</string>
+    <string name="route_asset_duplicate_filename">Ресурс с именем файла %s уже существует</string>
+    <string name="route_asset_invalid_url">Неверный URL: %s</string>
+    <string name="route_asset_add">Добавить георесурсы</string>
+    <string name="route_asset_delete_prompt">Удалить этот георесурс?</string>
+    <string name="route_asset_name">Название георесурса</string>
+    <string name="route_asset_url">URL-адрес георесурса</string>
+    <string name="route_asset_settings">Данные георесурса</string>
+    <string name="browser_forwarder_hint">Загрузите v2ray-extra.zip из релиза v2ray-core и поместите index.html и index.js в Android/data/%s/files или импортируйте index.html и index.js в качестве ресурсов маршрута.</string>
+    <string name="hijack_dns_message">Перехват DNS-запросов, не отправленных на DNS-адрес TUN с помощью DNS-сниффера</string>
 </resources>
