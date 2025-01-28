@@ -53,7 +53,7 @@ class StunLegacyActivity : ThemedActivity() {
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 top = bars.top,
                 left = bars.left,
                 right = bars.right,
@@ -65,7 +65,7 @@ class StunLegacyActivity : ThemedActivity() {
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 left = bars.left,
                 right = bars.right,
                 bottom = bars.bottom,
