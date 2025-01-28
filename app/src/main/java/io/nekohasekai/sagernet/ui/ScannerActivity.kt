@@ -86,7 +86,7 @@ class ScannerActivity : ThemedActivity() {
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 top = bars.top,
                 left = bars.left,
                 right = bars.right,
