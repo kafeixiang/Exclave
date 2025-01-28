@@ -144,7 +144,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 requireActivity().finish()
             }
         }
-        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) {R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
@@ -156,7 +156,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.group_tab)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.group_tab)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
@@ -1315,7 +1315,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             if (!::proxyGroup.isInitialized) return
 
             configurationListView = view.findViewById(R.id.configuration_list)
-            ViewCompat.setOnApplyWindowInsetsListener(configurationListView) { v, insets ->
+            ViewCompat.setOnApplyWindowInsetsListener(configurationListView) { R, insets ->
                 val bars = insets.getInsets(
                     WindowInsetsCompat.Type.systemBars()
                             or WindowInsetsCompat.Type.displayCutout()
