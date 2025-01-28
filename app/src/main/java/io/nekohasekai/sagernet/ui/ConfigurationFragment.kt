@@ -161,7 +161,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 left = bars.left,
                 right = bars.right,
             )
@@ -1320,7 +1320,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     WindowInsetsCompat.Type.systemBars()
                             or WindowInsetsCompat.Type.displayCutout()
                 )
-                v.updatePadding(
+                R.updatePadding(
                     left = bars.left + dp2px(4),
                     right = bars.right + dp2px(4),
                     bottom = bars.bottom + dp2px(4),
