@@ -224,7 +224,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var providerHysteria2 by configurationStore.stringToInt(Key.PROVIDER_HYSTERIA2) { 1 }
     var providerTuic5 by configurationStore.stringToInt(Key.PROVIDER_TUIC5) { 1 }
     var hysteriaEnablePortHopping by configurationStore.boolean(Key.HYSTERIA_ENABLE_PORT_HOPPING)
-    var providerRootCA by configurationStore.stringToInt(Key.PROVIDER_ROOT_CA)
+    var providerRootCA by configurationStore.stringToInt(Key.PROVIDER_ROOT_CA) { 1 }
 
     // cache
 
@@ -253,7 +253,6 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverHost by profileCacheStore.string(Key.SERVER_HOST)
     var serverPath by profileCacheStore.string(Key.SERVER_PATH)
     var serverSNI by profileCacheStore.string(Key.SERVER_SNI)
-    var serverTLS by profileCacheStore.boolean(Key.SERVER_TLS)
     var serverEncryption by profileCacheStore.string(Key.SERVER_ENCRYPTION)
     var serverALPN by profileCacheStore.string(Key.SERVER_ALPN)
     var serverCertificates by profileCacheStore.string(Key.SERVER_CERTIFICATES)
@@ -274,7 +273,6 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverEchDohServer by profileCacheStore.string(Key.SERVER_ECH_DOH_SERVER)
     var serverRealityPublicKey by profileCacheStore.string(Key.SERVER_REALITY_PUBLIC_KEY)
     var serverRealityShortId by profileCacheStore.string(Key.SERVER_REALITY_SHORT_ID)
-    var serverRealitySpiderX by profileCacheStore.string(Key.SERVER_REALITY_SPIDER_X)
     var serverRealityFingerprint by profileCacheStore.string(Key.SERVER_REALITY_FINGERPRINT)
 
     var serverMekyaKcpSeed by profileCacheStore.string(Key.SERVER_MEKYA_KCP_SEED)
@@ -313,6 +311,9 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverBrookTlsFingerprint by profileCacheStore.string(Key.SERVER_BROOK_TLS_FINGERPRINT)
     var serverBrookFragment by profileCacheStore.string(Key.SERVER_BROOK_FRAGMENT)
     var serverBrookUdpOverStream by profileCacheStore.boolean(Key.SERVER_BROOK_UDP_OVER_STREAM)
+    var serverBrookClientHkdfInfo by profileCacheStore.string(Key.SERVER_BROOK_CLIENT_HKDF_INFO)
+    var serverBrookServerHkdfInfo by profileCacheStore.string(Key.SERVER_BROOK_SERVER_HKDF_INFO)
+    var serverBrookToken by profileCacheStore.string(Key.SERVER_BROOK_TOKEN)
 
     var serverUDPRelayMode by profileCacheStore.string(Key.SERVER_UDP_RELAY_MODE)
     var serverCongestionController by profileCacheStore.string(Key.SERVER_CONGESTION_CONTROLLER)
@@ -370,6 +371,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var subscriptionUserAgent by profileCacheStore.string(Key.SUBSCRIPTION_USER_AGENT)
     var subscriptionAutoUpdate by profileCacheStore.boolean(Key.SUBSCRIPTION_AUTO_UPDATE)
     var subscriptionAutoUpdateDelay by profileCacheStore.stringToInt(Key.SUBSCRIPTION_AUTO_UPDATE_DELAY) { 360 }
+    var subscriptionNameFilter by profileCacheStore.string(Key.SUBSCRIPTION_NAME_FILTER)
 
     var editingAssetName by profileCacheStore.string(Key.EDITING_ASSET_NAME)
     var assetName by profileCacheStore.string(Key.ASSET_NAME)
