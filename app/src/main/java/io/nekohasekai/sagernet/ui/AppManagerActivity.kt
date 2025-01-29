@@ -214,12 +214,12 @@ class AppManagerActivity : ThemedActivity() {
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.list)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.list)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 left = bars.left,
                 right = bars.right,
                 bottom = bars.bottom,
