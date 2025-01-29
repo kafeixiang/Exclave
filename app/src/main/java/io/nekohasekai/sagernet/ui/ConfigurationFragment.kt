@@ -144,24 +144,24 @@ class ConfigurationFragment @JvmOverloads constructor(
                 requireActivity().finish()
             }
         }
-        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 top = bars.top,
                 left = bars.left,
                 right = bars.right,
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.group_tab)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.group_tab)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 left = bars.left,
                 right = bars.right,
             )
@@ -1324,12 +1324,12 @@ class ConfigurationFragment @JvmOverloads constructor(
             if (!::proxyGroup.isInitialized) return
 
             configurationListView = view.findViewById(R.id.configuration_list)
-            ViewCompat.setOnApplyWindowInsetsListener(configurationListView) { v, insets ->
+            ViewCompat.setOnApplyWindowInsetsListener(configurationListView) { R, insets ->
                 val bars = insets.getInsets(
                     WindowInsetsCompat.Type.systemBars()
                             or WindowInsetsCompat.Type.displayCutout()
                 )
-                v.updatePadding(
+                R.updatePadding(
                     left = bars.left + dp2px(4),
                     right = bars.right + dp2px(4),
                     bottom = bars.bottom + dp2px(4),
