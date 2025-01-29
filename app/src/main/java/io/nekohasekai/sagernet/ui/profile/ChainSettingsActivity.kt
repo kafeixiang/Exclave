@@ -84,23 +84,23 @@ class ChainSettingsActivity : ProfileSettingsActivity<ChainBean>(R.layout.layout
 
         supportActionBar!!.setTitle(R.string.chain_settings)
         configurationList = findViewById(R.id.configuration_list)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 left = bars.left,
                 right = bars.right,
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(configurationList) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(configurationList) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 left = bars.left + dp2px(4),
                 right = bars.right + dp2px(4),
                 bottom = bars.bottom + dp2px(4),
