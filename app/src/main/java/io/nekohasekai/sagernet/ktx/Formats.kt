@@ -29,14 +29,16 @@ import io.nekohasekai.sagernet.fmt.http.parseHttp
 import io.nekohasekai.sagernet.fmt.hysteria.parseHysteria
 import io.nekohasekai.sagernet.fmt.hysteria2.parseHysteria2
 import io.nekohasekai.sagernet.fmt.juicity.parseJuicity
+import io.nekohasekai.sagernet.fmt.mieru.parseMieru
 import io.nekohasekai.sagernet.fmt.naive.parseNaive
-import io.nekohasekai.sagernet.fmt.parseUniversal
+import io.nekohasekai.sagernet.fmt.parseBackupLink
 import io.nekohasekai.sagernet.fmt.shadowsocks.parseShadowsocks
 import io.nekohasekai.sagernet.fmt.shadowsocksr.parseShadowsocksR
 import io.nekohasekai.sagernet.fmt.socks.parseSOCKS
 import io.nekohasekai.sagernet.fmt.trojan_go.parseTrojanGo
 import io.nekohasekai.sagernet.fmt.tuic5.parseTuic
 import io.nekohasekai.sagernet.fmt.v2ray.parseV2Ray
+import io.nekohasekai.sagernet.fmt.wireguard.parseV2rayNWireGuard
 
 fun formatObject(obj: Any): String {
     return gson.toJson(obj).let { JSONObject(it).toStringPretty() }
@@ -65,11 +67,12 @@ fun parseProxies(text: String): List<AbstractBean> {
         if (startsWith("exclave://")) {
             Logs.d("Try parse universal link: $this")
             runCatching {
-                entities.add(parseUniversal(this))
+                entities.add(parseBackupLink(this))
             }.onFailure {
                 Logs.w(it)
             }
-        } else if (startsWith("socks://") || startsWith("socks4://") || startsWith("socks4a://") || startsWith("socks5://")) {
+        } else if (startsWith("socks://") || startsWith("socks4://") || startsWith("socks4a://") ||
+            startsWith("socks5://") || startsWith("socks5h://")) {
             Logs.d("Try parse socks link: $this")
             runCatching {
                 entities.add(parseSOCKS(this))
@@ -139,19 +142,31 @@ fun parseProxies(text: String): List<AbstractBean> {
             }.onFailure {
                 Logs.w(it)
             }
-        }
-        else if (startsWith("juicity://")) {
+        } else if (startsWith("juicity://")) {
             Logs.d("Try parse juicity link: $this")
             runCatching {
                 entities.add(parseJuicity(this))
             }.onFailure {
                 Logs.w(it)
             }
-        }
-        else if (startsWith("tuic://")) {
+        } else if (startsWith("tuic://")) {
             Logs.d("Try parse tuic link: $this")
             runCatching {
                 entities.add(parseTuic(this))
+            }.onFailure {
+                Logs.w(it)
+            }
+        } else if (startsWith("wireguard://")) {
+            Logs.d("Try parse wireguard link: $this")
+            runCatching {
+                entities.add(parseV2rayNWireGuard(this))
+            }.onFailure {
+                Logs.w(it)
+            }
+        } else if (startsWith("mierus://")) {
+            Logs.d("Try parse mieru link: $this")
+            runCatching {
+                entities.add(parseMieru(this))
             }.onFailure {
                 Logs.w(it)
             }

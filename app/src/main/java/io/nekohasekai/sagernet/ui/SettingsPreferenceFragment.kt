@@ -38,6 +38,7 @@ import io.nekohasekai.sagernet.database.preference.EditTextPreferenceModifiers
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.widget.ColorPickerPreference
+import io.nekohasekai.sagernet.widget.LinkOrContentPreference
 import kotlinx.coroutines.delay
 import libcore.Libcore
 import java.io.File
@@ -81,6 +82,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             val theme = Theme.getTheme(newTheme as Int)
             app.setTheme(theme)
             requireActivity().apply {
+                // FIXME
                 this.finish()
                 startActivity(intent)
             }
@@ -91,6 +93,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             Theme.currentNightMode = (newTheme as String).toInt()
             Theme.applyNightTheme()
             requireActivity().apply {
+                // FIXME
                 this.finish()
                 startActivity(intent)
             }
@@ -173,12 +176,16 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
         val enableDnsRouting = findPreference<SwitchPreference>(Key.ENABLE_DNS_ROUTING)!!
         val enableFakeDns = findPreference<SwitchPreference>(Key.ENABLE_FAKEDNS)!!
-        val hijackDns = findPreference<SwitchPreference>(Key.HIJACK_DNS)!!
 
         val requireTransproxy = findPreference<SwitchPreference>(Key.REQUIRE_TRANSPROXY)!!
         val transproxyPort = findPreference<EditTextPreference>(Key.TRANSPROXY_PORT)!!
         val transproxyMode = findPreference<SimpleMenuPreference>(Key.TRANSPROXY_MODE)!!
         val enableLog = findPreference<SwitchPreference>(Key.ENABLE_LOG)!!
+
+        findPreference<EditTextPreference>(Key.PPROF_SERVER)!!.apply {
+            isVisible = DataStore.enableDebug
+            onPreferenceChangeListener = reloadListener
+        }
 
         transproxyPort.isEnabled = requireTransproxy.isChecked
         transproxyMode.isEnabled = requireTransproxy.isChecked
@@ -240,9 +247,12 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val tunImplementation = findPreference<SimpleMenuPreference>(Key.TUN_IMPLEMENTATION)!!
         val trafficSniffing = findPreference<SwitchPreference>(Key.TRAFFIC_SNIFFING)!!
         val destinationOverride = findPreference<SwitchPreference>(Key.DESTINATION_OVERRIDE)!!
+        val hijackDns = findPreference<SwitchPreference>(Key.HIJACK_DNS)!!
         destinationOverride.isEnabled = trafficSniffing.isChecked
+        hijackDns.isEnabled = trafficSniffing.isChecked
         trafficSniffing.setOnPreferenceChangeListener { _, newValue ->
             destinationOverride.isEnabled = newValue as Boolean
+            hijackDns.isEnabled = newValue
             needReload()
             true
         }
@@ -253,9 +263,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val providerRootCA = findPreference<SimpleMenuPreference>(Key.PROVIDER_ROOT_CA)!!
 
         providerRootCA.setOnPreferenceChangeListener { _, newValue ->
-            val useSystem = (newValue as String) == "${RootCAProvider.SYSTEM}"
-            Libcore.updateSystemRoots(useSystem)
-            (requireActivity() as? MainActivity)?.connection?.service?.updateSystemRoots(useSystem)
+            Libcore.updateSystemRoots((newValue as String).toInt())
             needReload()
             true
         }
@@ -265,8 +273,8 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val allowAppsBypassVpn = findPreference<SwitchPreference>(Key.ALLOW_APPS_BYPASS_VPN)!!
 
         val rulesProvider = findPreference<SimpleMenuPreference>(Key.RULES_PROVIDER)!!
-        val rulesGeositeUrl = findPreference<EditTextPreference>(Key.RULES_GEOSITE_URL)!!
-        val rulesGeoipUrl = findPreference<EditTextPreference>(Key.RULES_GEOIP_URL)!!
+        val rulesGeositeUrl = findPreference<LinkOrContentPreference>(Key.RULES_GEOSITE_URL)!!
+        val rulesGeoipUrl = findPreference<LinkOrContentPreference>(Key.RULES_GEOIP_URL)!!
         rulesGeositeUrl.isVisible = DataStore.rulesProvider > 2
         rulesGeoipUrl.isVisible = DataStore.rulesProvider > 2
         rulesProvider.setOnPreferenceChangeListener { _, newValue ->
@@ -328,6 +336,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         appTrafficStatistics.onPreferenceChangeListener = reloadListener
         tunImplementation.onPreferenceChangeListener = reloadListener
         destinationOverride.onPreferenceChangeListener = reloadListener
+        hijackDns.onPreferenceChangeListener = reloadListener
         resolveDestination.onPreferenceChangeListener = reloadListener
         resolveDestinationForDirect.onPreferenceChangeListener = reloadListener
         mtu.onPreferenceChangeListener = reloadListener

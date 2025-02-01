@@ -33,10 +33,10 @@
             app:title="@string/wireguard_public_key"
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
-            app:dialogLayout="@layout/layout_password_dialog"
             app:icon="@drawable/ic_settings_password"
             app:key="serverPassword"
-            app:title="@string/wireguard_psk" />
+            app:title="@string/wireguard_psk"
+            app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:icon="@drawable/baseline_public_24"
             app:key="serverMTU"

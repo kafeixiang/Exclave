@@ -43,7 +43,7 @@ object Key {
     const val USE_LOCAL_DNS_AS_BOOTSTRAP_DNS = "useLocalDnsAsBootstrapDns"
     const val ENABLE_DNS_ROUTING = "enableDnsRouting"
     const val ENABLE_FAKEDNS = "enableFakeDns"
-    const val HIJACK_DNS = "hijackDns"
+    const val HIJACK_DNS = "hijackDns0"
     const val DNS_HOSTS = "dnsHosts0"
     const val REMOTE_DNS_QUERY_STRATEGY = "remoteDnsQueryStrategy"
     const val DIRECT_DNS_QUERY_STRATEGY = "directDnsQueryStrategy"
@@ -88,6 +88,8 @@ object Key {
     const val RULES_GEOSITE_URL = "rulesGeositeUrl"
     const val RULES_GEOIP_URL = "rulesGeoipUrl"
     const val ENABLE_LOG = "enableLog"
+    const val ENABLE_DEBUG = "enableDebug"
+    const val PPROF_SERVER = "pprofServer"
 
     const val ALWAYS_SHOW_ADDRESS = "alwaysShowAddress"
     const val SHOW_GROUP_NAME = "showGroupName"
@@ -95,6 +97,7 @@ object Key {
     const val SHADOWSOCKS_2022_IMPLEMENTATION = "shadowsocks2022Implementation"
     const val PROVIDER_HYSTERIA2 = "providerHysteria2"
     const val HYSTERIA_ENABLE_PORT_HOPPING = "hysteriaEnablePortHopping"
+    const val PROVIDER_TUIC5 = "providerTuic5"
     const val PROVIDER_ROOT_CA = "providerRootCA"
 
     const val TUN_IMPLEMENTATION = "tunImplementation"
@@ -140,7 +143,6 @@ object Key {
     const val SERVER_HOST = "serverHost"
     const val SERVER_PATH = "serverPath"
     const val SERVER_SNI = "serverSNI"
-    const val SERVER_TLS = "serverTLS"
     const val SERVER_ENCRYPTION = "serverEncryption"
     const val SERVER_ALPN = "serverALPN"
     const val SERVER_CERTIFICATES = "serverCertificates"
@@ -149,6 +151,7 @@ object Key {
     const val SERVER_QUIC_SECURITY = "serverQuicSecurity"
     const val SERVER_WS_MAX_EARLY_DATA = "serverWsMaxEarlyData"
     const val SERVER_SPLITHTTP_MODE = "serverSplithttpMode"
+    const val SERVER_SPLITHTTP_EXTRA = "serverSplithttpExtra"
     const val SERVER_WS_BROWSER_FORWARDING = "serverWsBrowserForwarding"
     const val SERVER_SH_BROWSER_FORWARDING = "serverShBrowserForwarding"
     const val SERVER_EARLY_DATA_HEADER_NAME = "serverEarlyDataHeaderName"
@@ -160,7 +163,6 @@ object Key {
 
     const val SERVER_REALITY_PUBLIC_KEY = "serverRealityPublicKey"
     const val SERVER_REALITY_SHORT_ID = "serverRealityShortId"
-    const val SERVER_REALITY_SPIDER_X = "serverRealitySpiderX"
     const val SERVER_REALITY_FINGERPRINT = "serverRealityFingerprint"
 
     const val SERVER_MEKYA_KCP_SEED = "serverMekyaKcpSeed"
@@ -205,6 +207,9 @@ object Key {
     const val SERVER_BROOK_TLS_FINGERPRINT = "serverBrookTlsFingerprint"
     const val SERVER_BROOK_FRAGMENT = "serverBrookFragment"
     const val SERVER_BROOK_UDP_OVER_STREAM = "serverBrookUdpOverStream"
+    const val SERVER_BROOK_CLIENT_HKDF_INFO = "serverBrookClientHkdfInfo"
+    const val SERVER_BROOK_SERVER_HKDF_INFO = "serverBrookServerHkdfInfo"
+    const val SERVER_BROOK_TOKEN = "serverBrookToken"
 
     const val SERVER_UDP_RELAY_MODE = "serverUDPRelayMode"
     const val SERVER_CONGESTION_CONTROLLER = "serverCongestionController"
@@ -262,6 +267,11 @@ object Key {
     const val SUBSCRIPTION_USER_AGENT = "subscriptionUserAgent"
     const val SUBSCRIPTION_AUTO_UPDATE = "subscriptionAutoUpdate"
     const val SUBSCRIPTION_AUTO_UPDATE_DELAY = "subscriptionAutoUpdateDelay"
+    const val SUBSCRIPTION_NAME_FILTER = "subscriptionNameFilter"
+
+    const val EDITING_ASSET_NAME = "editingAssetName"
+    const val ASSET_NAME = "assetName"
+    const val ASSET_URL = "assetUrl"
 
     const val TASKER_ACTION = "taskerAction"
     const val TASKER_PROFILE = "taskerProfile"
@@ -274,15 +284,9 @@ object TunImplementation {
     const val SYSTEM = 1
 }
 
-object TrojanProvider {
-    const val V2RAY = 0
-    const val TROJAN = 1
-    const val TROJAN_GO = 2
-}
-
-object Hysteria2Provider {
-    const val HYSTERIA2_PLUGIN = 0
-    const val V2RAY = 1
+object ProtocolProvider {
+    const val PLUGIN = 0
+    const val CORE = 1
 }
 
 object Shadowsocks2022Implementation {
@@ -293,6 +297,7 @@ object Shadowsocks2022Implementation {
 object RootCAProvider {
     const val MOZILLA = 0
     const val SYSTEM = 1
+    const val SYSTEM_AND_USER = 2 // for https://github.com/golang/go/issues/71258
 }
 
 object IPv6Mode {
@@ -300,12 +305,6 @@ object IPv6Mode {
     const val ENABLE = 1
     const val PREFER = 2
     const val ONLY = 3
-}
-
-object PacketStrategy {
-    const val DIRECT = 0
-    const val DROP = 1
-    const val REPLY = 2
 }
 
 object GroupType {

@@ -55,24 +55,24 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
         val binding = LayoutAboutBinding.bind(view)
 
         toolbar.setTitle(R.string.menu_about)
-        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 top = bars.top,
                 left = bars.left,
                 right = bars.right,
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.layout_about)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.layout_about)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 left = bars.left,
                 right = bars.right,
                 bottom = bars.bottom,
@@ -122,6 +122,9 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                             requireContext().launchCustomTab(
                                 "https://github.com/dyhkwong/Exclave/releases"
                             )
+                        }
+                        .setOnLongClickAction {
+                            DataStore.enableDebug = !DataStore.enableDebug
                         }
                         .build())
                     .addItem(MaterialAboutActionItem.Builder()
@@ -178,7 +181,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                         }
                         addItem(MaterialAboutActionItem.Builder()
                             .icon(R.drawable.ic_baseline_card_giftcard_24)
-                            .text(R.string.donate)
+                            .text(R.string.donate_to_original_author)
                             .subText(R.string.donate_info)
                             .setOnClickAction {
                                 requireContext().launchCustomTab(

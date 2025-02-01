@@ -24,10 +24,10 @@
             app:title="@string/username"
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
-            app:dialogLayout="@layout/layout_password_dialog"
             app:icon="@drawable/ic_baseline_person_24"
             app:key="serverUserId"
-            app:title="@string/uuid" />
+            app:title="@string/uuid"
+            app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:icon="@drawable/ic_maps_360"
             app:key="serverAlterId"
@@ -106,15 +106,10 @@
             app:title="@string/hysteria_download_mbps"
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
-            app:dialogLayout="@layout/layout_password_dialog"
             app:icon="@drawable/ic_settings_password"
             app:key="serverPassword"
-            app:title="@string/password" />
-        <EditTextPreference
-            app:dialogLayout="@layout/layout_password_dialog"
-            app:icon="@drawable/ic_baseline_texture_24"
-            app:key="serverObfs"
-            app:title="@string/hysteria_obfs" />
+            app:title="@string/password"
+            app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:icon="@drawable/ic_baseline_format_align_left_24"
             app:key="serverMekyaKcpSeed"
@@ -197,11 +192,6 @@
             app:key="serverRealityShortId"
             app:title="@string/reality_short_id"
             app:useSimpleSummaryProvider="true" />
-        <EditTextPreference
-            app:icon="@drawable/ic_baseline_format_align_left_24"
-            app:key="serverRealitySpiderX"
-            app:title="@string/reality_spider_x"
-            app:useSimpleSummaryProvider="true" />
         <com.takisoft.preferencex.SimpleMenuPreference
             app:entries="@array/reality_fingerprint_entry"
             app:entryValues="@array/reality_fingerprint_value"
@@ -243,11 +233,16 @@
             app:title="@string/ws_browser_forwarding" />
         <com.takisoft.preferencex.SimpleMenuPreference
             app:defaultValue="auto"
-            app:entries="@array/splithttp_mode_value"
+            app:entries="@array/splithttp_mode_entry"
             app:entryValues="@array/splithttp_mode_value"
             app:icon="@drawable/ic_baseline_stream_24"
             app:key="serverSplithttpMode"
             app:title="@string/splithttp_mode"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:icon="@drawable/ic_action_settings"
+            app:key="serverSplithttpExtra"
+            app:title="@string/splithttp_extra"
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 

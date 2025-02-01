@@ -79,6 +79,7 @@ class GroupSettingsActivity(
         DataStore.subscriptionUserAgent = subscription.customUserAgent
         DataStore.subscriptionAutoUpdate = subscription.autoUpdate
         DataStore.subscriptionAutoUpdateDelay = subscription.autoUpdateDelay
+        DataStore.subscriptionNameFilter = subscription.nameFilter
         DataStore.frontProxyOutbound = frontProxy
         DataStore.landingProxyOutbound = landingProxy
         DataStore.frontProxy = if (frontProxy >= 0) 1 else 0
@@ -86,7 +87,7 @@ class GroupSettingsActivity(
     }
 
     fun ProxyGroup.serialize() {
-        name = DataStore.groupName.takeIf { it.isNotBlank() }
+        name = DataStore.groupName.takeIf { it.isNotEmpty() }
             ?: ("My group " + System.currentTimeMillis() / 1000)
         type = DataStore.groupType
         order = DataStore.groupOrder
@@ -106,6 +107,7 @@ class GroupSettingsActivity(
                 customUserAgent = DataStore.subscriptionUserAgent
                 autoUpdate = DataStore.subscriptionAutoUpdate
                 autoUpdateDelay = DataStore.subscriptionAutoUpdateDelay
+                nameFilter = DataStore.subscriptionNameFilter
             }
         }
     }
@@ -246,12 +248,12 @@ class GroupSettingsActivity(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.toolbar)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.toolbar)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 top = bars.top,
                 left = bars.left,
                 right = bars.right,
@@ -403,7 +405,7 @@ class GroupSettingsActivity(
 
         override fun provideSummary(preference: EditTextPreference): CharSequence {
             val text = preference.text
-            return if (text.isNullOrBlank()) {
+            return if (text.isNullOrEmpty()) {
                 preference.context.getString(androidx.preference.R.string.not_set)
             } else {
                 "\u2022".repeat(text.length)

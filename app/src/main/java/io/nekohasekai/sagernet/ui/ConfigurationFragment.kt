@@ -42,7 +42,6 @@ import androidx.core.view.isVisible
 import androidx.core.view.size
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -62,8 +61,9 @@ import io.nekohasekai.sagernet.databinding.LayoutProfileBinding
 import io.nekohasekai.sagernet.databinding.LayoutProfileListBinding
 import io.nekohasekai.sagernet.databinding.LayoutProgressListBinding
 import io.nekohasekai.sagernet.fmt.AbstractBean
-import io.nekohasekai.sagernet.fmt.toUniversalLink
-import io.nekohasekai.sagernet.fmt.v2ray.toV2rayN
+import io.nekohasekai.sagernet.fmt.exportBackup
+import io.nekohasekai.sagernet.fmt.v2ray.StandardV2RayBean
+import io.nekohasekai.sagernet.fmt.wireguard.toConf
 import io.nekohasekai.sagernet.group.GroupUpdater
 import io.nekohasekai.sagernet.group.Protocols
 import io.nekohasekai.sagernet.group.RawUpdater
@@ -997,6 +997,15 @@ class ConfigurationFragment @JvmOverloads constructor(
         val mainJob = runOnDefaultDispatcher {
             val group = DataStore.currentGroup()
             var profilesUnfiltered = SagerDatabase.proxyDao.getByGroup(group.id)
+            profilesUnfiltered = profilesUnfiltered.filter {
+                when (val bean = it.requireBean()) {
+                    is StandardV2RayBean -> {
+                        !(bean.type == "ws" && bean.wsUseBrowserForwarder) &&
+                                !(bean.type == "splithttp" && bean.shUseBrowserForwarder)
+                    }
+                    else -> true
+                }
+            }
             if (group.subscription?.type == SubscriptionType.OOCv1) {
                 val subscription = group.subscription!!
                 if (subscription.selectedGroups.isNotEmpty()) {
@@ -1730,12 +1739,12 @@ class ConfigurationFragment @JvmOverloads constructor(
                     address = address.substring(0, 27) + "..."
                 }
 
-                if (proxyEntity.requireBean().name.isBlank() || !parent.alwaysShowAddress) {
+                if (proxyEntity.requireBean().name.isEmpty() || !parent.alwaysShowAddress) {
                     address = ""
                 }
 
                 profileAddress.text = address
-                (trafficText.parent as View).isGone = (!showTraffic || proxyEntity.status <= 0) && address.isBlank()
+                (trafficText.parent as View).isGone = (!showTraffic || proxyEntity.status <= 0) && address.isEmpty()
 
                 if (proxyEntity.status <= 0) {
                     if (showTraffic) {
@@ -1785,6 +1794,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
                 editButton.isGone = parent.select
                 deleteButton.isGone = parent.select
+                shareButton.isGone = parent.select
 
                 runOnDefaultDispatcher {
                     val selected = (parent.selectedItem?.id
@@ -1800,26 +1810,22 @@ class ConfigurationFragment @JvmOverloads constructor(
                         val popup = PopupMenu(requireContext(), anchor)
                         popup.menuInflater.inflate(R.menu.profile_share_menu, popup.menu)
 
-                        if (proxyEntity.vmessBean == null) {
-                            popup.menu.findItem(R.id.action_group_qr).subMenu?.removeItem(R.id.action_v2rayn_qr)
-                            popup.menu.findItem(R.id.action_group_clipboard).subMenu?.removeItem(R.id.action_v2rayn_clipboard)
-                        }
-
                         when {
-                            !proxyEntity.haveLink() -> {
-                                popup.menu.removeItem(R.id.action_group_qr)
-                                popup.menu.removeItem(R.id.action_group_clipboard)
+                            !proxyEntity.hasShareLink() -> {
+                                popup.menu.removeItem(R.id.action_qr)
+                                popup.menu.removeItem(R.id.action_clipboard)
                             }
-                            !proxyEntity.haveStandardLink() -> {
-                                popup.menu.findItem(R.id.action_group_qr).subMenu?.removeItem(R.id.action_standard_qr)
-                                popup.menu.findItem(R.id.action_group_clipboard).subMenu?.removeItem(
-                                    R.id.action_standard_clipboard
-                                )
+                            !proxyEntity.canExportBackup() -> {
+                                popup.menu.removeItem(R.id.action_export_backup)
+                            }
+                            !proxyEntity.hasShareLink() && proxyEntity.wgBean == null  -> {
+                                popup.menu.findItem(R.id.action_export_backup).subMenu?.removeItem(R.id.action_export_backup_qr)
+                                popup.menu.findItem(R.id.action_export_backup).subMenu?.removeItem(R.id.action_export_backup_clipboard)
                             }
                         }
 
-                        if (proxyEntity.brookBean != null) {
-                            popup.menu.removeItem(R.id.action_group_configuration)
+                        if (proxyEntity.brookBean != null || proxyEntity.shadowtlsBean != null) {
+                            popup.menu.removeItem(R.id.action_export_configuration)
                         }
 
                         popup.setOnMenuItemClickListener(this@ConfigurationHolder)
@@ -1855,22 +1861,30 @@ class ConfigurationFragment @JvmOverloads constructor(
             override fun onMenuItemClick(item: MenuItem): Boolean {
                 try {
                     when (item.itemId) {
-                        R.id.action_standard_qr -> showCode(entity.toLink()!!)
-                        R.id.action_standard_clipboard -> export(entity.toLink()!!)
-                        R.id.action_universal_qr -> showCode(entity.requireBean().toUniversalLink())
-                        R.id.action_universal_clipboard -> export(
-                            entity.requireBean().toUniversalLink()
-                        )
-                        R.id.action_v2rayn_qr -> showCode(entity.vmessBean!!.toV2rayN())
-                        R.id.action_v2rayn_clipboard -> export(entity.vmessBean!!.toV2rayN())
-                        R.id.action_config_export_clipboard -> export(entity.exportConfig().first)
-                        R.id.action_config_export_file -> {
+                        R.id.action_qr -> {
+                            if (entity.wgBean != null) {
+                                entity.wgBean?.toConf()?.let { showCode(it) }
+                            } else {
+                                entity.toLink()?.let { showCode(it) }
+                            }
+                        }
+                        R.id.action_clipboard -> {
+                            if (entity.wgBean != null) {
+                                entity.wgBean?.toConf()?.let { export(it) }
+                            } else {
+                                entity.toLink()?.let { export(it) }
+                            }
+                        }
+                        R.id.action_export_config_clipboard -> export(entity.exportConfig().first)
+                        R.id.action_export_config_file -> {
                             val cfg = entity.exportConfig()
                             DataStore.serverConfig = cfg.first
                             startFilesForResult(
                                 (parentFragment as ConfigurationFragment).exportConfig, cfg.second
                             )
                         }
+                        R.id.action_export_backup_qr -> showCode(entity.requireBean().exportBackup())
+                        R.id.action_export_backup_clipboard -> export(entity.requireBean().exportBackup())
                     }
                 } catch (e: Exception) {
                     Logs.w(e)

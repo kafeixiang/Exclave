@@ -19,7 +19,7 @@
 
 package io.nekohasekai.sagernet.ui
 
-import android.os.Build
+import android.content.Intent
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.text.format.DateFormat
@@ -31,6 +31,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -39,13 +40,13 @@ import com.google.android.material.snackbar.Snackbar
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.databinding.LayoutAssetItemBinding
 import io.nekohasekai.sagernet.databinding.LayoutAssetsBinding
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.widget.UndoSnackbarManager
 import libcore.Libcore
 import java.io.File
-import java.io.FileNotFoundException
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -64,24 +65,24 @@ class AssetsActivity : ThemedActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.toolbar)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.toolbar)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 top = bars.top,
                 left = bars.left,
                 right = bars.right,
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.recycler_view)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.recycler_view)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 left = bars.left + dp2px(4),
                 right = bars.right + dp2px(4),
                 bottom = bars.bottom + dp2px(4),
@@ -154,8 +155,10 @@ class AssetsActivity : ThemedActivity() {
                 .substringAfterLast('/')
                 .substringAfter(':')
 
-            if (!fileName.endsWith(".dat")) {
-                alert(getString(R.string.route_not_asset, fileName)).show()
+            if (!fileName.endsWith(".dat") && fileName != "index.html" && fileName != "index.js" && fileName != "mozilla_included.pem") {
+                runOnMainDispatcher {
+                    alert(getString(R.string.route_not_asset, fileName)).show()
+                }
                 return@registerForActivityResult
             }
 
@@ -182,6 +185,11 @@ class AssetsActivity : ThemedActivity() {
                 startFilesForResult(importFile, "*/*")
                 return true
             }
+            R.id.action_import_url -> {
+                startActivity(Intent(this, AssetEditActivity::class.java))
+                adapter.reloadAssets()
+                return true
+            }
         }
         return false
     }
@@ -196,16 +204,19 @@ class AssetsActivity : ThemedActivity() {
         }
 
         fun reloadAssets() {
-            val files = app.externalAssets.listFiles()
-                ?.filter { it.isFile && it.name.endsWith(".dat") && it.name !in internalFiles }
             assets.clear()
             assets.add(File(app.externalAssets, "geoip.dat"))
-            assets.add(
-                File(
-                    app.externalAssets, "geosite.dat"
-                )
-            )
-            if (files != null) assets.addAll(files)
+            assets.add(File(app.externalAssets, "geosite.dat"))
+
+            val managedAssets = SagerDatabase.assetDao.getAll().associateBy { it.name }
+            managedAssets.forEach {
+                assets.add(File(app.externalAssets, it.key))
+            }
+
+            val unmanagedAssets = app.externalAssets.listFiles()?.filter {
+                it.isFile && it.name.endsWith(".dat") && it.name !in internalFiles && it !in assets
+            }
+            if (unmanagedAssets != null) assets.addAll(unmanagedAssets)
 
             layout.refreshLayout.post {
                 notifyDataSetChanged()
@@ -239,7 +250,10 @@ class AssetsActivity : ThemedActivity() {
         override fun commit(actions: List<Pair<Int, File>>) {
             val groups = actions.map { it.second }.toTypedArray()
             runOnDefaultDispatcher {
-                groups.forEach { it.deleteRecursively() }
+                groups.forEach {
+                    it.deleteRecursively()
+                    SagerDatabase.assetDao.delete(it.name)
+                }
             }
         }
 
@@ -263,18 +277,13 @@ class AssetsActivity : ThemedActivity() {
                     DateFormat.getDateFormat(app).format(Date(file.lastModified()))
                 }
             } else {
-                try {
-                    assets.open("v2ray/" + versionFile.name).bufferedReader().readText().trim()
-                } catch (e: FileNotFoundException) {
-                    versionFile.readText()
-                    Logs.w(e)
-                    "<unknown>"
-                }
+                "<unknown>"
             }
 
             binding.assetStatus.text = getString(R.string.route_asset_status, localVersion)
 
-            binding.rulesUpdate.isInvisible = file.name !in internalFiles
+            val assetEntity = SagerDatabase.assetDao.get(file.name)
+            binding.rulesUpdate.isInvisible = file.name !in internalFiles && assetEntity == null
             binding.rulesUpdate.setOnClickListener {
                 updating.incrementAndGet()
                 layout.refreshLayout.isEnabled = false
@@ -282,7 +291,11 @@ class AssetsActivity : ThemedActivity() {
                 binding.rulesUpdate.isInvisible = true
                 runOnDefaultDispatcher {
                     runCatching {
-                        updateAsset(file, versionFile, localVersion)
+                        if (file.name in internalFiles) {
+                            updateAsset(file, versionFile, localVersion)
+                        } else {
+                            updateCustomAsset(file, assetEntity!!.url)
+                        }
                     }.onFailure {
                         onMainDispatcher {
                             alert(it.readableMessage).show()
@@ -299,6 +312,14 @@ class AssetsActivity : ThemedActivity() {
                 }
             }
 
+            binding.edit.isVisible = file.name !in internalFiles && assetEntity != null
+            binding.edit.setOnClickListener {
+                startActivity(Intent(this@AssetsActivity, AssetEditActivity::class.java).apply {
+                    putExtra(AssetEditActivity.EXTRA_ASSET_NAME, file.name)
+                })
+                adapter.reloadAssets()
+            }
+
         }
 
     }
@@ -312,12 +333,12 @@ class AssetsActivity : ThemedActivity() {
                     repo = "v2fly/geoip"
                 } else {
                     repo = "v2fly/domain-list-community"
-                    fileName = "dlc.dat.xz"
+                    fileName = "dlc.dat"
                 }
             }
             1 -> repo = "Loyalsoldier/v2ray-rules-dat"
             2 -> repo = "Chocolate4U/Iran-v2ray-rules"
-            else -> return updateCustomAsset(file, versionFile)
+            else -> return updateGeoAsset(file, versionFile)
         }
 
         val client = Libcore.newHttpClient().apply {
@@ -357,12 +378,7 @@ class AssetsActivity : ThemedActivity() {
 
             response.writeTo(cacheFile.canonicalPath)
 
-            if (fileName.endsWith(".xz")) {
-                Libcore.unxz(cacheFile.absolutePath, file.absolutePath)
-                cacheFile.delete()
-            } else {
-                cacheFile.renameTo(file)
-            }
+            cacheFile.renameTo(file)
 
             versionFile.writeText(tagName)
 
@@ -376,12 +392,17 @@ class AssetsActivity : ThemedActivity() {
         }
     }
 
-    suspend fun updateCustomAsset(file: File, versionFile: File) {
-        val url: String = if (file.name == internalFiles[0]) {
-            DataStore.rulesGeoipUrl
-        } else {
-            DataStore.rulesGeositeUrl
+    suspend fun updateGeoAsset(file: File, versionFile: File) {
+        try {
+            updateCustomAsset(file, if (file.name == internalFiles[0]) DataStore.rulesGeoipUrl else DataStore.rulesGeositeUrl)
+        } finally {
+            if (versionFile.isFile) {
+                versionFile.delete()
+            }
         }
+    }
+
+    suspend fun updateCustomAsset(file: File, url: String) {
         val client = Libcore.newHttpClient().apply {
             modernTLS()
             keepAlive()
@@ -403,9 +424,6 @@ class AssetsActivity : ThemedActivity() {
             }
         } finally {
             client.close()
-            if (versionFile.isFile) {
-                versionFile.delete()
-            }
         }
     }
 

@@ -623,7 +623,7 @@
     </string-array>
 
     <string-array name="rules_dat_provider">
-        <item>@string/route_rules_official</item>
+        <item>v2fly</item>
         <item>Loyalsoldier/v2ray-rules-dat</item>
         <item>Chocolate4U/Iran-v2ray-rules</item>
         <item>@string/route_rules_custom</item>
@@ -662,11 +662,21 @@
     </string-array>
 
     <string-array name="hysteria2_provider">
-        <item>Hysteria 2 Plugin</item>
-        <item>V2Ray</item>
+        <item>@string/plugin</item>
+        <item>@string/core</item>
     </string-array>
 
     <string-array name="hysteria2_provider_value">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+
+    <string-array name="tuic5_provider">
+        <item>@string/plugin</item>
+        <item>@string/core</item>
+    </string-array>
+
+    <string-array name="tuic5_provider_value">
         <item>0</item>
         <item>1</item>
     </string-array>
@@ -959,6 +969,7 @@
     <string-array name="root_ca_provider_entry">
         <item>@string/root_ca_mozilla</item>
         <item>@string/root_ca_system</item>
+        <item>@string/root_ca_system_and_user</item>
     </string-array>
 
     <string-array name="packet_encoding_entry">
@@ -1002,17 +1013,19 @@
     </string-array>
 
     <string-array name="mieru_mux_level_entry">
-        <item>off</item>
-        <item>low</item>
-        <item>middle</item>
-        <item>high</item>
+        <item />
+        <item>MULTIPLEXING_OFF</item>
+        <item>MULTIPLEXING_LOW</item>
+        <item>MULTIPLEXING_MIDDLE</item>
+        <item>MULTIPLEXING_HIGH</item>
     </string-array>
 
     <string-array name="mieru_mux_level_value">
-        <item>1</item>
         <item>0</item>
+        <item>1</item>
         <item>2</item>
         <item>3</item>
+        <item>4</item>
     </string-array>
 
     <string-array name="brook_tls_fingerprint_entry">
@@ -1058,10 +1071,18 @@
         <item>1</item>
     </string-array>
 
+    <string-array name="splithttp_mode_entry">
+        <item>AUTO</item>
+        <item>PACKET-UP</item>
+        <item>STREAM-UP</item>
+        <item>STREAM-ONE</item>
+    </string-array>
+
     <string-array name="splithttp_mode_value">
         <item>auto</item>
         <item>packet-up</item>
         <item>stream-up</item>
+        <item>stream-one</item>
     </string-array>
 
 </resources>

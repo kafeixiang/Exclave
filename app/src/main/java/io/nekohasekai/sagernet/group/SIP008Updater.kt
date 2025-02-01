@@ -60,7 +60,7 @@ object SIP008Updater : GroupUpdater() {
                 }
             }.newRequest().apply {
                 setURL(subscription.link)
-                if (subscription.customUserAgent.isNotBlank()) {
+                if (subscription.customUserAgent.isNotEmpty()) {
                     setUserAgent(subscription.customUserAgent)
                 } else {
                     setUserAgent(USER_AGENT)
@@ -78,10 +78,14 @@ object SIP008Updater : GroupUpdater() {
 
         var profiles = mutableListOf<AbstractBean>()
 
+        val pattern = Regex(subscription.nameFilter)
         for (profile in servers) {
             val bean = profile.parseShadowsocks()
             appendExtraInfo(profile, bean)
-            profiles.add(bean.applyDefaultValues())
+            bean.applyDefaultValues()
+            if (subscription.nameFilter.isEmpty() || !pattern.containsMatchIn(bean.name)) {
+                profiles.add(bean)
+            }
         }
 
         if (subscription.forceResolve) forceResolve(profiles, proxyGroup.id)
@@ -97,7 +101,7 @@ object SIP008Updater : GroupUpdater() {
                     val index = uniqueProfiles.indexOf(proxy)
                     if (uniqueNames.containsKey(proxy)) {
                         val name = uniqueNames[proxy]!!.replace(" ($index)", "")
-                        if (name.isNotBlank()) {
+                        if (name.isNotEmpty()) {
                             duplicate.add("$name ($index)")
                             uniqueNames[proxy] = ""
                         }

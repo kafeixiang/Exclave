@@ -72,7 +72,8 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SagerNet.Start">
+        android:theme="@style/Theme.SagerNet.Start"
+        android:localeConfig="@xml/locales_config">
         <meta-data
             android:name="android.app.shortcuts"
             android:resource="@xml/shortcuts" />
@@ -124,6 +125,7 @@
                 <data android:scheme="socks4" />
                 <data android:scheme="socks4a" />
                 <data android:scheme="sock5" />
+                <data android:scheme="sock5h" />
                 <data android:scheme="vmess" />
                 <data android:scheme="vless" />
                 <data android:scheme="trojan" />
@@ -136,6 +138,8 @@
                 <data android:scheme="hy2" />
                 <data android:scheme="juicity" />
                 <data android:scheme="tuic" />
+                <data android:scheme="wireguard" />
+                <data android:scheme="mierus" />
 
             </intent-filter>
 
@@ -199,6 +203,8 @@
             android:name="io.nekohasekai.sagernet.ui.RouteSettingsActivity" />
         <activity
             android:name="io.nekohasekai.sagernet.ui.AssetsActivity" />
+        <activity
+            android:name="io.nekohasekai.sagernet.ui.AssetEditActivity" />
         <activity
             android:name="io.nekohasekai.sagernet.ui.AppListActivity" />
         <activity

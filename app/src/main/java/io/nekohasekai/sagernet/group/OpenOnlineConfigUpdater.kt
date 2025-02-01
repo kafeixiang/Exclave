@@ -58,7 +58,7 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
             }
             val baseUrl = apiToken.getStr("baseUrl")
             when {
-                baseUrl.isNullOrBlank() -> {
+                baseUrl.isNullOrEmpty() -> {
                     error("Missing field: baseUrl")
                 }
                 baseUrl.endsWith("/") -> {
@@ -70,14 +70,14 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
                 else -> baseLink = Libcore.parseURL(baseUrl)
             }
             val secret = apiToken.getStr("secret")
-            if (secret.isNullOrBlank()) error("Missing field: secret")
+            if (secret.isNullOrEmpty()) error("Missing field: secret")
             baseLink.addPathSegments(secret, "ooc/v1")
 
             val userId = apiToken.getStr("userId")
-            if (userId.isNullOrBlank()) error("Missing field: userId")
+            if (userId.isNullOrEmpty()) error("Missing field: userId")
             baseLink.addPathSegments(userId)
             certSha256 = apiToken.getStr("certSha256")
-            if (!certSha256.isNullOrBlank()) {
+            if (!certSha256.isNullOrEmpty()) {
                 when {
                     certSha256.length != 64 -> {
                         error("certSha256 must be a SHA-256 hexadecimal string")
@@ -100,7 +100,7 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
             }
         }.newRequest().apply {
             setURL(baseLink.string)
-            setUserAgent(subscription.customUserAgent.takeIf { it.isNotBlank() }
+            setUserAgent(subscription.customUserAgent.takeIf { it.isNotEmpty() }
                 ?: USER_AGENT)
         }.execute()
 
@@ -120,6 +120,7 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
 
         var profiles = mutableListOf<AbstractBean>()
 
+        val pattern = Regex(subscription.nameFilter)
         for (protocol in subscription.protocols) {
             val profilesInProtocol = oocResponse.getJSONArray(protocol)
                 .filterIsInstance<JSONObject>()
@@ -134,7 +135,7 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
                 bean.password = profile.getStr("password")
 
                 val pluginName = profile.getStr("pluginName")
-                if (!pluginName.isNullOrBlank()) {
+                if (!pluginName.isNullOrEmpty()) {
                     // TODO: check plugin exists
                     // TODO: check pluginVersion
                     // TODO: support pluginArguments
@@ -148,7 +149,10 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
 
                 appendExtraInfo(profile, bean)
 
-                profiles.add(bean.applyDefaultValues())
+                bean.applyDefaultValues()
+                if (subscription.nameFilter.isEmpty() || !pattern.containsMatchIn(bean.name)) {
+                    profiles.add(bean)
+                }
             }
         }
 
@@ -165,7 +169,7 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
                     val index = uniqueProfiles.indexOf(proxy)
                     if (uniqueNames.containsKey(proxy)) {
                         val name = uniqueNames[proxy]!!.replace(" ($index)", "")
-                        if (name.isNotBlank()) {
+                        if (name.isNotEmpty()) {
                             duplicate.add("$name ($index)")
                             uniqueNames[proxy] = ""
                         }

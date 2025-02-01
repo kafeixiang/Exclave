@@ -173,7 +173,7 @@
     <string name="group_duplicate">重复：
 \n%s</string>
     <string name="deduplication">去重</string>
-    <string name="version_x">版本（%s）</string>
+    <string name="version_x">版本 (%s)</string>
     <string name="ss_cat">Shadowsocks 设置</string>
     <string name="show_direct_speed">显示直连速度</string>
     <string name="show_direct_speed_sum">在通知中显示不经过代理的流量速度</string>
@@ -199,6 +199,7 @@
     <string name="file_manager_missing">您的设备缺少 Android 标准文件选择器，请安装一个，如质感文件。</string>
     <string name="restart">重载代理服务以应用修改</string>
     <string name="theme">主题</string>
+    <string name="donate_to_original_author">向原作者捐款</string>
     <string name="donate">捐款</string>
     <string name="donate_info">世界很可爱 请给世界钱</string>
     <string name="extra_headers">附加头</string>
@@ -316,7 +317,7 @@
     <string name="fakedns_message">可能导致其他应用程序在代理停止后需要重新启动以重新连接到网络</string>
     <string name="ws_max_early_data">最大前置数据</string>
     <string name="hijack_dns">劫持 DNS</string>
-    <string name="hijack_dns_message">在 TUN 中劫持 DNS 而不是使用 DNS 流量嗅探模块</string>
+    <string name="hijack_dns_message">使用 DNS 嗅探模块劫持不是发往 TUN DNS 地址的 DNS 查询</string>
     <string name="dns_hosts">域名重写</string>
     <string name="apps">应用</string>
     <string name="select_apps">选择应用</string>
@@ -512,4 +513,22 @@
     <string name="ech_config">ECH 配置</string>
     <string name="ech_doh_server">ECH DoH 服务器</string>
     <string name="splithttp_mode">模式</string>
+    <string name="backup_all_profiles">备份所有配置</string>
+    <string name="tuic_v5_provider">TUIC v5 提供程序</string>
+    <string name="browser_forwarder_hint">请从 v2ray-core 发行下载 v2ray-extra.zip 并将 index.html 和 index.js 放置到 Android/data/%s/files，或者将 index.html 和 index.js 导入为路由资源。</string>
+    <string name="mieru_multiplexing_level">多路复用级别</string>
+    <string name="route_asset_add">添加路由资源</string>
+    <string name="route_asset_add_url">添加 URL</string>
+    <string name="route_asset_invalid_filename">无效的文件名：%s</string>
+    <string name="route_asset_reserved_filename">文件名不能为 %s</string>
+    <string name="route_asset_duplicate_filename">文件名为 %s 的资源已经存在</string>
+    <string name="route_asset_invalid_url">无效的 URL：%s</string>
+    <string name="route_asset_delete_prompt">您确定要删除这个资源吗？</string>
+    <string name="route_asset_name">资源名称</string>
+    <string name="route_asset_url">资源 URL</string>
+    <string name="route_asset_settings">资源设置</string>
+    <string name="core">核心</string>
+    <string name="cag_httpupgrade">HTTPUpgrade 设置</string>
+    <string name="regular_expression_filter">名称排除（正则表达式）</string>
+    <string name="root_ca_system_and_user">系统和用户</string>
 </resources>

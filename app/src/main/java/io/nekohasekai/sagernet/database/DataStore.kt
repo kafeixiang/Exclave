@@ -127,6 +127,8 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var rulesGeositeUrl by configurationStore.string(Key.RULES_GEOSITE_URL) { "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat" }
     var rulesGeoipUrl by configurationStore.string(Key.RULES_GEOIP_URL) { "https://github.com/v2fly/geoip/releases/latest/download/geoip.dat" }
     var enableLog by configurationStore.boolean(Key.ENABLE_LOG) { BuildConfig.DEBUG }
+    var enableDebug by configurationStore.boolean(Key.ENABLE_DEBUG) { BuildConfig.DEBUG }
+    var pprofServer by configurationStore.string(Key.PPROF_SERVER)
     var enablePcap by configurationStore.boolean(Key.ENABLE_PCAP)
     var allowAppsBypassVpn by configurationStore.boolean(Key.ALLOW_APPS_BYPASS_VPN)
 
@@ -220,8 +222,9 @@ object DataStore : OnPreferenceDataStoreChangeListener {
 
     var shadowsocks2022Implementation by configurationStore.stringToInt(Key.SHADOWSOCKS_2022_IMPLEMENTATION)
     var providerHysteria2 by configurationStore.stringToInt(Key.PROVIDER_HYSTERIA2) { 1 }
+    var providerTuic5 by configurationStore.stringToInt(Key.PROVIDER_TUIC5) { 1 }
     var hysteriaEnablePortHopping by configurationStore.boolean(Key.HYSTERIA_ENABLE_PORT_HOPPING)
-    var providerRootCA by configurationStore.stringToInt(Key.PROVIDER_ROOT_CA)
+    var providerRootCA by configurationStore.stringToInt(Key.PROVIDER_ROOT_CA) { 1 }
 
     // cache
 
@@ -250,7 +253,6 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverHost by profileCacheStore.string(Key.SERVER_HOST)
     var serverPath by profileCacheStore.string(Key.SERVER_PATH)
     var serverSNI by profileCacheStore.string(Key.SERVER_SNI)
-    var serverTLS by profileCacheStore.boolean(Key.SERVER_TLS)
     var serverEncryption by profileCacheStore.string(Key.SERVER_ENCRYPTION)
     var serverALPN by profileCacheStore.string(Key.SERVER_ALPN)
     var serverCertificates by profileCacheStore.string(Key.SERVER_CERTIFICATES)
@@ -259,6 +261,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverQuicSecurity by profileCacheStore.string(Key.SERVER_QUIC_SECURITY)
     var serverWsMaxEarlyData by profileCacheStore.stringToInt(Key.SERVER_WS_MAX_EARLY_DATA)
     var serverSplithttpMode by profileCacheStore.string(Key.SERVER_SPLITHTTP_MODE)
+    var serverSplithttpExtra by profileCacheStore.string(Key.SERVER_SPLITHTTP_EXTRA)
     var serverWsBrowserForwarding by profileCacheStore.boolean(Key.SERVER_WS_BROWSER_FORWARDING)
     var serverShBrowserForwarding by profileCacheStore.boolean(Key.SERVER_SH_BROWSER_FORWARDING)
     var serverEarlyDataHeaderName by profileCacheStore.string(Key.SERVER_EARLY_DATA_HEADER_NAME)
@@ -270,7 +273,6 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverEchDohServer by profileCacheStore.string(Key.SERVER_ECH_DOH_SERVER)
     var serverRealityPublicKey by profileCacheStore.string(Key.SERVER_REALITY_PUBLIC_KEY)
     var serverRealityShortId by profileCacheStore.string(Key.SERVER_REALITY_SHORT_ID)
-    var serverRealitySpiderX by profileCacheStore.string(Key.SERVER_REALITY_SPIDER_X)
     var serverRealityFingerprint by profileCacheStore.string(Key.SERVER_REALITY_FINGERPRINT)
 
     var serverMekyaKcpSeed by profileCacheStore.string(Key.SERVER_MEKYA_KCP_SEED)
@@ -309,6 +311,9 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverBrookTlsFingerprint by profileCacheStore.string(Key.SERVER_BROOK_TLS_FINGERPRINT)
     var serverBrookFragment by profileCacheStore.string(Key.SERVER_BROOK_FRAGMENT)
     var serverBrookUdpOverStream by profileCacheStore.boolean(Key.SERVER_BROOK_UDP_OVER_STREAM)
+    var serverBrookClientHkdfInfo by profileCacheStore.string(Key.SERVER_BROOK_CLIENT_HKDF_INFO)
+    var serverBrookServerHkdfInfo by profileCacheStore.string(Key.SERVER_BROOK_SERVER_HKDF_INFO)
+    var serverBrookToken by profileCacheStore.string(Key.SERVER_BROOK_TOKEN)
 
     var serverUDPRelayMode by profileCacheStore.string(Key.SERVER_UDP_RELAY_MODE)
     var serverCongestionController by profileCacheStore.string(Key.SERVER_CONGESTION_CONTROLLER)
@@ -366,6 +371,11 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var subscriptionUserAgent by profileCacheStore.string(Key.SUBSCRIPTION_USER_AGENT)
     var subscriptionAutoUpdate by profileCacheStore.boolean(Key.SUBSCRIPTION_AUTO_UPDATE)
     var subscriptionAutoUpdateDelay by profileCacheStore.stringToInt(Key.SUBSCRIPTION_AUTO_UPDATE_DELAY) { 360 }
+    var subscriptionNameFilter by profileCacheStore.string(Key.SUBSCRIPTION_NAME_FILTER)
+
+    var editingAssetName by profileCacheStore.string(Key.EDITING_ASSET_NAME)
+    var assetName by profileCacheStore.string(Key.ASSET_NAME)
+    var assetUrl by profileCacheStore.string(Key.ASSET_URL)
 
     var taskerAction by profileCacheStore.stringToInt(Key.TASKER_ACTION)
     var taskerProfile by profileCacheStore.stringToInt(Key.TASKER_PROFILE)

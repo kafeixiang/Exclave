@@ -73,7 +73,7 @@
     <string name="enable_fakedns">Enable fake DNS</string>
     <string name="fakedns_message">May cause other applications to need to be restarted to reconnect to the network after the proxy is disconnected</string>
     <string name="hijack_dns">Hijack DNS</string>
-    <string name="hijack_dns_message">Hijack DNS in TUN instead of using DNS sniffer</string>
+    <string name="hijack_dns_message">Hijack DNS queries that are not sent to TUN DNS address with DNS sniffer</string>
     <string name="dns_hosts">Domain rewriting</string>
     <string name="port_local_dns">Local DNS port</string>
     <string name="require_transproxy">Enable transparent proxy inbound</string>
@@ -251,6 +251,7 @@
     <string name="no_proxies_found_in_file">No proxy found in the file</string>
     <string name="no_proxies_found_in_clipboard">No proxy found in the clipboard</string>
     <string name="deduplication">Deduplication</string>
+    <string name="donate_to_original_author">Donate to original author</string>
     <string name="donate">Donate</string>
     <string name="donate_info">I love money</string>
     <string name="ignore_battery_optimizations">Ignore battery optimizations</string>
@@ -537,4 +538,26 @@
     <string name="ech_config">ECH Config</string>
     <string name="ech_doh_server">ECH DoH server</string>
     <string name="splithttp_mode">Mode</string>
+    <string name="splithttp_extra" translatable="false">Extra</string>
+    <string name="backup_all_profiles">Backup all profiles</string>
+    <string name="tuic_v5_provider">TUIC v5 provider</string>
+    <string name="browser_forwarder_hint">Please download v2ray-extra.zip from v2ray-core release and place index.html and index.js in Android/data/%s/files or import index.html and index.js as route assets.</string>
+    <string name="mieru_multiplexing_level">Multiplexing level</string>
+    <string name="route_asset_add">Add route asset</string>
+    <string name="route_asset_add_url">Add URL</string>
+    <string name="route_asset_invalid_filename">Invalid filename: %s</string>
+    <string name="route_asset_reserved_filename">Filename can\'t be %s</string>
+    <string name="route_asset_duplicate_filename">Asset with filename %s already exists</string>
+    <string name="route_asset_invalid_url">Invalid URL: %s</string>
+    <string name="route_asset_delete_prompt">Are you sure you want to delete this asset?</string>
+    <string name="route_asset_name">Asset name</string>
+    <string name="route_asset_url">Asset URL</string>
+    <string name="route_asset_settings">Asset settings</string>
+    <string name="core">core</string>
+    <string name="cag_httpupgrade">HTTPUpgrade settings</string>
+    <string name="regular_expression_filter">Name exclusion (regular expression)</string>
+    <string name="root_ca_system_and_user">System and user</string>
+    <string name="brook_token" translatable="false">Token</string>
+    <string name="brook_client_hkdf_info" translatable="false">Client HKDF info</string>
+    <string name="brook_server_hkdf_info" translatable="false">Server HKDF info</string>
 </resources>

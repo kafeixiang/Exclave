@@ -71,7 +71,7 @@ class RouteSettingsActivity(
 
     fun init(packageName: String?) {
         RuleEntity().apply {
-            if (!packageName.isNullOrBlank()) {
+            if (!packageName.isNullOrEmpty()) {
                 packages = listOf(packageName)
                 name = app.getString(R.string.route_for, PackageCache.loadLabel(packageName))
             }
@@ -120,7 +120,7 @@ class RouteSettingsActivity(
         }
         reverse = DataStore.routeReverse
         redirect = DataStore.routeRedirect
-        packages = DataStore.routePackages.split("\n").filter { it.isNotBlank() }
+        packages = DataStore.routePackages.split("\n").filter { it.isNotEmpty() }
         networkType = DataStore.routeNetworkType
         ssid = DataStore.routeSSID
 
@@ -131,7 +131,7 @@ class RouteSettingsActivity(
 
     fun needSave(): Boolean {
         if (!DataStore.dirty) return false
-        if (DataStore.routePackages.isBlank() && DataStore.routeDomain.isBlank() && DataStore.routeIP.isBlank() && DataStore.routePort.isBlank() && DataStore.routeSourcePort.isBlank() && DataStore.routeNetwork.isBlank() && DataStore.routeSource.isBlank() && DataStore.routeProtocol.isBlank() && DataStore.routeAttrs.isBlank() && !(DataStore.routeReverse && DataStore.routeRedirect.isNotBlank()) && DataStore.routeNetworkType.isBlank()) {
+        if (DataStore.routePackages.isEmpty() && DataStore.routeDomain.isEmpty() && DataStore.routeIP.isEmpty() && DataStore.routePort.isEmpty() && DataStore.routeSourcePort.isEmpty() && DataStore.routeNetwork.isEmpty() && DataStore.routeSource.isEmpty() && DataStore.routeProtocol.isEmpty() && DataStore.routeAttrs.isEmpty() && !(DataStore.routeReverse && DataStore.routeRedirect.isEmpty()) && DataStore.routeNetworkType.isEmpty()) {
             return false
         }
         return true
@@ -284,24 +284,24 @@ class RouteSettingsActivity(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.toolbar)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.toolbar)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 top = bars.top,
                 left = bars.left,
                 right = bars.right,
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings)) { R, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
             )
-            v.updatePadding(
+            R.updatePadding(
                 left = bars.left,
                 right = bars.right,
                 bottom = bars.bottom,
@@ -469,7 +469,7 @@ class RouteSettingsActivity(
 
         override fun provideSummary(preference: EditTextPreference): CharSequence {
             val text = preference.text
-            return if (text.isNullOrBlank()) {
+            return if (text.isNullOrEmpty()) {
                 preference.context.getString(androidx.preference.R.string.not_set)
             } else {
                 "\u2022".repeat(text.length)

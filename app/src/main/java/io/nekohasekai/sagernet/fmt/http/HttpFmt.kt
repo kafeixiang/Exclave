@@ -29,12 +29,16 @@ fun parseHttp(link: String): HttpBean {
 
     return HttpBean().apply {
         serverAddress = url.host
-        serverPort = url.port
+        serverPort = url.port.takeIf { it > 0 } ?: if (url.scheme == "https") 443 else 80
         username = url.username
         password = url.password
         name = url.fragment
         if (url.scheme == "https") {
+            // non-standard
             security = "tls"
+            url.queryParameter("sni")?.let {
+                sni = it
+            }
         }
     }
 }
@@ -44,16 +48,17 @@ fun HttpBean.toUri(): String {
     builder.host = serverAddress
     builder.port = serverPort
 
-    if (username.isNotBlank()) {
+    if (username.isNotEmpty()) {
         builder.username = username
     }
-    if (password.isNotBlank()) {
+    if (password.isNotEmpty()) {
         builder.password = password
     }
-    if (security == "tls" && sni.isNotBlank()) {
-        builder.addQueryParameter("sni", sni) // non-standard
+    if (security == "tls" && sni.isNotEmpty()) {
+        // non-standard
+        builder.addQueryParameter("sni", sni)
     }
-    if (name.isNotBlank()) {
+    if (name.isNotEmpty()) {
         builder.setRawFragment(name.urlSafe())
     }
 

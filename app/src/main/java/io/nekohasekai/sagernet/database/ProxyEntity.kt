@@ -24,7 +24,7 @@ import android.content.Intent
 import androidx.room.*
 import com.esotericsoftware.kryo.io.ByteBufferInput
 import com.esotericsoftware.kryo.io.ByteBufferOutput
-import io.nekohasekai.sagernet.Hysteria2Provider
+import io.nekohasekai.sagernet.ProtocolProvider
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.aidl.TrafficStats
 import io.nekohasekai.sagernet.fmt.AbstractBean
@@ -49,6 +49,7 @@ import io.nekohasekai.sagernet.fmt.juicity.buildJuicityConfig
 import io.nekohasekai.sagernet.fmt.juicity.toUri
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
 import io.nekohasekai.sagernet.fmt.mieru.buildMieruConfig
+import io.nekohasekai.sagernet.fmt.mieru.toUri
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean
 import io.nekohasekai.sagernet.fmt.naive.buildNaiveConfig
 import io.nekohasekai.sagernet.fmt.naive.toUri
@@ -60,7 +61,6 @@ import io.nekohasekai.sagernet.fmt.shadowtls.ShadowTLSBean
 import io.nekohasekai.sagernet.fmt.socks.SOCKSBean
 import io.nekohasekai.sagernet.fmt.socks.toUri
 import io.nekohasekai.sagernet.fmt.ssh.SSHBean
-import io.nekohasekai.sagernet.fmt.toUniversalLink
 import io.nekohasekai.sagernet.fmt.trojan.TrojanBean
 import io.nekohasekai.sagernet.fmt.trojan.toUri
 import io.nekohasekai.sagernet.fmt.trojan_go.TrojanGoBean
@@ -79,7 +79,6 @@ import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.app
 import io.nekohasekai.sagernet.ktx.applyDefaultValues
-import io.nekohasekai.sagernet.ktx.isValidHysteriaMultiPort
 import io.nekohasekai.sagernet.ui.profile.*
 
 @Entity(
@@ -302,7 +301,7 @@ data class ProxyEntity(
         } ?: SOCKSBean().applyDefaultValues()
     }
 
-    fun haveLink(): Boolean {
+    fun canExportBackup(): Boolean {
         return when (type) {
             TYPE_CHAIN -> false
             TYPE_BALANCER -> false
@@ -310,10 +309,10 @@ data class ProxyEntity(
         }
     }
 
-    fun haveStandardLink(): Boolean {
-        return haveLink() && when (type) {
-            TYPE_SSH, TYPE_WG, TYPE_MIERU, TYPE_SHADOWTLS -> false
-            TYPE_CONFIG -> false
+    fun hasShareLink(): Boolean {
+        return when (type) {
+            TYPE_SSH, TYPE_WG, TYPE_SHADOWTLS -> false
+            TYPE_CONFIG, TYPE_CHAIN, TYPE_BALANCER -> false
             else -> true
         }
     }
@@ -335,12 +334,7 @@ data class ProxyEntity(
             is JuicityBean -> toUri()
             is TuicBean -> toUri()
             is Tuic5Bean -> toUri()
-
-            is ConfigBean -> toUniversalLink()
-            is SSHBean -> toUniversalLink()
-            is WireGuardBean -> toUniversalLink()
-            is MieruBean -> toUniversalLink()
-            is ShadowTLSBean -> toUniversalLink()
+            is MieruBean -> toUri()
             else -> null
         }
     }
@@ -421,7 +415,10 @@ data class ProxyEntity(
             return bean.type != "v2ray_outbound"
         }
         if (bean is Hysteria2Bean) {
-            return DataStore.providerHysteria2 != Hysteria2Provider.V2RAY
+            return DataStore.providerHysteria2 != ProtocolProvider.CORE
+        }
+        if (bean is Tuic5Bean) {
+            return DataStore.providerTuic5 != ProtocolProvider.CORE
         }
         return when (type) {
             TYPE_TROJAN_GO -> true
@@ -430,7 +427,6 @@ data class ProxyEntity(
             TYPE_BROOK -> true
             TYPE_MIERU -> true
             TYPE_TUIC -> true
-            TYPE_TUIC5 -> true
             TYPE_SHADOWTLS -> true
             TYPE_JUICITY -> true
 

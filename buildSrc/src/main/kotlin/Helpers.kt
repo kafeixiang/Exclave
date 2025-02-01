@@ -1,6 +1,7 @@
 import cn.hutool.core.codec.Base64
 import com.android.build.api.dsl.*
 import com.android.build.gradle.AbstractAppExtension
+import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 import org.apache.tools.ant.filters.StringInputStream
 import org.gradle.api.JavaVersion
@@ -89,7 +90,7 @@ fun Project.setupCommon() {
 
 fun Project.setupCommon(projectName: String) {
     android.apply {
-        buildToolsVersion = "35.0.0"
+        buildToolsVersion = "35.0.1"
         compileSdk = 35
         defaultConfig {
             minSdk = if (projectName.lowercase(Locale.ROOT) == "naive") 24 else 21
@@ -97,6 +98,7 @@ fun Project.setupCommon(projectName: String) {
         buildTypes {
             getByName("release") {
                 isMinifyEnabled = true
+                vcsInfo.include = false
             }
         }
         compileOptions {
@@ -175,10 +177,15 @@ fun Project.setupAppCommon(projectName: String) {
                     storePassword = keystorePwd
                     keyAlias = alias
                     keyPassword = pwd
+                    enableV3Signing = true
                 }
             }
         } else if (requireFlavor().contains("OssRelease")) {
             return
+        }
+        dependenciesInfo {
+            includeInApk = false
+            includeInBundle = false
         }
         buildTypes {
             val key = signingConfigs.findByName("release")
@@ -194,7 +201,6 @@ fun Project.setupAppCommon(projectName: String) {
 
 fun Project.setupPlugin(projectName: String) {
     val propPrefix = projectName.uppercase(Locale.ROOT)
-    val projName = projectName.lowercase(Locale.ROOT)
     val verName = requireMetadata().getProperty("${propPrefix}_VERSION_NAME").trim()
     val verCode = requireMetadata().getProperty("${propPrefix}_VERSION").trim().toInt()
     androidApp.defaultConfig {
@@ -209,16 +215,12 @@ fun Project.setupPlugin(projectName: String) {
     val targetAbi = requireTargetAbi()
 
     androidApp.apply {
-        this as AbstractAppExtension
-
-        buildTypes {
-            getByName("release") {
-                proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    project(":plugin:api").file("proguard-rules.pro")
-                )
-            }
+        dependenciesInfo {
+            includeInApk = false
+            includeInBundle = false
         }
+
+        this as AbstractAppExtension
 
         splits.abi {
             isEnable = true
@@ -238,47 +240,7 @@ fun Project.setupPlugin(projectName: String) {
             create("oss")
         }
 
-        if (System.getenv("SKIP_BUILD") != "on" && System.getProperty("SKIP_BUILD_$propPrefix") != "on") {
-            if (targetAbi.isBlank()) {
-                tasks.register<Exec>("externalBuild") {
-                    executable(rootProject.file("run"))
-                    args("plugin", projName)
-                    workingDir(rootProject.projectDir)
-                }
-
-                tasks.configureEach {
-                    if (name.startsWith("merge") && name.endsWith("JniLibFolders")) {
-                        dependsOn("externalBuild")
-                    }
-                }
-            } else {
-                tasks.register<Exec>("externalBuildInit") {
-                    executable(rootProject.file("run"))
-                    args("plugin", projName, "init")
-                    workingDir(rootProject.projectDir)
-                }
-                tasks.register<Exec>("externalBuild") {
-                    executable(rootProject.file("run"))
-                    args("plugin", projName, targetAbi)
-                    workingDir(rootProject.projectDir)
-                    dependsOn("externalBuildInit")
-                }
-                tasks.register<Exec>("externalBuildEnd") {
-                    executable(rootProject.file("run"))
-                    args("plugin", projName, "end")
-                    workingDir(rootProject.projectDir)
-                    dependsOn("externalBuild")
-                }
-                tasks.configureEach {
-                    if (name.startsWith("merge") && name.endsWith("JniLibFolders")) {
-                        dependsOn("externalBuildEnd")
-                    }
-                }
-            }
-        }
-
         applicationVariants.all {
-
             outputs.all {
                 this as BaseVariantOutputImpl
                 outputFileName = outputFileName.replace(
@@ -296,7 +258,7 @@ fun Project.setupPlugin(projectName: String) {
 fun Project.setupApp() {
     val pkgName = requireMetadata().getProperty("PACKAGE_NAME").trim()
     val verName = requireMetadata().getProperty("VERSION_NAME").trim()
-    val verCode = requireMetadata().getProperty("VERSION_CODE").trim().toInt()
+    val verCode = requireMetadata().getProperty("VERSION_CODE").trim().toInt() * 5
     androidApp.apply {
         defaultConfig {
             applicationId = pkgName
@@ -339,6 +301,15 @@ fun Project.setupApp() {
         }
 
         applicationVariants.all {
+            outputs.forEach { output ->
+                output as ApkVariantOutputImpl
+                when (output.filters.find { it.filterType == "ABI" }?.identifier) {
+                    "arm64-v8a" -> output.versionCodeOverride = verCode + 4
+                    "x86_64" -> output.versionCodeOverride = verCode + 3
+                    "armeabi-v7a" -> output.versionCodeOverride = verCode + 2
+                    "x86" -> output.versionCodeOverride = verCode + 1
+                }
+            }
             outputs.all {
                 this as BaseVariantOutputImpl
                 outputFileName = outputFileName.replace(project.name, "Exclave-$versionName")
@@ -353,8 +324,17 @@ fun Project.setupApp() {
                 requireFlavor().endsWith("Debug")
             }
             doLast {
+                downloadAssets(false)
+            }
+        }
+
+        tasks.register("updateAssets") {
+            outputs.upToDateWhen {
+                requireFlavor().endsWith("Debug")
+            }
+            doLast {
                 downloadRootCAList()
-                downloadAssets()
+                downloadAssets(true)
             }
         }
     }

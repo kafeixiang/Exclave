@@ -29,7 +29,6 @@ import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.whenCreated
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
@@ -58,6 +57,7 @@ import io.nekohasekai.sagernet.ktx.app
 import io.nekohasekai.sagernet.ktx.listenForPackageChanges
 import io.nekohasekai.sagernet.ktx.readableMessage
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
+import io.nekohasekai.sagernet.ktx.runOnMainDispatcher
 import io.nekohasekai.sagernet.ktx.showAllowingStateLoss
 import kotlinx.coroutines.launch
 
@@ -125,22 +125,22 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         }
         DataStore.serverPinnedCertificateChain = pinnedPeerCertificateChainSha256
         DataStore.serverQuicSecurity = quicSecurity
-        DataStore.serverWsMaxEarlyData = wsMaxEarlyData
+        DataStore.serverWsMaxEarlyData = maxEarlyData
         DataStore.serverEarlyDataHeaderName = earlyDataHeaderName
         DataStore.serverSplithttpMode = splithttpMode
+        DataStore.serverSplithttpExtra = splithttpExtra
         DataStore.serverUTLSFingerprint = utlsFingerprint
         DataStore.serverEchConfig = echConfig
         DataStore.serverEchDohServer = echDohServer
 
         DataStore.serverRealityPublicKey = realityPublicKey
         DataStore.serverRealityShortId = realityShortId
-        DataStore.serverRealitySpiderX = realitySpiderX
         DataStore.serverRealityFingerprint = realityFingerprint
 
         DataStore.serverUploadSpeed = hy2UpMbps
         DataStore.serverDownloadSpeed = hy2DownMbps
         DataStore.serverPassword = hy2Password
-        DataStore.serverObfs = hy2ObfsPassword
+        // DataStore.serverObfs = hy2ObfsPassword
 
         DataStore.serverMekyaKcpSeed = mekyaKcpSeed
         DataStore.serverMekyaKcpHeaderType = mekyaKcpHeaderType
@@ -210,22 +210,22 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
             is SOCKSBean -> protocol = DataStore.serverProtocolVersion
         }
         quicSecurity = DataStore.serverQuicSecurity
-        wsMaxEarlyData = DataStore.serverWsMaxEarlyData
+        maxEarlyData = DataStore.serverWsMaxEarlyData
         earlyDataHeaderName = DataStore.serverEarlyDataHeaderName
         splithttpMode = DataStore.serverSplithttpMode
+        splithttpExtra = DataStore.serverSplithttpExtra
         utlsFingerprint = DataStore.serverUTLSFingerprint
         echConfig = DataStore.serverEchConfig
         echDohServer = DataStore.serverEchDohServer
 
         realityPublicKey = DataStore.serverRealityPublicKey
         realityShortId = DataStore.serverRealityShortId
-        realitySpiderX = DataStore.serverRealitySpiderX
         realityFingerprint = DataStore.serverRealityFingerprint
 
         hy2UpMbps = DataStore.serverUploadSpeed
         hy2DownMbps = DataStore.serverDownloadSpeed
         hy2Password = DataStore.serverPassword
-        hy2ObfsPassword = DataStore.serverObfs
+        // hy2ObfsPassword = DataStore.serverObfs
 
         mekyaKcpSeed = DataStore.serverMekyaKcpSeed
         mekyaKcpHeaderType = DataStore.serverMekyaKcpHeaderType
@@ -263,7 +263,6 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
 
     lateinit var realityPublicKey: EditTextPreference
     lateinit var realityShortId: EditTextPreference
-    lateinit var realitySpiderX: EditTextPreference
     lateinit var realityFingerprint: SimpleMenuPreference
 
     lateinit var packetEncoding: SimpleMenuPreference
@@ -271,7 +270,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
     lateinit var hy2UpMbps: EditTextPreference
     lateinit var hy2DownMbps: EditTextPreference
     lateinit var hy2Password: EditTextPreference
-    lateinit var hy2ObfsPassword: EditTextPreference
+    // lateinit var hy2ObfsPassword: EditTextPreference
 
     lateinit var mekyaKcpSeed: EditTextPreference
     lateinit var mekyaKcpHeaderType: SimpleMenuPreference
@@ -281,6 +280,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
     lateinit var passwordUUID: EditTextPreference
 
     lateinit var wsCategory: PreferenceCategory
+    lateinit var wsUseBrowserForwarder: SwitchPreference
     lateinit var splithttpCategory: PreferenceCategory
     lateinit var splithttpMode: SimpleMenuPreference
     lateinit var ssExperimentsCategory: PreferenceCategory
@@ -326,8 +326,11 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
 
         realityPublicKey = findPreference(Key.SERVER_REALITY_PUBLIC_KEY)!!
         realityShortId = findPreference(Key.SERVER_REALITY_SHORT_ID)!!
-        realitySpiderX = findPreference(Key.SERVER_REALITY_SPIDER_X)!!
         realityFingerprint = findPreference(Key.SERVER_REALITY_FINGERPRINT)!!
+
+        realityPublicKey.apply {
+            summaryProvider = PasswordSummaryProvider
+        }
 
         hy2UpMbps = findPreference(Key.SERVER_UPLOAD_SPEED)!!
         hy2UpMbps.apply {
@@ -343,18 +346,31 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
             title = resources.getString(R.string.hysteria2_password)
             dialogTitle = resources.getString(R.string.hysteria2_password)
         }
-        hy2ObfsPassword = findPreference(Key.SERVER_OBFS)!!
+        /* hy2ObfsPassword = findPreference(Key.SERVER_OBFS)!!
         hy2ObfsPassword.apply {
             summaryProvider = PasswordSummaryProvider
-        }
+        } */
 
         mekyaKcpSeed = findPreference(Key.SERVER_MEKYA_KCP_SEED)!!
         mekyaKcpHeaderType = findPreference(Key.SERVER_MEKYA_KCP_HEADER_TYPE)!!
         mekyaUrl = findPreference(Key.SERVER_MEKYA_URL)!!
 
         wsCategory = findPreference(Key.SERVER_WS_CATEGORY)!!
+        wsUseBrowserForwarder = findPreference(Key.SERVER_WS_BROWSER_FORWARDING)!!
         splithttpCategory = findPreference(Key.SERVER_SH_CATEGORY)!!
         splithttpMode = findPreference(Key.SERVER_SPLITHTTP_MODE)!!
+
+        findPreference<SwitchPreference>(Key.SERVER_WS_BROWSER_FORWARDING)!!.setOnPreferenceChangeListener { _, newValue ->
+            if (newValue as Boolean) {
+                runOnMainDispatcher {
+                    MaterialAlertDialogBuilder(this@StandardV2RaySettingsActivity)
+                        .setMessage(getString(R.string.browser_forwarder_hint, packageName))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                }
+            }
+            true
+        }
 
         when (bean) {
             is VLESSBean -> {
@@ -382,7 +398,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
                 encryption.setEntryValues(R.array.enc_method_value)
                 val sev = resources.getStringArray(R.array.enc_method_value)
                 if (encryption.value !in sev) {
-                    encryption.value = "aes-256-gcm"
+                    encryption.value = "none"
                 }
             }
             else -> {
@@ -515,7 +531,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         hy2UpMbps.isVisible = isHysteria2
         hy2DownMbps.isVisible = isHysteria2
         hy2Password.isVisible = isHysteria2
-        hy2ObfsPassword.isVisible = isHysteria2
+        // hy2ObfsPassword.isVisible = isHysteria2
         quicSecurity.isVisible = isQUIC
         mekyaKcpSeed.isVisible = isMekya
         mekyaKcpHeaderType.isVisible = isMekya
@@ -532,7 +548,10 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
             }
         }
 
-        wsCategory.isVisible = isWS
+        wsCategory.isVisible = isWS || isHTTPUpgrade
+        if (isWS) wsCategory.setTitle(R.string.cag_ws)
+        if (isHTTPUpgrade) wsCategory.setTitle(R.string.cag_httpupgrade)
+        wsUseBrowserForwarder.isVisible = isWS
         splithttpCategory.isVisible = isSplitHTTP
         if (splithttpMode.value !in resources.getStringArray(R.array.splithttp_mode_value)) {
             splithttpMode.value = resources.getStringArray(R.array.splithttp_mode_value)[0]
@@ -672,7 +691,6 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         alpn.isVisible = isTLS
         realityPublicKey.isVisible = isReality
         realityShortId.isVisible = isReality
-        realitySpiderX.isVisible = isReality
         utlsFingerprint.isVisible = isTLS && (network.value == "tcp" || network.value == "ws"
                 || network.value == "http" || network.value == "meek" || network.value == "httpupgrade"
                 || network.value == "grpc" || network.value == "splithttp" || network.value == "mekya")

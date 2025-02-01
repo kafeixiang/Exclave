@@ -281,6 +281,8 @@ public class V2RayConfig {
                     return VLiteUInboundConfigurationObject.class;
                 case "mixed":
                     return MixedInboundConfigurationObject.class;
+                case "wireguard":
+                    return WireGuardInboundConfigurationObject.class;
                 case "shadowsocks-2022":
                     return Shadowsocks2022InboundConfigurationObject.class;
                 case "shadowsocks-2022-multi":
@@ -482,6 +484,16 @@ public class V2RayConfig {
 
     }
 
+    public static class WireGuardInboundConfigurationObject implements InboundConfigurationObject {
+
+        public List<String> address;
+        public String secretKey;
+        public Integer mtu;
+        public Integer workers;
+        public List<WireGuardOutboundConfigurationObject.WireGuardPeerObject> peers;
+
+    }
+
     public static class Shadowsocks2022InboundConfigurationObject implements InboundConfigurationObject {
 
         public String method;
@@ -641,6 +653,8 @@ public class V2RayConfig {
                     return Shadowsocks_2022OutboundConfigurationObject.class;
                 case "hysteria2":
                     return Hysteria2OutboundConfigurationObject.class;
+                case "tuic":
+                    return TUICOutboundConfigurationObject.class;
             }
             return null;
         }
@@ -901,6 +915,23 @@ public class V2RayConfig {
 
     }
 
+    public static class TUICOutboundConfigurationObject implements OutboundConfigurationObject {
+
+        public String address;
+        public Integer port;
+        public String uuid;
+        public String password;
+        public String congestionControl;
+        public String udpRelayMode;
+        public Boolean zeroRTTHandshake;
+        public String serverName;
+        public List<String> alpn;
+        public List<String> certificate;
+        public Boolean allowInsecure;
+        public Boolean disableSNI;
+
+    }
+
     public TransportObject transport;
 
     public static class TransportObject {
@@ -923,7 +954,6 @@ public class V2RayConfig {
         public TLSObject tlsSettings;
         public UTLSObject utlsSettings;
         public RealityObject realitySettings;
-        public TcpObject rawSettings; // xray alias
         public TcpObject tcpSettings;
         public KcpObject kcpSettings;
         public WebSocketObject wsSettings;
@@ -936,7 +966,6 @@ public class V2RayConfig {
         public HTTPUpgradeObject httpupgradeSettings;
         public Hysteria2Object hy2Settings;
         public SplitHTTPObject splithttpSettings;
-        public SplitHTTPObject xhttpSettings; // xray alias
         public MekyaObject mekyaSettings;
         public DTLSObject dtlsSettings;
         public RequestObject requestSettings;
@@ -975,7 +1004,7 @@ public class V2RayConfig {
 
                 public String type;
                 public String packet;
-                public String delay; // String or Integer
+                public String delay;
 
             }
 
@@ -1034,7 +1063,6 @@ public class V2RayConfig {
         public String serverName;
         public String publicKey;
         public String shortId;
-        public String spiderX;
         public String fingerprint;
         public String version;
 
@@ -1161,7 +1189,16 @@ public class V2RayConfig {
 
         public String host;
         public String path;
-        public Map<String, String> headers;
+        public Integer maxEarlyData;
+        public String earlyDataHeaderName;
+        public List<HTTPUpgradeHeaderObject> header;
+
+        public static class HTTPUpgradeHeaderObject {
+
+            public String key;
+            public String value;
+
+        }
 
     }
 
@@ -1194,6 +1231,11 @@ public class V2RayConfig {
         public String path;
         public Map<String, String> headers;
         public String mode;
+        public String scMaxConcurrentPosts;
+        public String scMaxEachPostBytes;
+        public String scMinPostsIntervalMs;
+        public String xPaddingBytes;
+        public Boolean noGRPCHeader;
         public Boolean useBrowserForwarding;
 
     }
