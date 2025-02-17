@@ -249,6 +249,10 @@
             app:key="providerTuic5"
             app:title="@string/tuic_v5_provider"
             app:useSimpleSummaryProvider="true" />
+        <io.nekohasekai.sagernet.widget.PluginListPreference
+            app:icon="@drawable/baseline_widgets_24"
+            app:key="matsuriPlugins"
+            app:title="@string/matsuri_plugins" />
         <com.takisoft.preferencex.SimpleMenuPreference
             android:icon="@drawable/baseline_flight_takeoff_24"
             app:defaultValue="1"

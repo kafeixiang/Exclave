@@ -17,44 +17,41 @@
  *                                                                            *
  ******************************************************************************/
 
-package io.nekohasekai.sagernet.fmt
+package io.nekohasekai.sagernet.utils
 
-import io.nekohasekai.sagernet.database.ProxyEntity
+import android.os.Build
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebView
+import io.nekohasekai.sagernet.ktx.Logs
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 
-object TypeMap : HashMap<String, Int>() {
-    init {
-        this["socks"] = ProxyEntity.TYPE_SOCKS
-        this["http"] = ProxyEntity.TYPE_HTTP
-        this["ss"] = ProxyEntity.TYPE_SS
-        this["ssr"] = ProxyEntity.TYPE_SSR
-        this["vmess"] = ProxyEntity.TYPE_VMESS
-        this["vless"] = ProxyEntity.TYPE_VLESS
-        this["trojan"] = ProxyEntity.TYPE_TROJAN
-        this["trojan-go"] = ProxyEntity.TYPE_TROJAN_GO
-        this["naive"] = ProxyEntity.TYPE_NAIVE
-        this["brook"] = ProxyEntity.TYPE_BROOK
-        this["config"] = ProxyEntity.TYPE_CONFIG
-        this["hysteria"] = ProxyEntity.TYPE_HYSTERIA
-        this["hysteria2"] = ProxyEntity.TYPE_HYSTERIA2
-        this["ssh"] = ProxyEntity.TYPE_SSH
-        this["wg"] = ProxyEntity.TYPE_WG
-        this["mieru"] = ProxyEntity.TYPE_MIERU
-        this["tuic"] = ProxyEntity.TYPE_TUIC
-        this["tuic5"] = ProxyEntity.TYPE_TUIC5
-        this["shadowtls"] = ProxyEntity.TYPE_SHADOWTLS
-        this["juicity"] = ProxyEntity.TYPE_JUICITY
-        this["http3"] = ProxyEntity.TYPE_HTTP3
-        this["anytls"] = ProxyEntity.TYPE_ANYTLS
-        this["shadowquic"] = ProxyEntity.TYPE_SHADOWQUIC
-        this["matsuri"] = ProxyEntity.TYPE_MATSURI
+object WebViewUtil {
+    fun onReceivedError(
+        view: WebView?, request: WebResourceRequest?, error: WebResourceError?
+    ) {
+        if (Build.VERSION.SDK_INT >= 23 && error != null) {
+            Logs.e("WebView error description: ${error.description}")
+        }
+        Logs.e("WebView error: ${error.toString()}")
     }
 
-    val reversed = HashMap<Int, String>()
-
-    init {
-        TypeMap.forEach { (key, type) ->
-            reversed[type] = key
+    fun interceptRequest(
+        res: (String) -> InputStream?, view: WebView?, request: WebResourceRequest?
+    ): WebResourceResponse {
+        val path = request?.url?.path ?: "404"
+        val input = res(path)
+        var mime = "text/plain"
+        if (path.endsWith(".js")) mime = "application/javascript"
+        if (path.endsWith(".html")) mime = "text/html"
+        return if (input != null) {
+            WebResourceResponse(mime, "UTF-8", input)
+        } else {
+            WebResourceResponse(
+                "text/plain", "UTF-8", ByteArrayInputStream("".toByteArray())
+            )
         }
     }
-
 }

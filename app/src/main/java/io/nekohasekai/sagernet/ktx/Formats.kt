@@ -28,6 +28,7 @@ import io.nekohasekai.sagernet.fmt.http3.parseHttp3
 import io.nekohasekai.sagernet.fmt.hysteria.parseHysteria
 import io.nekohasekai.sagernet.fmt.hysteria2.parseHysteria2
 import io.nekohasekai.sagernet.fmt.juicity.parseJuicity
+import io.nekohasekai.sagernet.fmt.matsuri.parseShareLink
 import io.nekohasekai.sagernet.fmt.mieru.parseMieru
 import io.nekohasekai.sagernet.fmt.naive.parseNaive
 import io.nekohasekai.sagernet.fmt.parseBackupLink
@@ -44,6 +45,8 @@ import java.util.zip.Deflater
 import java.util.zip.Inflater
 import kotlin.io.encoding.Base64
 import kotlin.io.use
+import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
+import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
 
 fun String.decodeBase64(): String {
     if (this.contains("-") || this.contains("_")) {
@@ -155,6 +158,24 @@ fun parseShareLinks(text: String): List<AbstractBean> {
             runCatching {
                 entities.add(parseSSH(this))
             }
+        } else { // Matsuri plugins
+            MatsuriPluginManager.getProtocols().forEach { obj ->
+                obj.protocolConfig.getStringArray("links")?.forEach { any ->
+                    if (startsWith(any)) {
+                        runOnDefaultDispatcher {
+                            runCatching {
+                                entities.add(
+                                    parseShareLink(
+                                        obj.plgId, obj.protocolId, this@parseLink
+                                    )
+                                )
+                            }.onFailure {
+                                Logs.w(it)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -164,7 +185,9 @@ fun parseShareLinks(text: String): List<AbstractBean> {
     for (link in linksByLine) {
         link.parseLink(entitiesByLine)
     }
-
+    runOnDefaultDispatcher {
+        MatsuriJSInterface.Default.destroyAllJsi()
+    }
     return if (entities.size > entitiesByLine.size) entities else entitiesByLine
 }
 

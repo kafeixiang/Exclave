@@ -108,6 +108,8 @@ object Key {
     const val PROVIDER_TUIC5 = "providerTuic5"
     const val PROVIDER_JUICITY = "providerJuicity"
     const val PROVIDER_ROOT_CA = "providerRootCA"
+    const val MATSURI_PLUGINS = "matsuriPlugins"
+    const val MATSURI_PLUGIN_STORAGE = "matsuriPluginStorage"
 
     const val INTERRUPT_REUSED_CONNECTIONS = "interruptReusedConnections"
 

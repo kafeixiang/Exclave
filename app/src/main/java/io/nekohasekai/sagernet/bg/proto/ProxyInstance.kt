@@ -44,7 +44,7 @@ class ProxyInstance(profile: ProxyEntity, val service: BaseService.Interface) : 
 
     lateinit var observatoryJob: Job
 
-    override fun init(isVpn: Boolean) {
+    override suspend fun init(isVpn: Boolean) {
         super.init(isVpn)
 
         if (DataStore.logLevel == LogLevel.DEBUG) {

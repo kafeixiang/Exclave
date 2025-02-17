@@ -102,6 +102,9 @@
                             <item
                                 android:id="@+id/action_new_shadowtls"
                                 android:title="@string/action_shadowtls" />
+                            <item
+                                android:id="@+id/action_new_matsuri"
+                                android:title="@string/matsuri_plugins" />
                         </menu>
                     </item>
                 </menu>

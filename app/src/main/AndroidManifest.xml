@@ -219,6 +219,8 @@
         <activity
             android:name="io.nekohasekai.sagernet.ui.profile.BalancerSettingsActivity" />
         <activity
+            android:name="io.nekohasekai.sagernet.ui.profile.MatsuriSettingsActivity" />
+        <activity
             android:name="io.nekohasekai.sagernet.ui.GroupSettingsActivity" />
         <activity
             android:name="io.nekohasekai.sagernet.ui.RouteSettingsActivity" />
@@ -228,6 +230,8 @@
             android:name="io.nekohasekai.sagernet.ui.AssetEditActivity" />
         <activity
             android:name="io.nekohasekai.sagernet.ui.AppListActivity" />
+        <activity
+            android:name="io.nekohasekai.sagernet.ui.MatsuriPluginListActivity" />
         <activity
             android:name="com.github.shadowsocks.plugin.v2ray.ConfigActivity" />
         <activity

@@ -30,7 +30,7 @@ class ExternalInstance(
     profile: ProxyEntity, val port: Int
 ) : V2RayInstance(profile) {
 
-    override fun init(isVpn: Boolean) {
+    override suspend fun init(isVpn: Boolean) {
         super.init(isVpn)
 
         if (DataStore.logLevel == LogLevel.DEBUG) {

@@ -409,6 +409,7 @@
     <string name="ssh_private_key_passphrase">Private key passphrase</string>
     <string name="menu_tools">Tools</string>
     <string name="menu_log">Logs</string>
+    <string name="matsuri_plugins" translatable="false">Matsuri plugins</string>
     <string name="clear_logcat">Clear Logcat</string>
     <string name="wireguard_local_address">Local address</string>
     <string name="wireguard_public_key">Peer public key</string>

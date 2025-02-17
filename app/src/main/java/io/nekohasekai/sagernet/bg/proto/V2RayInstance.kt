@@ -52,6 +52,8 @@ import io.nekohasekai.sagernet.fmt.naive.NaiveBean
 import io.nekohasekai.sagernet.fmt.naive.buildNaiveConfig
 import io.nekohasekai.sagernet.fmt.shadowquic.ShadowQUICBean
 import io.nekohasekai.sagernet.fmt.shadowquic.buildshadowQUICConfig
+import io.nekohasekai.sagernet.fmt.matsuri.MatsuriBean
+import io.nekohasekai.sagernet.fmt.matsuri.updateAllConfig
 import io.nekohasekai.sagernet.fmt.trojan_go.TrojanGoBean
 import io.nekohasekai.sagernet.fmt.trojan_go.buildTrojanGoConfig
 import io.nekohasekai.sagernet.fmt.tuic.TuicBean
@@ -59,6 +61,8 @@ import io.nekohasekai.sagernet.fmt.tuic.buildTuicConfig
 import io.nekohasekai.sagernet.fmt.tuic5.Tuic5Bean
 import io.nekohasekai.sagernet.fmt.tuic5.buildTuic5Config
 import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
+import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
 import io.nekohasekai.sagernet.plugin.PluginManager
 import kotlinx.coroutines.*
 import libcore.V2RayInstance
@@ -92,11 +96,12 @@ abstract class V2RayInstance(
         config = buildV2RayConfig(profile)
     }
 
-    protected open fun loadConfig() {
+    protected open suspend fun loadConfig() {
+        MatsuriJSInterface.Default.destroyAllJsi()
         v2rayPoint.loadConfig(config.config)
     }
 
-    open fun init(isVpn: Boolean) {
+    open suspend fun init(isVpn: Boolean) {
         v2rayPoint = V2RayInstance()
         buildConfig()
         for ((_, chain) in config.index) {
@@ -177,6 +182,15 @@ abstract class V2RayInstance(
                     is ShadowQUICBean -> {
                         initPlugin("shadowquic-plugin")
                         pluginConfigs[port] = profile.type to bean.buildshadowQUICConfig(port)
+                    }
+                    is MatsuriBean -> {
+                        // check if plugin binary can be loaded
+                        initPlugin(bean.plgId)
+                        // build config and check if succeed
+                        bean.updateAllConfig(port)
+                        if (bean.allConfig == null) {
+                            throw MatsuriPluginManager.PluginInternalException(bean.protocolId)
+                        }
                     }
                     is ConfigBean -> {
                         when (bean.type) {
@@ -442,6 +456,42 @@ abstract class V2RayInstance(
                             configFile.absolutePath,
                         )
                         processes.start(commands, env)
+                    }
+                    bean is MatsuriBean -> {
+                        // config built from JS
+                        val nekoRunConfigs = bean.allConfig?.getJsonArray("nekoRunConfigs")
+                        val configs = mutableMapOf<String, String>()
+
+                        nekoRunConfigs?.forEach { any ->
+                            val obj = any.asJsonObject
+
+                            val name = obj.getString("name") ?: ""
+                            val configFile = File(SagerNet.application.cacheDir, name)
+                            configFile.parentFile?.mkdirs()
+                            val content = obj.getString("content") ?: ""
+                            configFile.writeText(content)
+
+                            cacheFiles.add(configFile)
+                            configs[name] = configFile.absolutePath
+
+                            Logs.d(name + "\n\n" + content)
+                        }
+
+                        val nekoCommands = bean.allConfig?.getJsonArray("nekoCommands")
+                        val commands = mutableListOf<String>()
+
+                        nekoCommands?.forEach { any ->
+                            val anyStr = any.asString
+                            if (configs.containsKey(anyStr)) {
+                                commands.add(configs[anyStr]!!)
+                            } else if (anyStr == "%exe%") {
+                                commands.add(initPlugin(bean.plgId).path)
+                            } else {
+                                commands.add(anyStr)
+                            }
+                        }
+
+                        processes.start(commands)
                     }
                 }
             }

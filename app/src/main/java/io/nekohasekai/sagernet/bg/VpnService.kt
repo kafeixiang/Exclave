@@ -36,6 +36,8 @@ import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.database.StatsEntity
 import io.nekohasekai.sagernet.fmt.LOCALHOST
+import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean
+import io.nekohasekai.sagernet.fmt.matsuri.needBypassRootUid
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.getBooleanProperty
 import io.nekohasekai.sagernet.ktx.listByLineOrComma
@@ -241,7 +243,8 @@ class VpnService : BaseVpnService(),
         val tunImplementation = DataStore.tunImplementation
         val needIncludeSelf = tunImplementation == TunImplementation.SYSTEM /*data.proxy!!.config.index.any { !it.isBalancer && it.chain.size > 1 }*/
         val needBypassRootUID = data.proxy!!.config.outboundTagsAll.values.any {
-            it.requireBean().needBypassRootUID()
+            it.requireBean().needBypassRootUID()||
+                    it.matsuriBean?.needBypassRootUid() == true
         }
         if (proxyApps || needBypassRootUID) {
             var bypass = DataStore.bypass
@@ -340,7 +343,8 @@ class VpnService : BaseVpnService(),
         }
 
         if (tunImplementation == TunImplementation.SYSTEM &&
-            data.proxy!!.config.outboundTagsAll.values.any { it.requireBean().needProtect() }
+            data.proxy!!.config.outboundTagsAll.values.any { it.requireBean().needProtect() ||
+                    it.matsuriBean != null }
             ) {
             config.protectPath = SagerNet.deviceStorage.noBackupFilesDir.toString() + "/protect_path"
         }

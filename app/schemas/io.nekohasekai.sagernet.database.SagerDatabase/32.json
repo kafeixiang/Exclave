@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 31,
-    "identityHash": "6b98cde25c10eddc02d7b3c842ce209f",
+    "version": 32,
+    "identityHash": "c81d489e7c1630a276ad2b7ca2c12dc0",
     "entities": [
       {
         "tableName": "proxy_groups",
@@ -72,7 +72,7 @@
       },
       {
         "tableName": "proxy_entities",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `groupId` INTEGER NOT NULL, `type` INTEGER NOT NULL, `userOrder` INTEGER NOT NULL, `tx` INTEGER NOT NULL, `rx` INTEGER NOT NULL, `status` INTEGER NOT NULL, `ping` INTEGER NOT NULL, `uuid` TEXT NOT NULL, `error` TEXT, `socksBean` BLOB, `httpBean` BLOB, `ssBean` BLOB, `ssrBean` BLOB, `vmessBean` BLOB, `vlessBean` BLOB, `trojanBean` BLOB, `trojanGoBean` BLOB, `naiveBean` BLOB, `brookBean` BLOB, `hysteriaBean` BLOB, `hysteria2Bean` BLOB, `mieruBean` BLOB, `tuicBean` BLOB, `tuic5Bean` BLOB, `shadowtlsBean` BLOB, `sshBean` BLOB, `wgBean` BLOB, `juicityBean` BLOB, `http3Bean` BLOB, `anytlsBean` BLOB, `shadowquicBean` BLOB, `configBean` BLOB, `chainBean` BLOB, `balancerBean` BLOB, `matsuriBean` BLOB)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `groupId` INTEGER NOT NULL, `type` INTEGER NOT NULL, `userOrder` INTEGER NOT NULL, `tx` INTEGER NOT NULL, `rx` INTEGER NOT NULL, `status` INTEGER NOT NULL, `ping` INTEGER NOT NULL, `uuid` TEXT, `error` TEXT, `socksBean` BLOB, `httpBean` BLOB, `ssBean` BLOB, `ssrBean` BLOB, `vmessBean` BLOB, `vlessBean` BLOB, `trojanBean` BLOB, `trojanGoBean` BLOB, `naiveBean` BLOB, `brookBean` BLOB, `hysteriaBean` BLOB, `hysteria2Bean` BLOB, `mieruBean` BLOB, `tuicBean` BLOB, `tuic5Bean` BLOB, `shadowtlsBean` BLOB, `sshBean` BLOB, `wgBean` BLOB, `juicityBean` BLOB, `http3Bean` BLOB, `anytlsBean` BLOB, `shadowquicBean` BLOB, `configBean` BLOB, `chainBean` BLOB, `balancerBean` BLOB, `matsuriBean` BLOB)",
         "fields": [
           {
             "fieldPath": "id",
@@ -125,8 +125,7 @@
           {
             "fieldPath": "uuid",
             "columnName": "uuid",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "error",
@@ -254,14 +253,13 @@
             "affinity": "BLOB"
           },
           {
-            "fieldPath": "matsuriBean",
-            "columnName": "matsuriBean",
-            "affinity": "BLOB",
-            "notNull": false
-          },
-          {
             "fieldPath": "balancerBean",
             "columnName": "balancerBean",
+            "affinity": "BLOB"
+          },
+          {
+            "fieldPath": "matsuriBean",
+            "columnName": "matsuriBean",
             "affinity": "BLOB"
           }
         ],
@@ -497,7 +495,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6b98cde25c10eddc02d7b3c842ce209f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c81d489e7c1630a276ad2b7ca2c12dc0')"
     ]
   }
 }

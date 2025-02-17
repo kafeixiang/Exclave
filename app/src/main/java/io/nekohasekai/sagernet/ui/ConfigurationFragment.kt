@@ -31,6 +31,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
@@ -55,19 +56,24 @@ import io.nekohasekai.sagernet.aidl.TrafficStats
 import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.bg.test.V2RayTestInstance
 import io.nekohasekai.sagernet.database.*
+import io.nekohasekai.sagernet.databinding.LayoutAppsItemBinding
 import io.nekohasekai.sagernet.databinding.LayoutProfileBinding
 import io.nekohasekai.sagernet.databinding.LayoutProfileListBinding
 import io.nekohasekai.sagernet.databinding.LayoutProgressListBinding
 import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.fmt.exportBackup
+import io.nekohasekai.sagernet.fmt.matsuri.MatsuriBean
 import io.nekohasekai.sagernet.fmt.v2ray.StandardV2RayBean
 import io.nekohasekai.sagernet.fmt.wireguard.toConf
 import io.nekohasekai.sagernet.group.GroupUpdater
 import io.nekohasekai.sagernet.group.Protocols
 import io.nekohasekai.sagernet.group.RawUpdater
 import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
+import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
 import io.nekohasekai.sagernet.plugin.PluginManager
 import io.nekohasekai.sagernet.ui.profile.*
+import io.nekohasekai.sagernet.utils.PackageCache
 import io.nekohasekai.sagernet.widget.QRCodeDialog
 import io.nekohasekai.sagernet.widget.UndoSnackbarManager
 import kotlinx.coroutines.*
@@ -481,6 +487,35 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
             R.id.action_new_http3 -> {
                 startActivity(Intent(requireActivity(), Http3SettingsActivity::class.java))
+            }
+            R.id.action_new_matsuri -> {
+                val context = requireContext()
+                lateinit var dialog: AlertDialog
+                val linearLayout = LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    MatsuriPluginManager.getProtocols().forEach { obj ->
+                        LayoutAppsItemBinding.inflate(layoutInflater, this, true).apply {
+                            itemcheck.isGone = true
+                            itemicon.setImageDrawable(
+                                PackageCache.installedApps[obj.plgId]?.loadIcon(
+                                    context.packageManager
+                                )
+                            )
+                            title.text = obj.protocolId
+                            desc.text = obj.plgId
+                            appitem.setOnClickListener {
+                                dialog.dismiss()
+                                val intent = Intent(context, MatsuriSettingsActivity::class.java)
+                                intent.putExtra("plgId", obj.plgId)
+                                intent.putExtra("protocolId", obj.protocolId)
+                                startActivity(intent)
+                            }
+                        }
+                    }
+                }
+                dialog = MaterialAlertDialogBuilder(context).setTitle(R.string.matsuri_plugins)
+                    .setView(linearLayout)
+                    .show()
             }
             R.id.action_new_anytls -> {
                 startActivity(Intent(requireActivity(), AnyTLSSettingsActivity::class.java))
@@ -997,6 +1032,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             mainJob.cancel()
             runOnDefaultDispatcher {
                 GroupManager.postReload(DataStore.currentGroupId())
+                MatsuriJSInterface.Default.destroyAllJsi()
             }
         }
     }
