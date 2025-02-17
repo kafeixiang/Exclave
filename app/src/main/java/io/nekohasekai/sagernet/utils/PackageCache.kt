@@ -33,6 +33,7 @@ import kotlinx.coroutines.sync.withLock
 object PackageCache {
 
     lateinit var installedPackages: Map<String, PackageInfo>
+    lateinit var installedPluginPackages: Map<String, PackageInfo>
     lateinit var installedApps: Map<String, ApplicationInfo>
     lateinit var packageMap: Map<String, Int>
     val uidMap = HashMap<Int, HashSet<String>>()
@@ -57,6 +58,13 @@ object PackageCache {
                 }
             }
             .associateBy { it.packageName }
+
+        installedPluginPackages = app.packageManager.getInstalledPackages(
+            PackageManager.GET_PROVIDERS
+                    or PackageManager.GET_META_DATA
+        ).filter {
+            it.providers?.get(0)?.authority?.startsWith("moe.matsuri.plugin.") == true
+        }.associateBy { it.packageName }
 
         val installed = app.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
         installedApps = installed.associateBy { it.packageName }

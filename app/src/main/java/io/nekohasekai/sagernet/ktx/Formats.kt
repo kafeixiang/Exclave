@@ -30,6 +30,7 @@ import io.nekohasekai.sagernet.fmt.http3.parseHttp3
 import io.nekohasekai.sagernet.fmt.hysteria.parseHysteria
 import io.nekohasekai.sagernet.fmt.hysteria2.parseHysteria2
 import io.nekohasekai.sagernet.fmt.juicity.parseJuicity
+import io.nekohasekai.sagernet.fmt.matsuri.parseShareLink
 import io.nekohasekai.sagernet.fmt.mieru.parseMieru
 import io.nekohasekai.sagernet.fmt.naive.parseNaive
 import io.nekohasekai.sagernet.fmt.parseBackupLink
@@ -40,6 +41,8 @@ import io.nekohasekai.sagernet.fmt.trojan_go.parseTrojanGo
 import io.nekohasekai.sagernet.fmt.tuic5.parseTuic
 import io.nekohasekai.sagernet.fmt.v2ray.parseV2Ray
 import io.nekohasekai.sagernet.fmt.wireguard.parseV2rayNWireGuard
+import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
+import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
 
 fun formatObject(obj: Any): String {
     return gson.toJson(obj).let { JSONObject(it).toStringPretty() }
@@ -178,6 +181,24 @@ fun parseProxies(text: String): List<AbstractBean> {
             }.onFailure {
                 Logs.w(it)
             }
+        } else { // Matsuri plugins
+            MatsuriPluginManager.getProtocols().forEach { obj ->
+                obj.protocolConfig.getJSONArray("links")?.forEach { any ->
+                    if (any is String && startsWith(any)) {
+                        runOnDefaultDispatcher {
+                            runCatching {
+                                entities.add(
+                                    parseShareLink(
+                                        obj.plgId, obj.protocolId, this@parseLink
+                                    )
+                                )
+                            }.onFailure {
+                                Logs.w(it)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -196,6 +217,9 @@ fun parseProxies(text: String): List<AbstractBean> {
                 return@test
             }
         }
+    }
+    runOnDefaultDispatcher {
+        MatsuriJSInterface.Default.destroyAllJsi()
     }
     return if (entities.size > entitiesByLine.size) entities else entitiesByLine
 }

@@ -49,6 +49,10 @@ import io.nekohasekai.sagernet.fmt.internal.ConfigBean
 import io.nekohasekai.sagernet.fmt.juicity.JuicityBean
 import io.nekohasekai.sagernet.fmt.juicity.buildJuicityConfig
 import io.nekohasekai.sagernet.fmt.juicity.toUri
+import io.nekohasekai.sagernet.fmt.matsuri.MatsuriBean
+import io.nekohasekai.sagernet.fmt.matsuri.canShare
+import io.nekohasekai.sagernet.fmt.matsuri.haveStandardLink
+import io.nekohasekai.sagernet.fmt.matsuri.toUri
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
 import io.nekohasekai.sagernet.fmt.mieru.buildMieruConfig
 import io.nekohasekai.sagernet.fmt.mieru.toUri
@@ -119,7 +123,8 @@ data class ProxyEntity(
     var http3Bean: Http3Bean? = null,
     var configBean: ConfigBean? = null,
     var chainBean: ChainBean? = null,
-    var balancerBean: BalancerBean? = null
+    var balancerBean: BalancerBean? = null,
+    var matsuriBean: MatsuriBean? = null,
 ) : Serializable() {
 
     companion object {
@@ -148,11 +153,11 @@ data class ProxyEntity(
         const val TYPE_BALANCER = 14
         const val TYPE_CONFIG = 13
 
+        const val TYPE_MATSURI = 900
+
         val chainName by lazy { app.getString(R.string.proxy_chain) }
         val configName by lazy { app.getString(R.string.custom_config) }
         val balancerName by lazy { app.getString(R.string.balancer) }
-
-        private val placeHolderBean = SOCKSBean().applyDefaultValues()
 
         @JvmField
         val CREATOR = object : CREATOR<ProxyEntity>() {
@@ -240,10 +245,10 @@ data class ProxyEntity(
             TYPE_SHADOWTLS -> shadowtlsBean = KryoConverters.shadowtlsDeserialize(byteArray)
             TYPE_JUICITY -> juicityBean = KryoConverters.juicityDeserialize(byteArray)
             TYPE_HTTP3 -> http3Bean = KryoConverters.http3Deserialize(byteArray)
-
             TYPE_CONFIG -> configBean = KryoConverters.configDeserialize(byteArray)
             TYPE_CHAIN -> chainBean = KryoConverters.chainDeserialize(byteArray)
             TYPE_BALANCER -> balancerBean = KryoConverters.balancerBeanDeserialize(byteArray)
+            TYPE_MATSURI -> matsuriBean = KryoConverters.matsuriDeserialize(byteArray)
         }
     }
 
@@ -268,10 +273,10 @@ data class ProxyEntity(
         TYPE_SHADOWTLS -> "ShadowTLS"
         TYPE_JUICITY -> "Juicity"
         TYPE_HTTP3 -> "HTTP3"
-
         TYPE_CHAIN -> chainName
         TYPE_CONFIG -> configName
         TYPE_BALANCER -> balancerName
+        TYPE_MATSURI -> matsuriBean!!.displayType()
         else -> "Invalid"
     }
 
@@ -304,6 +309,8 @@ data class ProxyEntity(
             TYPE_CONFIG -> configBean
             TYPE_CHAIN -> chainBean
             TYPE_BALANCER -> balancerBean
+
+            TYPE_MATSURI -> matsuriBean
             else -> null
         } ?: SOCKSBean().applyDefaultValues()
     }
@@ -312,6 +319,7 @@ data class ProxyEntity(
         return when (type) {
             TYPE_CHAIN -> false
             TYPE_BALANCER -> false
+            TYPE_MATSURI -> matsuriBean!!.canShare()
             else -> true
         }
     }
@@ -320,6 +328,7 @@ data class ProxyEntity(
         return when (type) {
             TYPE_SSH, TYPE_WG, TYPE_SHADOWTLS -> false
             TYPE_CONFIG, TYPE_CHAIN, TYPE_BALANCER -> false
+            TYPE_MATSURI -> matsuriBean!!.haveStandardLink()
             else -> true
         }
     }
@@ -343,6 +352,7 @@ data class ProxyEntity(
             is Tuic5Bean -> toUri()
             is MieruBean -> toUri()
             is Http3Bean -> toUri()
+            is MatsuriBean -> if (this.haveStandardLink()) toUri() else null
             else -> null
         }
     }
@@ -437,7 +447,7 @@ data class ProxyEntity(
             TYPE_TUIC -> true
             TYPE_SHADOWTLS -> true
             TYPE_JUICITY -> true
-
+            TYPE_MATSURI -> true
             else -> false
         }
     }
@@ -467,6 +477,8 @@ data class ProxyEntity(
         configBean = null
         chainBean = null
         balancerBean = null
+
+        matsuriBean = null
 
         when (bean) {
             is SOCKSBean -> {
@@ -562,6 +574,11 @@ data class ProxyEntity(
                 type = TYPE_BALANCER
                 balancerBean = bean
             }
+
+            is MatsuriBean -> {
+                type = TYPE_MATSURI
+                matsuriBean = bean
+            }
             else -> error("Undefined type $type")
         }
         return this
@@ -589,10 +606,10 @@ data class ProxyEntity(
             TYPE_SHADOWTLS -> ShadowTLSSettingsActivity::class.java
             TYPE_JUICITY -> JuicitySettingsActivity::class.java
             TYPE_HTTP3 -> Http3SettingsActivity::class.java
-
             TYPE_CONFIG -> ConfigSettingsActivity::class.java
             TYPE_CHAIN -> ChainSettingsActivity::class.java
             TYPE_BALANCER -> BalancerSettingsActivity::class.java
+            TYPE_MATSURI -> MatsuriSettingsActivity::class.java
             else -> return null
         }
         return Intent(

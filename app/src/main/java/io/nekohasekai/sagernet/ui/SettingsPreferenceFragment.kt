@@ -23,6 +23,9 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.component1
+import androidx.activity.result.component2
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -39,6 +42,7 @@ import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.widget.ColorPickerPreference
 import io.nekohasekai.sagernet.widget.LinkOrContentPreference
+import io.nekohasekai.sagernet.widget.PluginListPreference
 import kotlinx.coroutines.delay
 import libcore.Libcore
 import java.io.File
@@ -46,6 +50,7 @@ import java.io.File
 class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
     private lateinit var isProxyApps: SwitchPreference
+    private lateinit var matsuriPlugins: PluginListPreference
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -74,6 +79,22 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         preferenceManager.preferenceDataStore = DataStore.configurationStore
         DataStore.initGlobal()
         addPreferencesFromResource(R.xml.global_preferences)
+
+        matsuriPlugins = findPreference(Key.MATSURI_PLUGINS)!!
+        val selectAppList = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { (_, _) ->
+            matsuriPlugins.postUpdate()
+        }
+        matsuriPlugins.setOnPreferenceClickListener {
+            selectAppList.launch(
+                Intent(
+                    context, MatsuriPluginListActivity::class.java
+                ).apply { putExtra(Key.MATSURI_PLUGINS, true) }
+            )
+            true
+        }
+
         val appTheme = findPreference<ColorPickerPreference>(Key.APP_THEME)!!
         appTheme.setOnPreferenceChangeListener { _, newTheme ->
             if (SagerNet.started) {

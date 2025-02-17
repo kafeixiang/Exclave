@@ -39,6 +39,7 @@ import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.database.StatsEntity
 import io.nekohasekai.sagernet.fmt.LOCALHOST
 import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean
+import io.nekohasekai.sagernet.fmt.matsuri.needBypassRootUid
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.listByLineOrComma
 import io.nekohasekai.sagernet.ui.VpnRequestActivity
@@ -211,7 +212,8 @@ class VpnService : BaseVpnService(),
         val tunImplementation = DataStore.tunImplementation
         val needIncludeSelf = tunImplementation == TunImplementation.SYSTEM /*data.proxy!!.config.index.any { !it.isBalancer && it.chain.size > 1 }*/
         val needBypassRootUid = data.proxy!!.config.outboundTagsAll.values.any {
-            it.hysteriaBean?.protocol == HysteriaBean.PROTOCOL_FAKETCP
+            it.hysteriaBean?.protocol == HysteriaBean.PROTOCOL_FAKETCP ||
+                    it.matsuriBean?.needBypassRootUid() == true
         }
         if (proxyApps || needBypassRootUid) {
             var bypass = DataStore.bypass
@@ -305,7 +307,8 @@ class VpnService : BaseVpnService(),
         }
 
         val needProtectServer = tunImplementation == TunImplementation.SYSTEM && data.proxy!!.config.outboundTagsAll.values.any {
-            it.hysteria2Bean?.canMapping() == false || it.hysteriaBean?.canMapping() == false
+            it.hysteria2Bean?.canMapping() == false || it.hysteriaBean?.canMapping() == false ||
+                    it.matsuriBean != null
         }
         if (needProtectServer) {
             config.protectPath = SagerNet.deviceStorage.noBackupFilesDir.toString() + "/protect_path" // FIXME: incorrect working dir

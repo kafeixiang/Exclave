@@ -40,6 +40,7 @@ import io.nekohasekai.sagernet.fmt.internal.BalancerBean;
 import io.nekohasekai.sagernet.fmt.internal.ChainBean;
 import io.nekohasekai.sagernet.fmt.internal.ConfigBean;
 import io.nekohasekai.sagernet.fmt.juicity.JuicityBean;
+import io.nekohasekai.sagernet.fmt.matsuri.MatsuriBean;
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean;
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean;
 import io.nekohasekai.sagernet.fmt.shadowsocks.ShadowsocksBean;
@@ -221,6 +222,12 @@ public class KryoConverters {
     public static BalancerBean balancerBeanDeserialize(byte[] bytes) {
         if (ArrayUtil.isEmpty(bytes)) return null;
         return deserialize(new BalancerBean(), bytes);
+    }
+
+    @TypeConverter
+    public static MatsuriBean matsuriDeserialize(byte[] bytes) {
+        if (ArrayUtil.isEmpty(bytes)) return null;
+        return deserialize(new MatsuriBean(), bytes);
     }
 
     @TypeConverter

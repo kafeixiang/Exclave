@@ -218,6 +218,9 @@
             app:key="providerTuic5"
             app:title="@string/tuic_v5_provider"
             app:useSimpleSummaryProvider="true" />
+        <io.nekohasekai.sagernet.widget.PluginListPreference
+            app:key="matsuriPlugins"
+            app:title="@string/matsuri_plugins" />
         <com.takisoft.preferencex.SimpleMenuPreference
             android:icon="@drawable/ic_baseline_push_pin_24"
             app:defaultValue="1"
