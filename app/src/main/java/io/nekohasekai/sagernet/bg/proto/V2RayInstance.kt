@@ -26,6 +26,7 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import cn.hutool.json.JSONObject
 import io.nekohasekai.sagernet.LogLevel
 import io.nekohasekai.sagernet.RootCAProvider
 import io.nekohasekai.sagernet.SagerNet
@@ -51,6 +52,8 @@ import io.nekohasekai.sagernet.fmt.mieru.MieruBean
 import io.nekohasekai.sagernet.fmt.mieru.buildMieruConfig
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean
 import io.nekohasekai.sagernet.fmt.naive.buildNaiveConfig
+import io.nekohasekai.sagernet.fmt.matsuri.MatsuriBean
+import io.nekohasekai.sagernet.fmt.matsuri.updateAllConfig
 import io.nekohasekai.sagernet.fmt.trojan_go.TrojanGoBean
 import io.nekohasekai.sagernet.fmt.trojan_go.buildTrojanGoConfig
 import io.nekohasekai.sagernet.fmt.tuic.TuicBean
@@ -59,6 +62,8 @@ import io.nekohasekai.sagernet.fmt.tuic5.Tuic5Bean
 import io.nekohasekai.sagernet.fmt.tuic5.buildTuic5Config
 import io.nekohasekai.sagernet.fmt.shadowtls.ShadowTLSBean
 import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
+import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
 import io.nekohasekai.sagernet.plugin.PluginManager
 import kotlinx.coroutines.*
 import libcore.V2RayInstance
@@ -92,6 +97,8 @@ abstract class V2RayInstance(
         config = buildV2RayConfig(profile)
     }
 
+    protected open suspend fun loadConfig() {
+        MatsuriJSInterface.Default.destroyAllJsi()
     protected open fun loadConfig() {
         v2rayPoint.loadConfig(config.config)
     }
@@ -171,6 +178,15 @@ abstract class V2RayInstance(
                     is JuicityBean -> {
                         initPlugin("juicity-plugin")
                         pluginConfigs[port] = profile.type to bean.buildJuicityConfig(port)
+                    }
+                    is MatsuriBean -> {
+                        // check if plugin binary can be loaded
+                        initPlugin(bean.plgId)
+                        // build config and check if succeed
+                        bean.updateAllConfig(port)
+                        if (bean.allConfig == null) {
+                            throw MatsuriPluginManager.PluginInternalException(bean.protocolId)
+                        }
                     }
                     is ConfigBean -> {
                         when (bean.type) {
@@ -433,6 +449,44 @@ abstract class V2RayInstance(
                         )
                         
                         processes.start(commands, env)
+                        bean is MatsuriBean -> {
+                            // config built from JS
+                            val nekoRunConfigs = bean.allConfig.getJSONArray("nekoRunConfigs")
+                            val configs = mutableMapOf<String, String>()
+
+                            nekoRunConfigs?.forEach { any ->
+                                any as JSONObject
+
+                                val name = any.getString("name") ?: ""
+                                val configFile = File(SagerNet.application.cacheDir, name)
+                                configFile.parentFile?.mkdirs()
+                                val content = any.getString("content") ?: ""
+                                configFile.writeText(content)
+
+                                cacheFiles.add(configFile)
+                                configs[name] = configFile.absolutePath
+
+                                Logs.d(name + "\n\n" + content)
+                            }
+
+                            val nekoCommands = bean.allConfig.getJSONArray("nekoCommands")
+                            val commands = mutableListOf<String>()
+
+                            nekoCommands.forEach { any ->
+                                if (any is String) {
+                                    if (configs.containsKey(any)) {
+                                        commands.add(configs[any]!!)
+                                    } else if (any == "%exe%") {
+                                        commands.add(initPlugin(bean.plgId).path)
+                                    } else {
+                                        commands.add(any)
+                                    }
+                                }
+                            }
+
+                            processes.start(commands)
+                        }
+                    }
                     }
                 }
             }
