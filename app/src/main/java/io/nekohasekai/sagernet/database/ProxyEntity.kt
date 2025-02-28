@@ -324,7 +324,7 @@ data class ProxyEntity(
 
     fun hasShareLink(): Boolean {
         return when (type) {
-            TYPE_SSH, TYPE_WG, TYPE_SHADOWTLS, TYPE_ANYTLS -> false
+            TYPE_SSH, TYPE_WG, TYPE_SHADOWTLS -> false
             TYPE_CONFIG, TYPE_CHAIN, TYPE_BALANCER -> false
             else -> true
         }
