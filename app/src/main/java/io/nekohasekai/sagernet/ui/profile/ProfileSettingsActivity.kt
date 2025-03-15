@@ -26,7 +26,7 @@ import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.activity.addCallback
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
@@ -47,6 +47,7 @@ import io.nekohasekai.sagernet.database.ProfileManager
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.database.preference.OnPreferenceDataStoreChangeListener
 import io.nekohasekai.sagernet.fmt.AbstractBean
+import io.nekohasekai.sagernet.ktx.FixedLinearLayoutManager
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.applyDefaultValues
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
@@ -73,6 +74,14 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
             setNegativeButton(android.R.string.cancel) { _, _ ->
                 requireActivity().finish()
             }
+        }
+    }
+
+    val callback = object : OnBackPressedCallback(enabled = false) {
+        override fun handleOnBackPressed() {
+            UnsavedChangesDialogFragment().apply {
+                key()
+            }.show(supportFragmentManager, null)
         }
     }
 
@@ -120,18 +129,7 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings)) { v, insets ->
-            val bars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars()
-                        or WindowInsetsCompat.Type.displayCutout()
-            )
-            v.updatePadding(
-                left = bars.left,
-                right = bars.right,
-                bottom = bars.bottom,
-            )
-            WindowInsetsCompat.CONSUMED
-        }
+
         setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.apply {
             setTitle(R.string.profile_config)
@@ -171,14 +169,7 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
 
         }
 
-        onBackPressedDispatcher.addCallback {
-            if (DataStore.dirty) UnsavedChangesDialogFragment().apply {
-                key()
-            }.show(supportFragmentManager, null)
-            else {
-                finish()
-            }
-        }
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     open suspend fun saveAndExit() {
@@ -244,6 +235,7 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         if (key != Key.PROFILE_DIRTY) {
             DataStore.dirty = true
+            callback.isEnabled = true
         }
     }
 
@@ -276,6 +268,19 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+
+            ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
+                val bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+                            or WindowInsetsCompat.Type.displayCutout()
+                )
+                v.updatePadding(
+                    left = bars.left,
+                    right = bars.right,
+                    bottom = bars.bottom,
+                )
+                WindowInsetsCompat.CONSUMED
+            }
 
             activity?.apply {
                 viewCreated(view, savedInstanceState)

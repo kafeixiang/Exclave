@@ -26,6 +26,7 @@ import android.view.View
 import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -103,9 +104,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             val theme = Theme.getTheme(newTheme as Int)
             app.setTheme(theme)
             requireActivity().apply {
-                // FIXME
-                this.finish()
-                startActivity(intent)
+                ActivityCompat.recreate(this)
             }
             true
         }
@@ -114,9 +113,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             Theme.currentNightMode = (newTheme as String).toInt()
             Theme.applyNightTheme()
             requireActivity().apply {
-                // FIXME
-                this.finish()
-                startActivity(intent)
+                ActivityCompat.recreate(this)
             }
             true
         }
@@ -307,6 +304,14 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
+        val fabStyle = findPreference<SimpleMenuPreference>(Key.FAB_STYLE)!!
+        fabStyle.setOnPreferenceChangeListener { _, _ ->
+            requireActivity().apply {
+                this.finish()
+                startActivity(intent)
+            }
+            true
+        }
         val enableFragment = findPreference<SwitchPreference>(Key.ENABLE_FRAGMENT)!!
         val enableFragmentForDirect = findPreference<SwitchPreference>(Key.ENABLE_FRAGMENT_FOR_DIRECT)!!
         val fragmentLength = findPreference<EditTextPreference>(Key.FRAGMENT_LENGTH)!!

@@ -98,6 +98,7 @@ abstract class V2RayInstance(
 
     protected open suspend fun loadConfig() {
         MatsuriJSInterface.Default.destroyAllJsi()
+    protected open fun loadConfig() {
         v2rayPoint.loadConfig(config.config)
     }
 
@@ -447,6 +448,44 @@ abstract class V2RayInstance(
                         )
                         
                         processes.start(commands, env)
+                        bean is MatsuriBean -> {
+                            // config built from JS
+                            val nekoRunConfigs = bean.allConfig.getJSONArray("nekoRunConfigs")
+                            val configs = mutableMapOf<String, String>()
+
+                            nekoRunConfigs?.forEach { any ->
+                                any as JSONObject
+
+                                val name = any.getString("name") ?: ""
+                                val configFile = File(SagerNet.application.cacheDir, name)
+                                configFile.parentFile?.mkdirs()
+                                val content = any.getString("content") ?: ""
+                                configFile.writeText(content)
+
+                                cacheFiles.add(configFile)
+                                configs[name] = configFile.absolutePath
+
+                                Logs.d(name + "\n\n" + content)
+                            }
+
+                            val nekoCommands = bean.allConfig.getJSONArray("nekoCommands")
+                            val commands = mutableListOf<String>()
+
+                            nekoCommands.forEach { any ->
+                                if (any is String) {
+                                    if (configs.containsKey(any)) {
+                                        commands.add(configs[any]!!)
+                                    } else if (any == "%exe%") {
+                                        commands.add(initPlugin(bean.plgId).path)
+                                    } else {
+                                        commands.add(any)
+                                    }
+                                }
+                            }
+
+                            processes.start(commands)
+                        }
+                    }
                     }
                     bean is MatsuriBean -> {
                         // config built from JS

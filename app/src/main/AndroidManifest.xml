@@ -73,7 +73,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SagerNet.Start"
-        android:localeConfig="@xml/locales_config">
+        android:localeConfig="@xml/locales_config"
+        android:enableOnBackInvokedCallback="true">
         <meta-data
             android:name="android.app.shortcuts"
             android:resource="@xml/shortcuts" />
@@ -141,6 +142,7 @@
                 <data android:scheme="wireguard" />
                 <data android:scheme="mierus" />
                 <data android:scheme="quic" />
+                <data android:scheme="anytls" />
 
             </intent-filter>
 
@@ -192,6 +194,8 @@
             android:name="io.nekohasekai.sagernet.ui.profile.JuicitySettingsActivity" />
         <activity
             android:name="io.nekohasekai.sagernet.ui.profile.Http3SettingsActivity" />
+        <activity
+            android:name="io.nekohasekai.sagernet.ui.profile.AnyTLSSettingsActivity" />
         <activity
             android:name="io.nekohasekai.sagernet.ui.profile.ConfigSettingsActivity" />
         <activity
