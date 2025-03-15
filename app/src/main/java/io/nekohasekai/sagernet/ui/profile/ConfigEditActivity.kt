@@ -22,11 +22,14 @@ package io.nekohasekai.sagernet.ui.profile
 import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import cn.hutool.json.JSONObject
@@ -51,16 +54,23 @@ class ConfigEditActivity : ThemedActivity() {
     var config = ""
     var dirty = false
 
+    val callback = object : OnBackPressedCallback(enabled = false) {
+        override fun handleOnBackPressed() {
+            UnsavedChangesDialogFragment().apply {
+                key()
+            }.show(supportFragmentManager, null)
+        }
+    }
+
     class UnsavedChangesDialogFragment : AlertDialogFragment<Empty, Empty>() {
         override fun AlertDialog.Builder.prepare(listener: DialogInterface.OnClickListener) {
             setTitle(R.string.unsaved_changes_prompt)
-            setPositiveButton(R.string.yes) { _, _ ->
+            setPositiveButton(android.R.string.ok) { _, _ ->
                 (requireActivity() as ConfigEditActivity).saveAndExit()
             }
-            setNegativeButton(R.string.no) { _, _ ->
+            setNegativeButton(android.R.string.cancel) { _, _ ->
                 requireActivity().finish()
             }
-            setNeutralButton(android.R.string.cancel, null)
         }
     }
 
@@ -71,6 +81,9 @@ class ConfigEditActivity : ThemedActivity() {
 
         setContentView(binding.root)
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.toolbar)) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
@@ -110,6 +123,7 @@ class ConfigEditActivity : ThemedActivity() {
             if (!dirty) {
                 dirty = true
                 DataStore.dirty = true
+                callback.isEnabled = true
             }
         }
         binding.editor.setHorizontallyScrolling(true)
@@ -121,6 +135,8 @@ class ConfigEditActivity : ThemedActivity() {
                 binding.editor.setTextContent(config)
             }
         }
+
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     fun saveAndExit() {
@@ -135,12 +151,6 @@ class ConfigEditActivity : ThemedActivity() {
         DataStore.serverConfig = config
         finish()
     }
-
-    override fun onBackPressed() {
-        if (dirty) UnsavedChangesDialogFragment().apply { key() }
-            .show(supportFragmentManager, null) else super.onBackPressed()
-    }
-
 
     override fun onSupportNavigateUp(): Boolean {
         if (!super.onSupportNavigateUp()) finish()

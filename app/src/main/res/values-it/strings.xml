@@ -11,7 +11,6 @@
     <string name="no_proxies_found_in_clipboard">Nessun proxy trovato nella clipboard</string>
     <string name="no_proxies_found_in_subscription">Nessun proxy trovato nella sottoscrizione</string>
     <string name="list">Lista</string>
-    <string name="enable_log_sum">Per scopi di debug</string>
     <string name="circular_reference">Riferimento Circolare</string>
     <string name="clear_profiles">Cancella</string>
     <string name="action_export_file">Esporta in un file</string>
@@ -41,7 +40,6 @@
     <string name="plugin_untrusted">Attenzione: Questo plugin non sembra provenire da una fonte affidabile.</string>
     <string name="proxy_cat">Impostazioni del server</string>
     <string name="unsaved_changes_prompt">Modifiche non salvate. Vuoi salvare\?</string>
-    <string name="no">No</string>
     <string name="restart">Ricarica il servizio proxy per applicare le modifiche</string>
     <string name="license">Licenza</string>
     <string name="probe_interval">Intervallo Osservazione Balancer</string>
@@ -94,14 +92,12 @@
     <string name="cleartext_http_warning">Il traffico Cleartext HTTP non è sicuro</string>
     <string name="no_proxies_found">Nessun proxy trovato nel link</string>
     <string name="ss_cat">Impostazioni Shadowsocks</string>
-    <string name="yes">Sì</string>
     <string name="plugin_auto_connect_unlock_only">Questo plugin potrebbe non funzionare con Auto Connect</string>
     <string name="route_warn">Assicuratevi di aver letto la documentazione prima di aggiungere regole personalizzate, altrimenti potreste non essere in grado di connettervi a Internet.</string>
     <string name="lines">%d Linee</string>
     <string name="auto">Automatico</string>
     <string name="username">Nome Utente</string>
     <string name="enable_mux">Abilità Multiplexer</string>
-    <string name="enable_log">Attiva Log</string>
     <string name="ws_browser_forwarding_sum">Trasferisci i corrispondenti WebSockets tramite il browser.</string>
     <string name="add_profile_methods_manual_settings">Impostazioni manuali</string>
     <string name="balancer_strategy">Strategia</string>

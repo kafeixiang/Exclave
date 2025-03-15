@@ -8,6 +8,8 @@ export GOOS=android
 CURR="plugin/juicity"
 CURR_PATH="$PROJECT/$CURR"
 
-git submodule update --init "$CURR/*"
+ROOT="$CURR_PATH/src/main/jniLibs"
+OUTPUT="juicity"
+LIB_OUTPUT="lib$OUTPUT.so"
+
 cd $CURR_PATH/src/main/go/juicity
-go mod download -x

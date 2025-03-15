@@ -73,7 +73,7 @@
     <string name="enable_fakedns">Enable fake DNS</string>
     <string name="fakedns_message">May cause other applications to need to be restarted to reconnect to the network after the proxy is disconnected</string>
     <string name="hijack_dns">Hijack DNS</string>
-    <string name="hijack_dns_message">Hijack DNS in TUN instead of using DNS sniffer</string>
+    <string name="hijack_dns_message">Hijack DNS queries that are not sent to TUN DNS address with DNS sniffer</string>
     <string name="dns_hosts">Domain rewriting</string>
     <string name="port_local_dns">Local DNS port</string>
     <string name="require_transproxy">Enable transparent proxy inbound</string>
@@ -199,6 +199,8 @@
     <string name="action_tuic" translatable="false">TUIC</string>
     <string name="action_tuic5" translatable="false">TUIC v5</string>
     <string name="action_shadowtls" translatable="false">ShadowTLS</string>
+    <string name="action_http3" translatable="false">HTTP3</string>
+    <string name="action_anytls" translatable="false">AnyTLS</string>
     <string name="proxy_chain">Proxy chain</string>
     <string name="custom_config">Custom config</string>
     <string name="balancer">Balancer</string>
@@ -266,8 +268,6 @@
     <string name="proxy_cat">Server settings</string>
     <string name="ss_cat">Shadowsocks settings</string>
     <string name="unsaved_changes_prompt">Changes are not saved. Do you want to save?</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
     <string name="apply">Apply</string>
     <string name="restart">Reload proxy service to apply changes</string>
     <string name="license">License</string>
@@ -278,8 +278,6 @@
     <string name="enable">Enable</string>
     <string name="disable">Disable</string>
     <string name="auto">Auto</string>
-    <string name="enable_log">Enable log</string>
-    <string name="enable_log_sum">For debug purpose</string>
     <string name="list">List</string>
     <string name="random">Random</string>
     <string name="probe_interval">Balancer observation interval</string>
@@ -481,7 +479,6 @@
     <string name="shadowtls_v3">ShadowTLS v3</string>
     <string name="wireguard_reserved">Reserved</string>
     <string name="shadowsocks_2022_implementation">Shadowsocks 2022 implementation</string>
-    <string name="action_copy">Copy</string>
     <string name="action_open">Open</string>
     <string name="bootstrap_dns">Bootstrap DNS</string>
     <string name="use_local_dns_as_bootstrap_dns">Use system DNS as Bootstrap DNS</string>
@@ -553,4 +550,19 @@
     <string name="route_asset_name">Asset name</string>
     <string name="route_asset_url">Asset URL</string>
     <string name="route_asset_settings">Asset settings</string>
+    <string name="core">core</string>
+    <string name="cag_httpupgrade">HTTPUpgrade settings</string>
+    <string name="regular_expression_filter">Name exclusion (regular expression)</string>
+    <string name="root_ca_system_and_user">System and user</string>
+    <string name="brook_token" translatable="false">Token</string>
+    <string name="brook_client_hkdf_info" translatable="false">Client HKDF info</string>
+    <string name="brook_server_hkdf_info" translatable="false">Server HKDF info</string>
+    <string name="one_per_line">One per line.</string>
+    <string name="one_per_line_format">One per line. Format:\n%s</string>
+    <string name="edns_client_ip_sum">Please input an IP address. IPv4 uses a subnet of /24 and IPv6 uses a subnet of /96.</string>
+    <string name="bootstrap_dns_sum">If the address of direct DNS is a domain name and "resolve destination" is enabled, use bootstrap DNS to resolve it. Please input a DNS server with IP address or with "+local".</string>
+    <string name="more">More</string>
+    <string name="acquire_wake_lock">Acquire WakeLock</string>
+    <string name="log_level">Log level</string>
+    <string name="fab_style">Floating action button style</string>
 </resources>

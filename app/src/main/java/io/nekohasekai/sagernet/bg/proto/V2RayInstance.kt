@@ -26,9 +26,11 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import io.nekohasekai.sagernet.LogLevel
 import io.nekohasekai.sagernet.RootCAProvider
 import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.bg.AbstractInstance
+import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.bg.ExternalInstance
 import io.nekohasekai.sagernet.bg.GuardedProcessPool
 import io.nekohasekai.sagernet.database.DataStore
@@ -94,7 +96,7 @@ abstract class V2RayInstance(
         v2rayPoint.loadConfig(config.config)
     }
 
-    open fun init() {
+    open fun init(isVpn: Boolean) {
         v2rayPoint = V2RayInstance()
         buildConfig()
         for ((_, chain) in config.index) {
@@ -125,7 +127,7 @@ abstract class V2RayInstance(
                     }
                     is Hysteria2Bean -> {
                         initPlugin("hysteria2-plugin")
-                        pluginConfigs[port] = profile.type to bean.buildHysteria2Config(port) {
+                        pluginConfigs[port] = profile.type to bean.buildHysteria2Config(port, isVpn) {
                             File(
                                 app.noBackupFilesDir,
                                 "hysteria2_" + SystemClock.elapsedRealtime() + ".ca"
@@ -178,7 +180,7 @@ abstract class V2RayInstance(
                                 externalInstances[port] = ExternalInstance(
                                     profile, port
                                 ).apply {
-                                    init()
+                                    init(isVpn)
                                 }
                             }
                         }
@@ -192,20 +194,23 @@ abstract class V2RayInstance(
     @SuppressLint("SetJavaScriptEnabled")
     override fun launch() {
         val context = if (Build.VERSION.SDK_INT < 24 || SagerNet.user.isUserUnlocked) SagerNet.application else SagerNet.deviceStorage
-        val useSystemCACerts = DataStore.providerRootCA == RootCAProvider.SYSTEM
-        val rootCaPem by lazy {
-            (File(app.externalAssets, "mozilla_included.pem").takeIf { it.isFile }
-                ?: File(app.filesDir, "mozilla_included.pem")).canonicalPath
-        }
-
 
         for ((_, chain) in config.index) {
             chain.entries.forEachIndexed { _, (port, profile) ->
                 val bean = profile.requireBean()
                 val (_, config) = pluginConfigs[port] ?: (0 to "")
                 val env = mutableMapOf<String, String>()
-                if (!useSystemCACerts) {
-                    env["SSL_CERT_FILE"] = rootCaPem
+                if (DataStore.providerRootCA != RootCAProvider.SYSTEM) {
+                    env["SSL_CERT_FILE"] = when (DataStore.providerRootCA) {
+                        RootCAProvider.MOZILLA -> {
+                            (File(app.externalAssets, "mozilla_included.pem").takeIf { it.isFile }
+                                ?: File(app.filesDir, "mozilla_included.pem")).canonicalPath
+                        }
+                        RootCAProvider.SYSTEM_AND_USER -> {
+                            File(app.filesDir, "android_included.pem").canonicalPath
+                        }
+                        else -> error("impossible")
+                    }
                     // disable system directories
                     env["SSL_CERT_DIR"] = "/not_exists"
                 }
@@ -287,7 +292,13 @@ abstract class V2RayInstance(
                             "--config",
                             configFile.absolutePath,
                             "--log-level",
-                            if (DataStore.enableLog) "trace" else "warn",
+                            when (DataStore.logLevel) {
+                                LogLevel.DEBUG -> "trace"
+                                LogLevel.INFO -> "info"
+                                LogLevel.WARNING -> "warn"
+                                LogLevel.ERROR -> "error"
+                                else -> "panic"
+                            },
                             "client"
                         )
 
@@ -313,7 +324,13 @@ abstract class V2RayInstance(
                             "--config",
                             configFile.absolutePath,
                             "--log-level",
-                            if (DataStore.enableLog) "debug" else "warn",
+                            when (DataStore.logLevel) {
+                                LogLevel.DEBUG -> "debug"
+                                LogLevel.INFO -> "info"
+                                LogLevel.WARNING -> "warn"
+                                LogLevel.ERROR -> "error"
+                                else -> "error"
+                            },
                             "client"
                         )
 
@@ -374,6 +391,9 @@ abstract class V2RayInstance(
                         processes.start(commands, env)
                     }
                     bean is ShadowTLSBean -> {
+                        if (DataStore.logLevel == LogLevel.NONE) {
+                            env["RUST_LOG"] = "error"
+                        }
                         val commands = mutableListOf(initPlugin("shadowtls-plugin").path)
                         if (bean.v3) {
                             commands.add("--v3")

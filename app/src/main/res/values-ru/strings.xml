@@ -159,8 +159,6 @@
     <string name="probe_interval">Интервал наблюдения балансировщика</string>
     <string name="random">Случайно</string>
     <string name="list">Список</string>
-    <string name="enable_log_sum">В целях отладки</string>
-    <string name="enable_log">Включить журнал</string>
     <string name="auto">Авто</string>
     <string name="disable">Отключен</string>
     <string name="enable">Включить</string>
@@ -171,8 +169,6 @@
     <string name="license">Лицензия</string>
     <string name="restart">Перезагрузите прокси-сервис для изменений</string>
     <string name="apply">Применить</string>
-    <string name="no">Нет</string>
-    <string name="yes">Да</string>
     <string name="unsaved_changes_prompt">Есть несохранённые изменения. Сохранить\?</string>
     <string name="ss_cat">Настройки Shadowsocks</string>
     <string name="proxy_cat">Настройки сервера</string>
@@ -265,7 +261,7 @@
     <string name="route_rules_official">Официальный</string>
     <string name="route_rules_provider">Поставщик ресурсов правил</string>
     <string name="route_assets">Ресурсы</string>
-    <string name="route_manage_assets">Управление ресурсами маршрутов</string>
+    <string name="route_manage_assets">Управление георесурсами</string>
     <string name="route_reverse_redirect">Обратное перенаправление</string>
     <string name="route_reverse">Обратный прокси</string>
     <string name="route_reset">Сброс</string>
@@ -289,11 +285,11 @@
     <string name="edit_config">Изменить конфигурацию</string>
     <string name="config_type">Тип конфигурации</string>
     <string name="extra_headers">Дополнительные заголовки</string>
-    <string name="early_data_header_name">Имя заголовка ранних данных</string>
+    <string name="early_data_header_name">Заголовок запроса ранних данных</string>
     <string name="pinned_peer_certificate_chain_sha256">Хэш цепочки закрепленного сертификата</string>
     <string name="certificates">Сертификаты</string>
-    <string name="alpn">Согласование протокола уровня приложений</string>
-    <string name="sni">Server Name Indication (SNI)</string>
+    <string name="alpn">ALPN (согласование протокола прикладного уровня)</string>
+    <string name="sni">SNI (индикация имени сервера)</string>
     <string name="grpc_service_name">Имя службы gRPC</string>
     <string name="kcp_seed">mKCP Seed</string>
     <string name="quic_key">Ключ QUIC</string>
@@ -368,7 +364,7 @@
     <string name="probe_url">Пользовательский URL-адрес проверки подключения</string>
     <string name="wireguard_public_key">Открытый ключ сервера</string>
     <string name="wireguard_psk">Пароль сервера</string>
-    <string name="naive_insecure_concurrency">Небезопасный параллелизм</string>
+    <string name="naive_insecure_concurrency">Число параллельных соединений</string>
     <string name="naive_insecure_concurrency_summary">Использовать N параллельных соединений для повышения отказоустойчивости в условиях ненадёжной сети. Большее число соединений увеличивает риск обнаружения туннелей и снижает безопасность. Этот проект стремится к максимальной защите от анализа трафика, следовательно, использование его небезопасным образом противоречит данной цели.
 \n
 \nЕсли придётся использовать данную функцию, попробуйте N=2, чтобы проверить, решит ли это проблему. Настоятельно не рекомендуется использовать более 4 соединений.</string>
@@ -467,7 +463,6 @@
     <string name="ech_doh_server">ECH DoH server</string>
     <string name="ws_max_early_data">Максимальный объём данных</string>
     <string name="hijack_dns">Перехват DNS</string>
-    <string name="hijack_dns_message">Перехват DNS в TUN вместо использования DNS-сниффера</string>
     <string name="connection_test_url_test">URL test</string>
     <string name="alter_id">Изменить ID</string>
     <string name="url">URL</string>
@@ -479,7 +474,6 @@
     <string name="route_need_location_enabled">Правило маршрутизации `%s` требует доступа к вашему **Wi-Fi SSID**, но для этого требуется **включенное местоположение**</string>
     <string name="route_need_fine_location">Правило маршрутизации `%s` требует доступа к вашему **Wi-Fi SSID**, но для этого требуется **разрешение на точное определение местоположения**</string>
     <string name="shadowsocks_2022_implementation">Реализация Shadowsocks 2022</string>
-    <string name="action_copy">Копировать</string>
     <string name="action_open">Открыть</string>
     <string name="bootstrap_dns">Загрузочный DNS</string>
     <string name="use_local_dns_as_bootstrap_dns">Использовать системный DNS как DNS начальной загрузки</string>
@@ -506,4 +500,29 @@
     <string name="backup_all_profiles">Бэкап всех профилей</string>
     <string name="donate_to_original_author">Пожертвовать автору</string>
     <string name="mieru_multiplexing_level">Уровень мультиплексирования</string>
+    <string name="hysteria_init_stream_receive_window">QUIC init stream receive window</string>
+    <string name="route_asset_add_url">Добавить URL-адрес</string>
+    <string name="route_asset_invalid_filename">Неверное имя файла: %s</string>
+    <string name="route_asset_reserved_filename">Имя файла не может быть %s</string>
+    <string name="route_asset_duplicate_filename">Ресурс с именем файла %s уже существует</string>
+    <string name="route_asset_invalid_url">Неверный URL: %s</string>
+    <string name="route_asset_add">Добавить георесурсы</string>
+    <string name="route_asset_delete_prompt">Удалить этот георесурс?</string>
+    <string name="route_asset_name">Название георесурса</string>
+    <string name="route_asset_url">URL-адрес георесурса</string>
+    <string name="route_asset_settings">Данные георесурса</string>
+    <string name="browser_forwarder_hint">Загрузите v2ray-extra.zip из релиза v2ray-core и поместите index.html и index.js в Android/data/%s/files или импортируйте index.html и index.js в качестве ресурсов маршрута.</string>
+    <string name="hijack_dns_message">Перехват DNS-запросов, не отправленных на DNS-адрес TUN с помощью DNS-сниффера</string>
+    <string name="cag_httpupgrade">Настройки HTTPUpgrade</string>
+    <string name="regular_expression_filter">Исключение имени (регулярное выражение)</string>
+    <string name="one_per_line_format">По одному на строку. Формат:\n%s</string>
+    <string name="edns_client_ip_sum">Введите IP-адрес. В IPv4 используется подсеть /24, а в IPv6 - подсеть /96.</string>
+    <string name="one_per_line">По одному в каждой строке.</string>
+    <string name="bootstrap_dns_sum">Если адрес прямого DNS является доменным именем и резолвинг адреса назначения включен, используйте Загрузочный DNS для его резолвинга. Пожалуйста, введите DNS-сервер с IP-адресом или с +local.</string>
+    <string name="root_ca_system_and_user">Система и пользователь</string>
+    <string name="more">Другие</string>
+    <string name="acquire_wake_lock">Включить WakeLock</string>
+    <string name="log_level">Тип журнала</string>
+    <string name="fab_style">Стиль нижней панели</string>
+    <string name="core">ядро</string>
 </resources>

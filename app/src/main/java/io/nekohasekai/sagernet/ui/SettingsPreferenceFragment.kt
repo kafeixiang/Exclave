@@ -23,6 +23,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -82,9 +83,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             val theme = Theme.getTheme(newTheme as Int)
             app.setTheme(theme)
             requireActivity().apply {
-                // FIXME
-                this.finish()
-                startActivity(intent)
+                ActivityCompat.recreate(this)
             }
             true
         }
@@ -93,9 +92,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             Theme.currentNightMode = (newTheme as String).toInt()
             Theme.applyNightTheme()
             requireActivity().apply {
-                // FIXME
-                this.finish()
-                startActivity(intent)
+                ActivityCompat.recreate(this)
             }
             true
         }
@@ -176,12 +173,11 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
         val enableDnsRouting = findPreference<SwitchPreference>(Key.ENABLE_DNS_ROUTING)!!
         val enableFakeDns = findPreference<SwitchPreference>(Key.ENABLE_FAKEDNS)!!
-        val hijackDns = findPreference<SwitchPreference>(Key.HIJACK_DNS)!!
 
         val requireTransproxy = findPreference<SwitchPreference>(Key.REQUIRE_TRANSPROXY)!!
         val transproxyPort = findPreference<EditTextPreference>(Key.TRANSPROXY_PORT)!!
         val transproxyMode = findPreference<SimpleMenuPreference>(Key.TRANSPROXY_MODE)!!
-        val enableLog = findPreference<SwitchPreference>(Key.ENABLE_LOG)!!
+        val logLevel = findPreference<SimpleMenuPreference>(Key.LOG_LEVEL)!!
 
         findPreference<EditTextPreference>(Key.PPROF_SERVER)!!.apply {
             isVisible = DataStore.enableDebug
@@ -207,6 +203,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         portSocks5.setOnBindEditTextListener(EditTextPreferenceModifiers.Port)
         portHttp.setOnBindEditTextListener(EditTextPreferenceModifiers.Port)
         dnsHosts.setOnBindEditTextListener(EditTextPreferenceModifiers.Hosts)
+        dnsHosts.dialogMessage = getString(R.string.one_per_line_format, "example.com 127.0.0.1\nwww.example.com 127.0.0.1 127.0.0.2")
 
         val metedNetwork = findPreference<Preference>(Key.METERED_NETWORK)!!
         if (Build.VERSION.SDK_INT < 28) {
@@ -248,9 +245,12 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val tunImplementation = findPreference<SimpleMenuPreference>(Key.TUN_IMPLEMENTATION)!!
         val trafficSniffing = findPreference<SwitchPreference>(Key.TRAFFIC_SNIFFING)!!
         val destinationOverride = findPreference<SwitchPreference>(Key.DESTINATION_OVERRIDE)!!
+        val hijackDns = findPreference<SwitchPreference>(Key.HIJACK_DNS)!!
         destinationOverride.isEnabled = trafficSniffing.isChecked
+        hijackDns.isEnabled = trafficSniffing.isChecked
         trafficSniffing.setOnPreferenceChangeListener { _, newValue ->
             destinationOverride.isEnabled = newValue as Boolean
+            hijackDns.isEnabled = newValue
             needReload()
             true
         }
@@ -261,9 +261,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val providerRootCA = findPreference<SimpleMenuPreference>(Key.PROVIDER_ROOT_CA)!!
 
         providerRootCA.setOnPreferenceChangeListener { _, newValue ->
-            val useSystem = (newValue as String) == "${RootCAProvider.SYSTEM}"
-            Libcore.updateSystemRoots(useSystem)
-            (requireActivity() as? MainActivity)?.connection?.service?.updateSystemRoots(useSystem)
+            Libcore.updateSystemRoots((newValue as String).toInt())
             needReload()
             true
         }
@@ -271,6 +269,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val mtu = findPreference<EditTextPreference>(Key.MTU)!!
         mtu.setOnBindEditTextListener(EditTextPreferenceModifiers.Number)
         val allowAppsBypassVpn = findPreference<SwitchPreference>(Key.ALLOW_APPS_BYPASS_VPN)!!
+        val acquireWakelock = findPreference<SwitchPreference>(Key.ACQUIRE_WAKE_LOCK)!!
 
         val rulesProvider = findPreference<SimpleMenuPreference>(Key.RULES_PROVIDER)!!
         val rulesGeositeUrl = findPreference<LinkOrContentPreference>(Key.RULES_GEOSITE_URL)!!
@@ -284,6 +283,14 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
+        val fabStyle = findPreference<SimpleMenuPreference>(Key.FAB_STYLE)!!
+        fabStyle.setOnPreferenceChangeListener { _, _ ->
+            requireActivity().apply {
+                this.finish()
+                startActivity(intent)
+            }
+            true
+        }
         val enableFragment = findPreference<SwitchPreference>(Key.ENABLE_FRAGMENT)!!
         val enableFragmentForDirect = findPreference<SwitchPreference>(Key.ENABLE_FRAGMENT_FOR_DIRECT)!!
         val fragmentLength = findPreference<EditTextPreference>(Key.FRAGMENT_LENGTH)!!
@@ -328,7 +335,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         transproxyPort.onPreferenceChangeListener = reloadListener
         transproxyMode.onPreferenceChangeListener = reloadListener
 
-        enableLog.onPreferenceChangeListener = reloadListener
+        logLevel.onPreferenceChangeListener = reloadListener
 
         shadowsocks2022Implementation.onPreferenceChangeListener = reloadListener
         providerHysteria2.onPreferenceChangeListener = reloadListener
@@ -336,10 +343,12 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         appTrafficStatistics.onPreferenceChangeListener = reloadListener
         tunImplementation.onPreferenceChangeListener = reloadListener
         destinationOverride.onPreferenceChangeListener = reloadListener
+        hijackDns.onPreferenceChangeListener = reloadListener
         resolveDestination.onPreferenceChangeListener = reloadListener
         resolveDestinationForDirect.onPreferenceChangeListener = reloadListener
         mtu.onPreferenceChangeListener = reloadListener
         allowAppsBypassVpn.onPreferenceChangeListener = reloadListener
+        acquireWakelock.onPreferenceChangeListener = reloadListener
 
         tunImplementation.setOnPreferenceChangeListener { _, newValue ->
             enablePcap.isEnabled = newValue == "${TunImplementation.GVISOR}"

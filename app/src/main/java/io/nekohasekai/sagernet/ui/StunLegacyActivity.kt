@@ -18,9 +18,13 @@
 
 package io.nekohasekai.sagernet.ui
 
+import android.os.Build
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.ListPopupWindow
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
@@ -28,6 +32,8 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.databinding.LayoutStunLegacyBinding
+import io.nekohasekai.sagernet.ktx.PUBLIC_STUN_SERVERS
+import io.nekohasekai.sagernet.ktx.listByLineOrComma
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.noties.markwon.Markwon
@@ -44,6 +50,9 @@ class StunLegacyActivity : ThemedActivity() {
         binding = LayoutStunLegacyBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.toolbar)) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
@@ -74,6 +83,26 @@ class StunLegacyActivity : ThemedActivity() {
             setDisplayHomeAsUpEnabled(true)
             setHomeAsUpIndicator(R.drawable.baseline_arrow_back_24)
         }
+
+        val list = if (DataStore.stunServers.isEmpty()) {
+            PUBLIC_STUN_SERVERS
+        } else {
+            DataStore.stunServers.listByLineOrComma().toTypedArray()
+        }
+
+        binding.natStunServer.setText(if (DataStore.stunServers.isEmpty()) list.random() else list[0])
+        binding.natStunServer.setOnClickListener {
+            val listPopupWindow = ListPopupWindow(this)
+            listPopupWindow.setAdapter(
+                ArrayAdapter(this, android.R.layout.simple_list_item_1, list)
+            )
+            listPopupWindow.setOnItemClickListener { _, _, i, _ ->
+                binding.natStunServer.setText(list[i])
+                listPopupWindow.dismiss()
+            }
+            listPopupWindow.anchorView = binding.natStunServer
+            listPopupWindow.show()
+        }
         binding.stunLegacyTest.setOnClickListener {
             doTest()
         }
@@ -93,7 +122,8 @@ class StunLegacyActivity : ThemedActivity() {
                         .setTitle(R.string.error_title)
                         .setMessage(result.error)
                         .setPositiveButton(android.R.string.ok) { _, _ -> }
-                        .show()
+                        .setOnCancelListener { finish() }
+                        .runCatching { show() }
                 }
                 binding.waitLayout.isVisible = false
                 binding.resultLayout.isVisible = true

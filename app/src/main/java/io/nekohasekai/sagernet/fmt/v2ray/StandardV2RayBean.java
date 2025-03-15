@@ -42,7 +42,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
     public String alpn;
 
     public String grpcServiceName;
-    public Integer wsMaxEarlyData;
+    public Integer maxEarlyData;
     public String earlyDataHeaderName;
     public String meekUrl;
     public String splithttpMode;
@@ -61,13 +61,11 @@ public abstract class StandardV2RayBean extends AbstractBean {
 
     public String realityPublicKey;
     public String realityShortId;
-    public String realitySpiderX;
     public String realityFingerprint;
 
     public Integer hy2DownMbps;
     public Integer hy2UpMbps;
     public String hy2Password;
-    public String hy2ObfsPassword;
 
     public String mekyaKcpSeed;
     public String mekyaKcpHeaderType;
@@ -100,7 +98,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
         if (alpn == null) alpn = "";
 
         if (grpcServiceName == null) grpcServiceName = "";
-        if (wsMaxEarlyData == null) wsMaxEarlyData = 0;
+        if (maxEarlyData == null) maxEarlyData = 0;
         if (wsUseBrowserForwarder == null) wsUseBrowserForwarder = false;
         if (shUseBrowserForwarder == null) shUseBrowserForwarder = false;
         if (certificates == null) certificates = "";
@@ -114,13 +112,11 @@ public abstract class StandardV2RayBean extends AbstractBean {
 
         if (realityPublicKey == null) realityPublicKey = "";
         if (realityShortId == null) realityShortId = "";
-        if (realitySpiderX == null) realitySpiderX = "";
         if (realityFingerprint == null) realityFingerprint = "chrome";
 
         if (hy2DownMbps == null) hy2DownMbps = 0;
         if (hy2UpMbps == null) hy2UpMbps = 0;
         if (hy2Password == null) hy2Password = "";
-        if (hy2ObfsPassword == null) hy2ObfsPassword = "";
 
         if (mekyaKcpSeed == null) mekyaKcpSeed = "";
         if (mekyaKcpHeaderType == null) mekyaKcpHeaderType = "none";
@@ -134,7 +130,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
 
     @Override
     public void serialize(ByteBufferOutput output) {
-        output.writeInt(24);
+        output.writeInt(26);
         super.serialize(output);
 
         output.writeString(uuid);
@@ -156,14 +152,21 @@ public abstract class StandardV2RayBean extends AbstractBean {
             case "ws": {
                 output.writeString(host);
                 output.writeString(path);
-                output.writeInt(wsMaxEarlyData);
+                output.writeInt(maxEarlyData);
                 output.writeBoolean(wsUseBrowserForwarder);
                 output.writeString(earlyDataHeaderName);
                 break;
             }
-            case "http", "httpupgrade": {
+            case "http": {
                 output.writeString(host);
                 output.writeString(path);
+                break;
+            }
+            case "httpupgrade": {
+                output.writeString(host);
+                output.writeString(path);
+                output.writeInt(maxEarlyData);
+                output.writeString(earlyDataHeaderName);
                 break;
             }
             case "splithttp": {
@@ -191,7 +194,6 @@ public abstract class StandardV2RayBean extends AbstractBean {
             case "hysteria2": {
                 output.writeInt(hy2DownMbps);
                 output.writeInt(hy2UpMbps);
-                output.writeString(hy2ObfsPassword);
                 output.writeString(hy2Password);
                 break;
             }
@@ -221,7 +223,6 @@ public abstract class StandardV2RayBean extends AbstractBean {
                 output.writeString(sni);
                 output.writeString(realityPublicKey);
                 output.writeString(realityShortId);
-                output.writeString(realitySpiderX);
                 output.writeString(realityFingerprint);
                 break;
             }
@@ -266,7 +267,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
             case "ws": {
                 host = input.readString();
                 path = input.readString();
-                wsMaxEarlyData = input.readInt();
+                maxEarlyData = input.readInt();
                 wsUseBrowserForwarder = input.readBoolean();
                 if (version >= 2) {
                     earlyDataHeaderName = input.readString();
@@ -308,6 +309,10 @@ public abstract class StandardV2RayBean extends AbstractBean {
                     host = input.readString();
                     path = input.readString();
                 }
+                if (version >= 25) {
+                    maxEarlyData = input.readInt();
+                    earlyDataHeaderName = input.readString();
+                }
                 if (version >= 16) {
                     break;
                 }
@@ -316,7 +321,9 @@ public abstract class StandardV2RayBean extends AbstractBean {
                 if (version >= 14) {
                     hy2DownMbps = input.readInt();
                     hy2UpMbps = input.readInt();
-                    hy2ObfsPassword = input.readString();
+                    if (version < 26) {
+                        input.readString(); // hy2ObfsPassword, removed
+                    }
                 }
                 if (version >= 15) {
                     hy2Password = input.readString();
@@ -386,7 +393,9 @@ public abstract class StandardV2RayBean extends AbstractBean {
                     sni = input.readString();
                     realityPublicKey = input.readString();
                     realityShortId = input.readString();
-                    realitySpiderX = input.readString();
+                    if (version < 26) {
+                        input.readString(); // realitySpiderX, removed
+                    }
                     realityFingerprint = input.readString();
                 }
                 break;
@@ -439,7 +448,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
         if (allowInsecure) {
             bean.allowInsecure = true;
         }
-        bean.wsMaxEarlyData = wsMaxEarlyData;
+        bean.maxEarlyData = maxEarlyData;
         bean.earlyDataHeaderName = earlyDataHeaderName;
         bean.wsUseBrowserForwarder = wsUseBrowserForwarder;
         bean.shUseBrowserForwarder = shUseBrowserForwarder;

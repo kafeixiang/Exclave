@@ -125,7 +125,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         }
         DataStore.serverPinnedCertificateChain = pinnedPeerCertificateChainSha256
         DataStore.serverQuicSecurity = quicSecurity
-        DataStore.serverWsMaxEarlyData = wsMaxEarlyData
+        DataStore.serverWsMaxEarlyData = maxEarlyData
         DataStore.serverEarlyDataHeaderName = earlyDataHeaderName
         DataStore.serverSplithttpMode = splithttpMode
         DataStore.serverSplithttpExtra = splithttpExtra
@@ -135,7 +135,6 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
 
         DataStore.serverRealityPublicKey = realityPublicKey
         DataStore.serverRealityShortId = realityShortId
-        DataStore.serverRealitySpiderX = realitySpiderX
         DataStore.serverRealityFingerprint = realityFingerprint
 
         DataStore.serverUploadSpeed = hy2UpMbps
@@ -211,7 +210,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
             is SOCKSBean -> protocol = DataStore.serverProtocolVersion
         }
         quicSecurity = DataStore.serverQuicSecurity
-        wsMaxEarlyData = DataStore.serverWsMaxEarlyData
+        maxEarlyData = DataStore.serverWsMaxEarlyData
         earlyDataHeaderName = DataStore.serverEarlyDataHeaderName
         splithttpMode = DataStore.serverSplithttpMode
         splithttpExtra = DataStore.serverSplithttpExtra
@@ -221,7 +220,6 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
 
         realityPublicKey = DataStore.serverRealityPublicKey
         realityShortId = DataStore.serverRealityShortId
-        realitySpiderX = DataStore.serverRealitySpiderX
         realityFingerprint = DataStore.serverRealityFingerprint
 
         hy2UpMbps = DataStore.serverUploadSpeed
@@ -265,7 +263,6 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
 
     lateinit var realityPublicKey: EditTextPreference
     lateinit var realityShortId: EditTextPreference
-    lateinit var realitySpiderX: EditTextPreference
     lateinit var realityFingerprint: SimpleMenuPreference
 
     lateinit var packetEncoding: SimpleMenuPreference
@@ -283,6 +280,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
     lateinit var passwordUUID: EditTextPreference
 
     lateinit var wsCategory: PreferenceCategory
+    lateinit var wsUseBrowserForwarder: SwitchPreference
     lateinit var splithttpCategory: PreferenceCategory
     lateinit var splithttpMode: SimpleMenuPreference
     lateinit var ssExperimentsCategory: PreferenceCategory
@@ -328,7 +326,6 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
 
         realityPublicKey = findPreference(Key.SERVER_REALITY_PUBLIC_KEY)!!
         realityShortId = findPreference(Key.SERVER_REALITY_SHORT_ID)!!
-        realitySpiderX = findPreference(Key.SERVER_REALITY_SPIDER_X)!!
         realityFingerprint = findPreference(Key.SERVER_REALITY_FINGERPRINT)!!
 
         realityPublicKey.apply {
@@ -359,6 +356,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         mekyaUrl = findPreference(Key.SERVER_MEKYA_URL)!!
 
         wsCategory = findPreference(Key.SERVER_WS_CATEGORY)!!
+        wsUseBrowserForwarder = findPreference(Key.SERVER_WS_BROWSER_FORWARDING)!!
         splithttpCategory = findPreference(Key.SERVER_SH_CATEGORY)!!
         splithttpMode = findPreference(Key.SERVER_SPLITHTTP_MODE)!!
 
@@ -520,29 +518,15 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
 
         updateTle(security.value)
 
-        val isTCP = network == "tcp"
-        val isQUIC = network == "quic"
-        val isWS = network == "ws"
-        val isHTTP = network == "http"
-        val isMeek = network == "meek"
-        val isHTTPUpgrade = network == "httpupgrade"
-        val isGRPC = network == "grpc"
-        val isSplitHTTP = network == "splithttp"
-        val isHysteria2 = network == "hysteria2"
-        val isMekya = network == "mekya"
-        hy2UpMbps.isVisible = isHysteria2
-        hy2DownMbps.isVisible = isHysteria2
-        hy2Password.isVisible = isHysteria2
-        // hy2ObfsPassword.isVisible = isHysteria2
-        quicSecurity.isVisible = isQUIC
-        mekyaKcpSeed.isVisible = isMekya
-        mekyaKcpHeaderType.isVisible = isMekya
-        mekyaUrl.isVisible = isMekya
-        utlsFingerprint.isVisible = security.value == "tls" && (isTCP || isWS || isHTTP || isMeek || isHTTPUpgrade || isGRPC || isSplitHTTP || isMekya)
-        echConfig.isVisible = security.value == "tls"
-        echDohServer.isVisible = security.value == "tls"
-        realityFingerprint.isVisible = security.value == "reality"
-        if (isQUIC) {
+        hy2UpMbps.isVisible = network == "hysteria2"
+        hy2DownMbps.isVisible = network == "hysteria2"
+        hy2Password.isVisible = network == "hysteria2"
+        // hy2ObfsPassword.isVisible = network == "hysteria2"
+        quicSecurity.isVisible = network == "quic"
+        mekyaKcpSeed.isVisible = network == "mekya"
+        mekyaKcpHeaderType.isVisible = network == "mekya"
+        mekyaUrl.isVisible = network == "mekya"
+        if (network == "quic") {
             if (DataStore.serverQuicSecurity !in quicSecurityValue) {
                 quicSecurity.value = quicSecurityValue[0]
             } else {
@@ -550,8 +534,12 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
             }
         }
 
-        wsCategory.isVisible = isWS
-        splithttpCategory.isVisible = isSplitHTTP
+        wsCategory.isVisible = network == "ws" || network == "httpupgrade"
+        if (network == "ws") wsCategory.setTitle(R.string.cag_ws)
+        if (network == "httpupgrade") wsCategory.setTitle(R.string.cag_httpupgrade)
+        wsUseBrowserForwarder.isVisible = network == "ws"
+
+        splithttpCategory.isVisible = network == "splithttp"
         if (splithttpMode.value !in resources.getStringArray(R.array.splithttp_mode_value)) {
             splithttpMode.value = resources.getStringArray(R.array.splithttp_mode_value)[0]
         }
@@ -679,24 +667,21 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         }
     }
 
-    fun updateTle(tle: String) {
-        val isTLS = tle == "tls"
-        val isReality = tle == "reality"
-        securityCategory.isVisible = isTLS || isReality
-        certificates.isVisible = isTLS
-        pinnedCertificateChain.isVisible = isTLS
-        allowInsecure.isVisible = isTLS
-        sni.isVisible = isTLS || isReality
-        alpn.isVisible = isTLS
-        realityPublicKey.isVisible = isReality
-        realityShortId.isVisible = isReality
-        realitySpiderX.isVisible = isReality
-        utlsFingerprint.isVisible = isTLS && (network.value == "tcp" || network.value == "ws"
+    fun updateTle(security: String) {
+        securityCategory.isVisible = security == "tls" || security == "reality"
+        certificates.isVisible = security == "tls"
+        pinnedCertificateChain.isVisible = security == "tls"
+        allowInsecure.isVisible = security == "tls"
+        sni.isVisible = security == "tls" || security == "reality"
+        alpn.isVisible = security == "tls"
+        realityPublicKey.isVisible = security == "reality"
+        realityShortId.isVisible = security == "reality"
+        utlsFingerprint.isVisible = security == "tls" && (network.value == "tcp" || network.value == "ws"
                 || network.value == "http" || network.value == "meek" || network.value == "httpupgrade"
                 || network.value == "grpc" || network.value == "splithttp" || network.value == "mekya")
-        echConfig.isVisible = isTLS
-        echDohServer.isVisible = isTLS
-        realityFingerprint.isVisible = isReality
+        echConfig.isVisible = security == "tls"
+        echDohServer.isVisible = security == "tls"
+        realityFingerprint.isVisible = security == "reality"
     }
 
     override fun onAttachedToWindow() {
@@ -720,6 +705,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
             )
             DataStore.serverPlugin = pluginConfiguration.toString()
             DataStore.dirty = true
+            callback.isEnabled = true
             plugin.value = pluginConfiguration.selected
             pluginConfigure.isEnabled = selected !is NoPlugin
             pluginConfigure.text = pluginConfiguration.getOptions().toString()
@@ -755,7 +741,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         }.showAllowingStateLoss(supportFragmentManager, Key.SERVER_PLUGIN_CONFIGURE)
     }
 
-     override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean = try {
+    override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean = try {
         val selected = pluginConfiguration.selected
         pluginConfiguration = PluginConfiguration(
             (pluginConfiguration.pluginsOptions + (pluginConfiguration.selected to PluginOptions(
@@ -764,6 +750,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         )
         DataStore.serverPlugin = pluginConfiguration.toString()
         DataStore.dirty = true
+        callback.isEnabled = true
         true
     } catch (exc: RuntimeException) {
         Snackbar.make(child.requireView(), exc.readableMessage, Snackbar.LENGTH_LONG).show()

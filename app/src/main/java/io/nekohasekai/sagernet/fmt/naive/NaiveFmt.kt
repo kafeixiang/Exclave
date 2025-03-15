@@ -20,10 +20,12 @@
 package io.nekohasekai.sagernet.fmt.naive
 
 import cn.hutool.json.JSONObject
+import io.nekohasekai.sagernet.LogLevel
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.fmt.LOCALHOST
 import io.nekohasekai.sagernet.ktx.isIpAddress
 import io.nekohasekai.sagernet.ktx.joinHostPort
+import io.nekohasekai.sagernet.ktx.listByLine
 import io.nekohasekai.sagernet.ktx.queryParameter
 import io.nekohasekai.sagernet.ktx.unUrlSafe
 import io.nekohasekai.sagernet.ktx.urlSafe
@@ -39,7 +41,7 @@ fun parseNaive(link: String): NaiveBean {
         serverPort = url.port.takeIf { it > 0 } ?: 443
         username = url.username
         password = url.password
-        extraHeaders = url.queryParameter("extra-headers")?.unUrlSafe()?.replace("\r\n", "\n")
+        extraHeaders = url.queryParameter("extra-headers")?.replace("\r\n", "\n")
         insecureConcurrency = url.queryParameter("insecure-concurrency")?.toIntOrNull()
         name = url.fragment
         initializeDefaultValues()
@@ -66,7 +68,7 @@ fun NaiveBean.toUri(proxyOnly: Boolean = false): String {
     }
     if (!proxyOnly) {
         if (extraHeaders.isNotEmpty()) {
-            builder.addQueryParameter("extra-headers", extraHeaders)
+            builder.addQueryParameter("extra-headers", extraHeaders.listByLine().joinToString("\r\n"))
         }
         if (name.isNotEmpty()) {
             builder.setRawFragment(name.urlSafe())
@@ -90,25 +92,14 @@ fun NaiveBean.buildNaiveConfig(port: Int): String {
         // It must be percent-encoded in other URL components.
         it["proxy"] = toUri(true).replace(",", "%2C")
         if (extraHeaders.isNotEmpty()) {
-            it["extra-headers"] = extraHeaders.split("\n").joinToString("\r\n")
+            it["extra-headers"] = extraHeaders.listByLine().joinToString("\r\n")
         }
         if (sni.isNotEmpty()) {
-            if (!sni.isIpAddress()) {
-                it["host-resolver-rules"] = "MAP $sni $finalAddress"
-            } else {
-                // do nothing
-            }
+            it["host-resolver-rules"] = "MAP $sni $finalAddress"
         } else {
-            if (!serverAddress.isIpAddress()) {
-                it["host-resolver-rules"] = "MAP $serverAddress $finalAddress"
-            } else {
-                // https://github.com/MatsuriDayo/NekoBoxForAndroid/blob/1b022eb2f1d6a939531d8ccdc5b3fa5495f1a2ee/app/src/main/java/io/nekohasekai/sagernet/fmt/naive/NaiveFmt.kt#L69-L71
-                // for naive, using IP as SNI name hardly happens
-                // and host-resolver-rules cannot resolve the SNI problem
-                // so do nothing
-            }
+            it["host-resolver-rules"] = "MAP $serverAddress $finalAddress"
         }
-        if (DataStore.enableLog) {
+        if (DataStore.logLevel != LogLevel.NONE) {
             it["log"] = ""
         }
         if (insecureConcurrency > 0) {

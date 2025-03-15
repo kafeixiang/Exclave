@@ -31,8 +31,10 @@ import java.io.ByteArrayOutputStream;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.ArrayUtil;
 import io.nekohasekai.sagernet.database.SubscriptionBean;
+import io.nekohasekai.sagernet.fmt.anytls.AnyTLSBean;
 import io.nekohasekai.sagernet.fmt.brook.BrookBean;
 import io.nekohasekai.sagernet.fmt.http.HttpBean;
+import io.nekohasekai.sagernet.fmt.http3.Http3Bean;
 import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean;
 import io.nekohasekai.sagernet.fmt.hysteria2.Hysteria2Bean;
 import io.nekohasekai.sagernet.fmt.internal.BalancerBean;
@@ -196,6 +198,18 @@ public class KryoConverters {
     public static JuicityBean juicityDeserialize(byte[] bytes) {
         if (ArrayUtil.isEmpty(bytes)) return null;
         return deserialize(new JuicityBean(), bytes);
+    }
+
+    @TypeConverter
+    public static Http3Bean http3Deserialize(byte[] bytes) {
+        if (ArrayUtil.isEmpty(bytes)) return null;
+        return deserialize(new Http3Bean(), bytes);
+    }
+
+    @TypeConverter
+    public static AnyTLSBean anytlsDeserialize(byte[] bytes) {
+        if (ArrayUtil.isEmpty(bytes)) return null;
+        return deserialize(new AnyTLSBean(), bytes);
     }
 
     @TypeConverter

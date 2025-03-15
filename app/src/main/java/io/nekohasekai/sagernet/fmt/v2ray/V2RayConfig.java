@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import cn.hutool.json.JSONObject;
 import io.nekohasekai.sagernet.fmt.gson.JsonLazyInterface;
 import io.nekohasekai.sagernet.fmt.gson.JsonOr;
 
@@ -58,7 +59,13 @@ public class V2RayConfig {
 
     public static class DnsObject {
 
-        public Map<String, String> hosts;
+        public static class StringOrListObject extends JsonOr<String, List<String>> {
+            public StringOrListObject() {
+                super(JsonToken.STRING, JsonToken.BEGIN_ARRAY);
+            }
+        }
+
+        public Map<String, StringOrListObject> hosts;
 
         public List<StringOrServerObject> servers;
 
@@ -125,6 +132,7 @@ public class V2RayConfig {
 
             public String type;
             public List<String> domain;
+            public List<String> domains;
             public List<String> ip;
             public String port;
             public String sourcePort;
@@ -162,8 +170,19 @@ public class V2RayConfig {
 
                 public static class strategyConfig {
 
-                    public String observerTag;
-                    public Boolean aliveOnly;
+                    public String observerTag; // random, leastPing, leastLoad, fallback
+                    public Boolean aliveOnly; // random
+                    public Float tolerance; // leastLoad
+                    public String maxRTT; // leastLoad
+                    public Integer expected; // leastLoad
+                    public List<String> baselines; // leastLoad
+                    public List<CostObject> costs; // leastLoad
+
+                    public static class CostObject {
+                        public Boolean regexp;
+                        public String match;
+                        public Float value;
+                    }
 
                 }
 
@@ -291,6 +310,8 @@ public class V2RayConfig {
                     return Shadowsocks2022RelayInboundConfigurationObject.class;
                 case "hysteria2":
                     return Hysteria2InboundConfigurationObject.class;
+                case "anytls":
+                    return AnyTLSInboundConfigurationObject.class;
             }
             return null;
         }
@@ -564,6 +585,16 @@ public class V2RayConfig {
         public String packetEncoding;
     }
 
+    public static class AnyTLSInboundConfigurationObject implements InboundConfigurationObject {
+        public UserObject users;
+        public List<String> paddingScheme;
+        public static class UserObject {
+            public String password;
+            public String email;
+            public Integer level;
+        }
+    }
+
     public List<OutboundObject> outbounds;
 
     public static class OutboundObject {
@@ -655,6 +686,10 @@ public class V2RayConfig {
                     return Hysteria2OutboundConfigurationObject.class;
                 case "tuic":
                     return TUICOutboundConfigurationObject.class;
+                case "http3":
+                    return HTTP3OutboundConfigurationObject.class;
+                case "anytls":
+                    return AnyTLSOutboundConfigurationObject.class;
             }
             return null;
         }
@@ -706,6 +741,18 @@ public class V2RayConfig {
             public List<HTTPInboundConfigurationObject.AccountObject> users;
 
         }
+
+    }
+
+    public static class HTTP3OutboundConfigurationObject implements OutboundConfigurationObject {
+
+        public String address;
+        public Integer port;
+        public Integer level;
+        public String username;
+        public String password;
+        public Map<String, String> headers;
+        public TLSObject tlsSettings;
 
     }
 
@@ -924,13 +971,23 @@ public class V2RayConfig {
         public String congestionControl;
         public String udpRelayMode;
         public Boolean zeroRTTHandshake;
-        public String serverName;
-        public List<String> alpn;
-        public List<String> certificate;
-        public Boolean allowInsecure;
+        public TLSObject tlsSettings;
         public Boolean disableSNI;
 
     }
+
+
+    public static class AnyTLSOutboundConfigurationObject implements OutboundConfigurationObject {
+
+        public String address;
+        public Integer port;
+        public String password;
+        public Integer idleSessionCheckInterval;
+        public Integer idleSessionTimeout;
+        public Integer minIdleSession;
+
+    }
+
 
     public TransportObject transport;
 
@@ -966,6 +1023,7 @@ public class V2RayConfig {
         public HTTPUpgradeObject httpupgradeSettings;
         public Hysteria2Object hy2Settings;
         public SplitHTTPObject splithttpSettings;
+        public SplitHTTPObject xhttpSettings;
         public MekyaObject mekyaSettings;
         public DTLSObject dtlsSettings;
         public RequestObject requestSettings;
@@ -1058,12 +1116,12 @@ public class V2RayConfig {
         public String type;
         public Integer xver;
         public List<String> serverNames;
+        public String password; // alias of privateKey
         public String privateKey;
         public List<String> shortIds;
         public String serverName;
         public String publicKey;
         public String shortId;
-        public String spiderX;
         public String fingerprint;
         public String version;
 
@@ -1189,7 +1247,16 @@ public class V2RayConfig {
 
         public String host;
         public String path;
-        public Map<String, String> headers;
+        public Integer maxEarlyData;
+        public String earlyDataHeaderName;
+        public List<HTTPUpgradeHeaderObject> header;
+
+        public static class HTTPUpgradeHeaderObject {
+
+            public String key;
+            public String value;
+
+        }
 
     }
 
@@ -1200,6 +1267,7 @@ public class V2RayConfig {
         public Boolean ignore_client_bandwidth;
         public Boolean use_udp_extension;
         public OBFSObject obfs;
+        public List<String> passwords;
         public String hopPorts;
         public Integer hopInterval;
 
@@ -1367,10 +1435,13 @@ public class V2RayConfig {
     public ObservatoryObject observatory;
 
     public static class ObservatoryObject {
+
         public Set<String> subjectSelector;
-        public String probeUrl;
+        public String probeURL;
         public String probeInterval;
-        public Boolean enableConcurrency;
+        public Boolean persistentProbeResult;
+        public Boolean enableConcurrency; // SagerNet private
+
     }
 
     public MultiObservatoryObject multiObservatory;
@@ -1382,8 +1453,36 @@ public class V2RayConfig {
         public static class MultiObservatoryItem {
             public String type;
             public String tag;
-            public ObservatoryObject settings;
+            public JSONObject settings; // ObservatoryObject or BurstObservatoryObject, WTF
         }
+
+    }
+
+    public BurstObservatoryObject burstObservatory;
+
+    public static class BurstObservatoryObject {
+
+        public Set<String> subjectSelector;
+        public PingConfigObject pingConfig;
+
+        public static class PingConfigObject {
+            public String destination;
+            public String connectivity;
+            public String interval;
+            public Integer sampling;
+            public String timeout;
+        }
+
+    }
+
+    public FileSystemStorageObject fileSystemStorage;
+
+    public static class FileSystemStorageObject {
+
+        public String stateStorageRoot;
+        public String instanceName;
+        public String protoJSON;
+
     }
 
     public void init() {

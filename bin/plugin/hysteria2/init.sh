@@ -8,6 +8,8 @@ export GOOS=android
 CURR="plugin/hysteria2"
 CURR_PATH="$PROJECT/$CURR"
 
-git submodule update --init "$CURR/*"
+ROOT="$CURR_PATH/src/main/jniLibs"
+OUTPUT="hysteria2"
+LIB_OUTPUT="lib$OUTPUT.so"
+
 cd $CURR_PATH/src/main/go/hysteria2
-go mod download -x

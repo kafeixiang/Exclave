@@ -22,6 +22,7 @@ package io.nekohasekai.sagernet.ui.profile
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.text.format.Formatter
 import android.view.View
@@ -32,6 +33,7 @@ import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
@@ -84,6 +86,9 @@ class ChainSettingsActivity : ProfileSettingsActivity<ChainBean>(R.layout.layout
 
         supportActionBar!!.setTitle(R.string.chain_settings)
         configurationList = findViewById(R.id.configuration_list)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings)) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
@@ -184,12 +189,14 @@ class ChainSettingsActivity : ProfileSettingsActivity<ChainBean>(R.layout.layout
             proxyList[from - 1] = toMove
             notifyItemMoved(from, to)
             DataStore.dirty = true
+            callback.isEnabled = true
         }
 
         fun remove(index: Int) {
             proxyList.removeAt(index - 1)
             notifyItemRemoved(index)
             DataStore.dirty = true
+            callback.isEnabled = true
         }
 
         override fun getItemId(position: Int): Long {
@@ -253,6 +260,7 @@ class ChainSettingsActivity : ProfileSettingsActivity<ChainBean>(R.layout.layout
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { (resultCode, data) ->
             if (resultCode == Activity.RESULT_OK) runOnDefaultDispatcher {
                 DataStore.dirty = true
+                callback.isEnabled = true
 
                 val profile = ProfileManager.getProfile(
                     data!!.getLongExtra(
@@ -340,10 +348,10 @@ class ChainSettingsActivity : ProfileSettingsActivity<ChainBean>(R.layout.layout
             deleteButton.setOnClickListener {
                 MaterialAlertDialogBuilder(this@ChainSettingsActivity)
                     .setTitle(getString(R.string.delete_confirm_prompt))
-                    .setPositiveButton(R.string.yes) { _, _ ->
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
                         configurationAdapter.remove(adapterPosition)
                     }
-                    .setNegativeButton(R.string.no, null)
+                    .setNegativeButton(android.R.string.cancel, null)
                     .show()
             }
 

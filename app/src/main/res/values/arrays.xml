@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string-array name="bypass_private_route">
         <item>1.0.0.0/8</item>
         <item>2.0.0.0/7</item>
@@ -623,7 +623,7 @@
     </string-array>
 
     <string-array name="rules_dat_provider">
-        <item>@string/route_rules_official</item>
+        <item>v2fly</item>
         <item>Loyalsoldier/v2ray-rules-dat</item>
         <item>Chocolate4U/Iran-v2ray-rules</item>
         <item>@string/route_rules_custom</item>
@@ -663,7 +663,7 @@
 
     <string-array name="hysteria2_provider">
         <item>@string/plugin</item>
-        <item>V2Ray</item>
+        <item>@string/core</item>
     </string-array>
 
     <string-array name="hysteria2_provider_value">
@@ -673,7 +673,7 @@
 
     <string-array name="tuic5_provider">
         <item>@string/plugin</item>
-        <item>V2Ray</item>
+        <item>@string/core</item>
     </string-array>
 
     <string-array name="tuic5_provider_value">
@@ -705,7 +705,7 @@
     </string-array>
 
     <string-array name="utls_entry">
-        <item>Disabled</item>
+        <item>@string/disable</item>
         <item>Chrome_Auto</item>
         <item>Firefox_Auto</item>
         <item>Safari_Auto</item>
@@ -796,57 +796,6 @@
         <item>hello360_11_0</item>
     </string-array>
 
-    <string-array name="reality_fingerprint_entry">
-        <item>chrome</item>
-        <item>firefox</item>
-        <item>safari</item>
-        <item>ios</item>
-        <item>edge</item>
-        <item>360</item>
-        <item>qq</item>
-        <item>random</item>
-        <item>randomized</item>
-        <item>hellofirefox_99</item>
-        <item>hellofirefox_102</item>
-        <item>hellofirefox_105</item>
-        <item>hellochrome_83</item>
-        <item>hellochrome_87</item>
-        <item>hellochrome_96</item>
-        <item>hellochrome_100</item>
-        <item>hellochrome_102</item>
-        <item>hellochrome_106_shuffle</item>
-        <item>helloios_13</item>
-        <item>helloios_14</item>
-        <item>helloedge_85</item>
-        <item>helloedge_106</item>
-        <item>hellosafari_16_0</item>
-        <item>hello360_11_0</item>
-        <item>helloqq_11_1</item>
-        <item>hellogolang</item>
-        <item>hellorandomized</item>
-        <item>hellorandomizedalpn</item>
-        <item>hellorandomizednoalpn</item>
-        <item>hellofirefox_auto</item>
-        <item>hellofirefox_55</item>
-        <item>hellofirefox_56</item>
-        <item>hellofirefox_63</item>
-        <item>hellofirefox_65</item>
-        <item>hellochrome_auto</item>
-        <item>hellochrome_58</item>
-        <item>hellochrome_62</item>
-        <item>hellochrome_70</item>
-        <item>hellochrome_72</item>
-        <item>helloios_auto</item>
-        <item>helloios_11_1</item>
-        <item>helloios_12_1</item>
-        <item>helloandroid_11_okhttp</item>
-        <item>helloedge_auto</item>
-        <item>hellosafari_auto</item>
-        <item>hello360_auto</item>
-        <item>hello360_7_5</item>
-        <item>helloqq_auto</item>
-    </string-array>
-
     <string-array name="reality_fingerprint_value">
         <item>chrome</item>
         <item>firefox</item>
@@ -857,15 +806,18 @@
         <item>qq</item>
         <item>random</item>
         <item>randomized</item>
+        <item>randomizednoalpn</item>
         <item>hellofirefox_99</item>
         <item>hellofirefox_102</item>
         <item>hellofirefox_105</item>
+        <item>hellofirefox_120</item>
         <item>hellochrome_83</item>
         <item>hellochrome_87</item>
         <item>hellochrome_96</item>
         <item>hellochrome_100</item>
         <item>hellochrome_102</item>
         <item>hellochrome_106_shuffle</item>
+        <item>hellochrome_120</item>
         <item>helloios_13</item>
         <item>helloios_14</item>
         <item>helloedge_85</item>
@@ -896,10 +848,11 @@
         <item>hello360_auto</item>
         <item>hello360_7_5</item>
         <item>helloqq_auto</item>
+        <item>unsafe</item>
     </string-array>
 
     <string-array name="trojan_go_utls_entry">
-        <item>Disabled</item>
+        <item>@string/disable</item>
         <item>Chrome</item>
         <item>Firefox</item>
         <item>iOS</item>
@@ -969,6 +922,7 @@
     <string-array name="root_ca_provider_entry">
         <item>@string/root_ca_mozilla</item>
         <item>@string/root_ca_system</item>
+        <item>@string/root_ca_system_and_user</item>
     </string-array>
 
     <string-array name="packet_encoding_entry">
@@ -1084,4 +1038,24 @@
         <item>stream-one</item>
     </string-array>
 
+    <string-array name="log_level_entry">
+        <item>debug</item>
+        <item>info</item>
+        <item>warning</item>
+        <item>error</item>
+        <item>none</item>
+    </string-array>
+
+    <string-array name="log_level_value">
+        <item>4</item>
+        <item>3</item>
+        <item>2</item>
+        <item>1</item>
+        <item>0</item>
+    </string-array>
+
+    <string-array name="fab_style_entry">
+        <item>SagerNet</item>
+        <item>Shadowsocks</item>
+    </string-array>
 </resources>

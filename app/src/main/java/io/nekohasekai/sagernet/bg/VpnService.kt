@@ -22,6 +22,7 @@
 package io.nekohasekai.sagernet.bg
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -29,6 +30,7 @@ import android.net.Network
 import android.net.ProxyInfo
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.os.PowerManager
 import android.system.ErrnoException
 import android.system.Os
 import io.nekohasekai.sagernet.*
@@ -100,6 +102,14 @@ class VpnService : BaseVpnService(),
     override suspend fun startProcesses() {
         startVpn()
         super.startProcesses()
+    }
+
+    override var wakeLock: PowerManager.WakeLock? = null
+
+    @SuppressLint("WakelockTimeout")
+    override fun acquireWakeLock() {
+        wakeLock = SagerNet.power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "sagernet:vpn")
+            .apply { acquire() }
     }
 
     @Suppress("EXPERIMENTAL_API_USAGE")
@@ -283,14 +293,10 @@ class VpnService : BaseVpnService(),
             sniffing = DataStore.trafficSniffing
             overrideDestination = DataStore.destinationOverride
             fakeDNS = DataStore.enableFakeDns
-            hijackDNS = DataStore.hijackDns
-            debug = DataStore.enableLog
+            debug = DataStore.logLevel == LogLevel.DEBUG
             dumpUID = data.proxy!!.config.dumpUid
             trafficStats = DataStore.appTrafficStatistics
             pCap = DataStore.enablePcap
-            errorHandler = ErrorHandler {
-                stopRunner(false, it)
-            }
             protector = this@VpnService
             localResolver = this@VpnService
         }

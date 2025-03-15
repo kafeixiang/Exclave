@@ -8,6 +8,8 @@ export GOOS=android
 CURR="plugin/mieru"
 CURR_PATH="$PROJECT/$CURR"
 
-git submodule update --init "$CURR/*"
+ROOT="$CURR_PATH/src/main/jniLibs"
+OUTPUT="mieru"
+LIB_OUTPUT="lib$OUTPUT.so"
+
 cd $CURR_PATH/src/main/go/mieru
-go mod download -x

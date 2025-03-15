@@ -368,10 +368,6 @@ class BaseService {
             return (data?.proxy?.service as? VpnService)?.tun?.trafficStatsEnabled ?: false
         }
 
-        override fun updateSystemRoots(useSystem: Boolean) {
-            Libcore.updateSystemRoots(useSystem)
-        }
-
         override fun close() {
             callbacks.kill()
             cancel()
@@ -400,8 +396,6 @@ class BaseService {
             }
         }
 
-        val isVpnService get() = false
-
         suspend fun startProcesses() {
             data.proxy!!.launch()
         }
@@ -413,6 +407,10 @@ class BaseService {
 
         fun killProcesses() {
             data.proxy?.close()
+            wakeLock?.apply {
+                release()
+                wakeLock = null
+            }
         }
 
         fun stopRunner(restart: Boolean = false, msg: String? = null, keepState: Boolean = true) {
@@ -454,6 +452,20 @@ class BaseService {
         }
 
         suspend fun preInit() {}
+
+        var wakeLock: PowerManager.WakeLock?
+        fun acquireWakeLock()
+
+        suspend fun lateInit() {
+            wakeLock?.apply {
+                release()
+                wakeLock = null
+            }
+
+            if (DataStore.acquireWakeLock) {
+                acquireWakeLock()
+            }
+        }
 
         fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
@@ -499,7 +511,7 @@ class BaseService {
                     Executable.killAll()    // clean up old processes
                     preInit()
                     try {
-                        proxy.init()
+                        proxy.init(data.proxy?.service is VpnService)
                     } catch (jsonEx: JSONException) {
                         error(jsonEx.readableMessage.replace("cn.hutool.json.", ""))
                     }
@@ -518,6 +530,7 @@ class BaseService {
                             it.routeAlert(type, routeName)
                         }
                     }
+                    lateInit()
                 } catch (_: CancellationException) { // if the job was cancelled, it is canceller's responsibility to call stopRunner
                 } catch (_: UnknownHostException) {
                     stopRunner(false, getString(R.string.invalid_server))

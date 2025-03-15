@@ -6,14 +6,11 @@
     <string name="version_x">Versión (%s)</string>
     <string name="app_version">Versión</string>
     <string name="always_show_address_sum">Mostrar siempre la dirección del servidor en la tarjeta de configuración</string>
-    <string name="enable_log">Activar registro</string>
     <string name="disable">Desactivar</string>
     <string name="enable">Permitir</string>
     <string name="night_mode">Modo nocturno</string>
     <string name="route_warn">Asegúrese de haber leído la documentación antes de agregar reglas personalizadas; de lo contrario, es posible que no pueda conectarse a Internet.</string>
     <string name="restart">Vuelva a cargar el servicio de proxy para aplicar cambios</string>
-    <string name="no">No</string>
-    <string name="yes">sí</string>
     <string name="ss_cat">Configuración de Shadowsocks</string>
     <string name="proxy_cat">Configuración del servidor</string>
     <string name="plugin_auto_connect_unlock_only">Es posible que este complemento no funcione con Auto Connect</string>
@@ -302,7 +299,6 @@
     <string name="probe_interval">Intervalo de observación del equilibrador</string>
     <string name="random">Aleatorio</string>
     <string name="list">Lista</string>
-    <string name="enable_log_sum">Para fines de depuración</string>
     <string name="auto">Automático</string>
     <string name="follow_system">Seguir el sistema</string>
     <string name="lines">%d líneas</string>
@@ -425,7 +421,6 @@
     <string name="hijack_dns">Secuestrar DNS</string>
     <string name="reality_public_key">Clave pública REALITY</string>
     <string name="tuic_zero_rtt_handshake">Protocolo de enlace 0-RTT</string>
-    <string name="hijack_dns_message">Interceptar DNS en TUN en lugar de utilizar un rastreador de DNS</string>
     <string name="hysteria_init_stream_receive_window">Ventana de recepción de secuencia de inicio QUIC</string>
     <string name="hysteria_max_stream_receive_window">Ventana de recepción de flujo máximo QUIC</string>
     <string name="hysteria_init_conn_receive_window">Ventana de recepción de conexión de inicio QUIC</string>
@@ -454,7 +449,6 @@
     <string name="shadowtls_v3">ShadowTLS versión 3</string>
     <string name="wireguard_reserved">Reservado</string>
     <string name="shadowsocks_2022_implementation">Implementación de Shadowsocks 2022</string>
-    <string name="action_copy">Copiar</string>
     <string name="action_open">Abrir</string>
     <string name="bootstrap_dns">Bootstrap DNS</string>
     <string name="brook_fragment">Fragmento</string>
@@ -503,4 +497,6 @@
     <string name="ech_doh_server">Servidor ECH DoH</string>
     <string name="tuic_v5_provider">Proveedor TUIC v5</string>
     <string name="backup_all_profiles">Copia de seguridad de todos los perfiles</string>
+    <string name="acquire_wake_lock">Adquirir WakeLock</string>
+    <string name="log_level">Nivel de registro</string>
 </resources>

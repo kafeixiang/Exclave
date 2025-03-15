@@ -84,7 +84,7 @@ fun parseHysteria2(rawURL: String): Hysteria2Bean {
             pinSHA256 = it
         }
         link.queryParameter("obfs")?.also { it ->
-            if (it == "salamander") {
+            if (it.lowercase() == "salamander") {
                 link.queryParameter("obfs-password")?.also {
                     obfs = it
                 }
@@ -106,11 +106,10 @@ fun Hysteria2Bean.toUri(): String? {
     }
 
     if (auth.isNotEmpty()) {
-        val a = auth.split(":")
-        if (a.size == 2) {
+        if (auth.contains(":")) {
             // https://github.com/apernet/hysteria/blob/c7545cc870e5cc62a187ad03a083920e6bef049f/app/cmd/client.go#L308-L316
-            builder.username = a[0]
-            builder.password = a[1]
+            builder.username = auth.substringBefore(":")
+            builder.password = auth.substringAfter(":")
         } else {
             builder.username = auth
         }
@@ -143,7 +142,7 @@ fun Hysteria2Bean.toUri(): String? {
     return url
 }
 
-fun Hysteria2Bean.buildHysteria2Config(port: Int, cacheFile: (() -> File)?): String {
+fun Hysteria2Bean.buildHysteria2Config(port: Int, isVpn: Boolean, cacheFile: (() -> File)?): String {
     if (!serverPorts.isValidHysteriaPort()) {
         error("invalid port: $serverPorts")
     }
@@ -225,7 +224,7 @@ fun Hysteria2Bean.buildHysteria2Config(port: Int, cacheFile: (() -> File)?): Str
     if (maxConnReceiveWindow > 0) {
         quicObject["maxConnReceiveWindow"] = maxConnReceiveWindow
     }
-    if (!canMapping() && DataStore.tunImplementation == TunImplementation.SYSTEM && DataStore.serviceMode == Key.MODE_VPN) {
+    if (!canMapping() && DataStore.tunImplementation == TunImplementation.SYSTEM && DataStore.serviceMode == Key.MODE_VPN && isVpn) {
         val sockoptsObject: MutableMap<String, Any> = HashMap()
         sockoptsObject["fdControlUnixSocket"] = "protect_path"
         quicObject["sockopts"] = sockoptsObject

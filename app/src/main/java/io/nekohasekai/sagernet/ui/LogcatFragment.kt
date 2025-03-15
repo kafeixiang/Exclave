@@ -20,13 +20,11 @@ package io.nekohasekai.sagernet.ui
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.FileProvider
-import androidx.core.graphics.TypefaceCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -97,20 +95,12 @@ class LogcatFragment : ToolbarFragment(R.layout.layout_logcat),
 
         terminalView.setTerminalViewClient(this)
         terminalView.setTextSize(fontSize)
-        terminalView.setTypeface(
-            TypefaceCompat.createFromResourcesFontFile(
-                view.context,
-                resources,
-                R.font.jetbrains_mono,
-                "res/font/jetbrains_mono.ttf",
-                0,
-                Typeface.NORMAL
-            )
-        )
 
         reloadSession()
 
         registerForContextMenu(terminalView)
+
+        (requireActivity() as? MainActivity)?.callback?.isEnabled = true
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

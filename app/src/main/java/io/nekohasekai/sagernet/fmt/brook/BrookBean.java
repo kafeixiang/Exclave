@@ -39,6 +39,10 @@ public class BrookBean extends AbstractBean {
     public String fragment;
     public String sni;
     public Boolean udpoverstream;
+    public String clientHKDFInfo;
+    public String serverHKDFInfo;
+    public String token;
+    public String ca;
 
     @Override
     public void initializeDefaultValues() {
@@ -53,15 +57,21 @@ public class BrookBean extends AbstractBean {
         if (fragment == null) fragment = "";
         if (sni == null) sni = "";
         if (udpoverstream == null) udpoverstream = false;
+        if (clientHKDFInfo == null) clientHKDFInfo = "";
+        if (serverHKDFInfo == null) serverHKDFInfo = "";
+        if (token == null) token = "";
+        if (ca == null) ca = "";
     }
 
     @Override
     public void serialize(ByteBufferOutput output) {
-        output.writeInt(7);
+        output.writeInt(9);
         super.serialize(output);
         output.writeString(protocol);
         output.writeString(password);
-        output.writeBoolean(udpovertcp); // FIXME: move it to the correct place on the next bean version bump
+        output.writeString(clientHKDFInfo);
+        output.writeString(serverHKDFInfo);
+        output.writeString(token);
         switch (protocol) {
             case "ws":
                 output.writeString(wsPath);
@@ -74,6 +84,7 @@ public class BrookBean extends AbstractBean {
                 output.writeString(tlsfingerprint);
                 output.writeString(fragment);
                 output.writeString(sni);
+                output.writeString(ca);
                 break;
             }
             case "quic": {
@@ -81,9 +92,11 @@ public class BrookBean extends AbstractBean {
                 output.writeBoolean(withoutBrookProtocol);
                 output.writeString(sni);
                 output.writeBoolean(udpoverstream);
+                output.writeString(ca);
                 break;
             }
             default:
+                output.writeBoolean(udpovertcp);
                 break;
         }
     }
@@ -94,8 +107,17 @@ public class BrookBean extends AbstractBean {
         super.deserialize(input);
         protocol = input.readString();
         password = input.readString();
-        if (version >= 5) {
-            udpovertcp = input.readBoolean();
+        if (version >= 5 && version < 8) {
+            if (protocol.isEmpty()) {
+                udpovertcp = input.readBoolean();
+            } else {
+                input.readBoolean();
+            }
+        }
+        if (version >= 9) {
+            clientHKDFInfo = input.readString();
+            serverHKDFInfo = input.readString();
+            token = input.readString();
         }
         if (version >= 1) switch (protocol) {
             case "ws":
@@ -117,6 +139,9 @@ public class BrookBean extends AbstractBean {
                     fragment = input.readString();
                     sni = input.readString();
                 }
+                if (version >= 9) {
+                    ca = input.readString();
+                }
                 break;
             }
             case "quic": {
@@ -130,11 +155,17 @@ public class BrookBean extends AbstractBean {
                 if (version >= 6) {
                     udpoverstream = input.readBoolean();
                 }
+                if (version >= 9) {
+                    ca = input.readString();
+                }
                 break;
             }
             default:
                 if (version == 2) {
                     input.readBoolean(); // uot, removed
+                }
+                if (version >= 8) {
+                    udpovertcp = input.readBoolean();
                 }
                 break;
         }
@@ -144,6 +175,9 @@ public class BrookBean extends AbstractBean {
     public String network() {
         if (protocol.equals("quic")) {
             return "udp";
+        }
+        if (protocol.isEmpty() && !udpovertcp) {
+            return "tcp,udp";
         }
         return "tcp";
     }
@@ -160,6 +194,7 @@ public class BrookBean extends AbstractBean {
         if (insecure) {
             bean.insecure = true;
         }
+        bean.ca = ca;
     }
 
     @NonNull

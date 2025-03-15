@@ -172,6 +172,15 @@ class ConfigurationFragment @JvmOverloads constructor(
         if (searchView != null) {
             searchView.setOnQueryTextListener(this)
             searchView.maxWidth = Int.MAX_VALUE
+            searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    searchView.onActionViewCollapsed()
+                    searchView.clearFocus()
+                    (requireActivity() as? MainActivity)?.callback?.isEnabled = false
+                } else {
+                    (requireActivity() as? MainActivity)?.callback?.isEnabled = true
+                }
+            }
         }
 
         groupPager = view.findViewById(R.id.group_pager)
@@ -217,6 +226,32 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
 
         }
+
+        toolbar.setOnLongClickListener {
+            val selectedProxy = selectedItem
+                ?: SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
+                ?: return@setOnLongClickListener true
+            val groupIndex = adapter.groupList.indexOfFirst {
+                it.id == selectedProxy.groupId
+            }
+            if (groupIndex < 0) return@setOnLongClickListener true
+            DataStore.selectedGroup = selectedProxy.groupId
+            groupPager.currentItem = groupIndex
+
+            val fragment = (childFragmentManager.findFragmentByTag("f" + selectedGroup.id) as GroupFragment?)
+            if (fragment != null) {
+                val selectedProfileIndex = fragment.adapter.configurationIdList.indexOfFirst {
+                    it == selectedProxy.id
+                }
+                if (selectedProfileIndex > 0) {
+                    fragment.configurationListView.scrollTo(selectedProfileIndex, true)
+                }
+            }
+
+            true
+        }
+
+        (requireActivity() as? MainActivity)?.callback?.isEnabled = false
     }
 
     override fun onDestroy() {
@@ -321,7 +356,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             group.name = "Group"
             MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.subscription_import)
                 .setMessage(getString(R.string.subscription_import_message, text))
-                .setPositiveButton(R.string.yes) { _, _ ->
+                .setPositiveButton(android.R.string.ok) { _, _ ->
                     runOnDefaultDispatcher {
                         GroupManager.createGroup(group)
                         GroupUpdater.startUpdate(group, true)
@@ -427,6 +462,12 @@ class ConfigurationFragment @JvmOverloads constructor(
             R.id.action_new_juicity -> {
                 startActivity(Intent(requireActivity(), JuicitySettingsActivity::class.java))
             }
+            R.id.action_new_http3 -> {
+                startActivity(Intent(requireActivity(), Http3SettingsActivity::class.java))
+            }
+            R.id.action_new_anytls -> {
+                startActivity(Intent(requireActivity(), AnyTLSSettingsActivity::class.java))
+            }
             R.id.action_new_config -> {
                 startActivity(Intent(requireActivity(), ConfigSettingsActivity::class.java))
             }
@@ -495,7 +536,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                                                 }
                                             }.joinToString("\n")
                                 )
-                                .setPositiveButton(R.string.yes) { _, _ ->
+                                .setPositiveButton(android.R.string.ok) { _, _ ->
                                     for (profile in toClear) {
                                         adapter.groupFragments[DataStore.selectedGroup]?.adapter?.apply {
                                             val index = configurationIdList.indexOf(profile.id)
@@ -514,7 +555,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                                         }
                                     }
                                 }
-                                .setNegativeButton(R.string.no, null)
+                                .setNegativeButton(android.R.string.cancel, null)
                                 .show()
                         }
                     }
@@ -533,7 +574,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                         onMainDispatcher {
                             MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.confirm)
                                 .setMessage(R.string.delete_confirm_prompt)
-                                .setPositiveButton(R.string.yes) { _, _ ->
+                                .setPositiveButton(android.R.string.ok) { _, _ ->
                                     for (profile in toClear) {
                                         adapter.groupFragments[DataStore.selectedGroup]?.adapter?.apply {
                                             val index = configurationIdList.indexOf(profile.id)
@@ -552,7 +593,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                                         }
                                     }
                                 }
-                                .setNegativeButton(R.string.no, null)
+                                .setNegativeButton(android.R.string.cancel, null)
                                 .show()
                         }
                     }
@@ -984,6 +1025,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             testJobs.forEach { it.cancel() }
             runOnDefaultDispatcher {
                 ProfileManager.updateProfile(test.results.filter { it.status != 0 })
+                GroupManager.postReload(DataStore.currentGroupId())
             }
         }
     }
@@ -1332,7 +1374,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 v.updatePadding(
                     left = bars.left + dp2px(4),
                     right = bars.right + dp2px(4),
-                    bottom = bars.bottom + dp2px(4),
+                    bottom = bars.bottom + dp2px(64),
                 )
                 WindowInsetsCompat.CONSUMED
             }

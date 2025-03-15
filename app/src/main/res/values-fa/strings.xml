@@ -138,8 +138,6 @@
     <string name="probe_interval">فاصله مشاهده بالانس</string>
     <string name="random">تصادفی</string>
     <string name="list">لیست</string>
-    <string name="enable_log_sum">به منظور رفع اشکال</string>
-    <string name="enable_log">فعال کردن گزارش</string>
     <string name="auto">خودکار</string>
     <string name="disable">غیرفعال کردن</string>
     <string name="enable">فعال کردن</string>
@@ -150,8 +148,6 @@
     <string name="license">مجوز</string>
     <string name="restart">سرویس پروکسی را دوباره راه اندازی کنید تا تغییرات اعمال شوند</string>
     <string name="apply">اعمال کردن</string>
-    <string name="no">نه</string>
-    <string name="yes">بله</string>
     <string name="unsaved_changes_prompt">تغییرات ذخیره نشد. آیا می خواهید ذخیره کنید؟</string>
     <string name="ss_cat">تنظیمات شادوساکس</string>
     <string name="proxy_cat">تنظیمات سرور</string>
@@ -337,6 +333,7 @@
     <string name="group_order_by_name">بر اساس نام</string>
     <string name="hysteria_disable_mtu_discovery">غیر فعال کردن مسیر کشف MTU</string>
     <string name="hysteria_connection_receive_window">پنجره دریافت اتصال سریع</string>
+    <string name="utls_fingerprint">اثر انگشت uTLS</string>
     <string name="hysteria_stream_receive_window">پنجره دریافت جریان QUIC</string>
     <string name="menu_traffic">ترافیک</string>
     <string name="no_statistics">هنوز آماری در دسترس نیست</string>
@@ -421,4 +418,16 @@
     <string name="tuic_congestion_controller">کنترل کننده ازدحام</string>
     <string name="tuic_disable_sni">غیر فعال کردن SNI</string>
     <string name="tuic_reduce_rtt">کاهش RTT</string>
+    <string name="action_flash_on">روشن کردن فلاش</string>
+    <string name="action_camera_switch">عوض کردن دوربین</string>
+    <string name="action_flash_off">خاموش کردن فلاش</string>
+    <string name="action_open">باز کردن</string>
+    <string name="connection_test_delete_unavailable">پاک‌سازی غیرقابل دسترس‌ها</string>
+    <string name="hysteria2_provider">ارائه دهنده Hysteria2</string>
+    <string name="front_proxy">پروکسی فرانت</string>
+    <string name="landing_proxy">پروکسی فرود آمدن</string>
+    <string name="allow_apps_bypass_vpn">اجازه دادن به برنامه‌ها برای دور زدن وی‌پی‌ان</string>
+    <string name="update_all_subscriptions">به‌روزرسانی تمام اشتراک ها</string>
+    <string name="acquire_wake_lock">به‌دست آوردن WakeLock</string>
+    <string name="log_level">سطح گزارش</string>
 </resources>

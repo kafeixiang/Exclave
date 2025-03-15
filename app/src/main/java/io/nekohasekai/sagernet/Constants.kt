@@ -43,7 +43,7 @@ object Key {
     const val USE_LOCAL_DNS_AS_BOOTSTRAP_DNS = "useLocalDnsAsBootstrapDns"
     const val ENABLE_DNS_ROUTING = "enableDnsRouting"
     const val ENABLE_FAKEDNS = "enableFakeDns"
-    const val HIJACK_DNS = "hijackDns"
+    const val HIJACK_DNS = "hijackDns0"
     const val DNS_HOSTS = "dnsHosts0"
     const val REMOTE_DNS_QUERY_STRATEGY = "remoteDnsQueryStrategy"
     const val DIRECT_DNS_QUERY_STRATEGY = "directDnsQueryStrategy"
@@ -87,7 +87,7 @@ object Key {
     const val RULES_PROVIDER = "rulesProvider"
     const val RULES_GEOSITE_URL = "rulesGeositeUrl"
     const val RULES_GEOIP_URL = "rulesGeoipUrl"
-    const val ENABLE_LOG = "enableLog"
+    const val LOG_LEVEL = "logLevel"
     const val ENABLE_DEBUG = "enableDebug"
     const val PPROF_SERVER = "pprofServer"
 
@@ -104,6 +104,9 @@ object Key {
     const val ENABLE_PCAP = "enablePcap"
     const val MTU = "mtu"
     const val ALLOW_APPS_BYPASS_VPN = "allowAppsBypassVpn"
+    const val ACQUIRE_WAKE_LOCK = "acquireWakeLock"
+    const val STUN_SERVERS = "stunServers"
+    const val FAB_STYLE = "fabStyle"
 
     const val ENABLE_FRAGMENT = "enableFragment"
     const val ENABLE_FRAGMENT_FOR_DIRECT = "enableFragmentForDirect"
@@ -143,7 +146,6 @@ object Key {
     const val SERVER_HOST = "serverHost"
     const val SERVER_PATH = "serverPath"
     const val SERVER_SNI = "serverSNI"
-    const val SERVER_TLS = "serverTLS"
     const val SERVER_ENCRYPTION = "serverEncryption"
     const val SERVER_ALPN = "serverALPN"
     const val SERVER_CERTIFICATES = "serverCertificates"
@@ -164,7 +166,6 @@ object Key {
 
     const val SERVER_REALITY_PUBLIC_KEY = "serverRealityPublicKey"
     const val SERVER_REALITY_SHORT_ID = "serverRealityShortId"
-    const val SERVER_REALITY_SPIDER_X = "serverRealitySpiderX"
     const val SERVER_REALITY_FINGERPRINT = "serverRealityFingerprint"
 
     const val SERVER_MEKYA_KCP_SEED = "serverMekyaKcpSeed"
@@ -209,6 +210,9 @@ object Key {
     const val SERVER_BROOK_TLS_FINGERPRINT = "serverBrookTlsFingerprint"
     const val SERVER_BROOK_FRAGMENT = "serverBrookFragment"
     const val SERVER_BROOK_UDP_OVER_STREAM = "serverBrookUdpOverStream"
+    const val SERVER_BROOK_CLIENT_HKDF_INFO = "serverBrookClientHkdfInfo"
+    const val SERVER_BROOK_SERVER_HKDF_INFO = "serverBrookServerHkdfInfo"
+    const val SERVER_BROOK_TOKEN = "serverBrookToken"
 
     const val SERVER_UDP_RELAY_MODE = "serverUDPRelayMode"
     const val SERVER_CONGESTION_CONTROLLER = "serverCongestionController"
@@ -266,6 +270,7 @@ object Key {
     const val SUBSCRIPTION_USER_AGENT = "subscriptionUserAgent"
     const val SUBSCRIPTION_AUTO_UPDATE = "subscriptionAutoUpdate"
     const val SUBSCRIPTION_AUTO_UPDATE_DELAY = "subscriptionAutoUpdateDelay"
+    const val SUBSCRIPTION_NAME_FILTER = "subscriptionNameFilter"
 
     const val EDITING_ASSET_NAME = "editingAssetName"
     const val ASSET_NAME = "assetName"
@@ -282,15 +287,9 @@ object TunImplementation {
     const val SYSTEM = 1
 }
 
-object TrojanProvider {
-    const val V2RAY = 0
-    const val TROJAN = 1
-    const val TROJAN_GO = 2
-}
-
-object Hysteria2Provider {
-    const val HYSTERIA2_PLUGIN = 0
-    const val V2RAY = 1
+object ProtocolProvider {
+    const val PLUGIN = 0
+    const val CORE = 1
 }
 
 object Shadowsocks2022Implementation {
@@ -301,6 +300,7 @@ object Shadowsocks2022Implementation {
 object RootCAProvider {
     const val MOZILLA = 0
     const val SYSTEM = 1
+    const val SYSTEM_AND_USER = 2 // for https://github.com/golang/go/issues/71258
 }
 
 object IPv6Mode {
@@ -308,12 +308,6 @@ object IPv6Mode {
     const val ENABLE = 1
     const val PREFER = 2
     const val ONLY = 3
-}
-
-object PacketStrategy {
-    const val DIRECT = 0
-    const val DROP = 1
-    const val REPLY = 2
 }
 
 object GroupType {
@@ -353,4 +347,17 @@ object NetworkType {
     const val WIFI = "wifi"
     const val BLUETOOTH = "bluetooth"
     const val ETHERNET = "ethernet"
+}
+
+object LogLevel {
+    const val NONE = 0
+    const val ERROR = 1
+    const val WARNING = 2
+    const val INFO = 3
+    const val DEBUG = 4
+}
+
+object FabStyle {
+    const val SagerNet = 0
+    const val Shadowsocks = 1
 }

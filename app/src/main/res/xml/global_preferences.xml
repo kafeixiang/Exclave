@@ -95,11 +95,14 @@
             app:key="allowAccess"
             app:summary="@string/allow_access_sum"
             app:title="@string/allow_access" />
-        <SwitchPreference
+        <com.takisoft.preferencex.SimpleMenuPreference
+            app:defaultValue="2"
             app:icon="@drawable/ic_baseline_bug_report_24"
-            app:key="enableLog"
-            app:summary="@string/enable_log_sum"
-            app:title="@string/enable_log" />
+            app:entries="@array/log_level_entry"
+            app:entryValues="@array/log_level_value"
+            app:key="logLevel"
+            app:title="@string/log_level"
+            app:useSimpleSummaryProvider="true"/>
         <EditTextPreference
             app:defaultValue="127.0.0.1:6060"
             app:key="pprofServer"
@@ -140,6 +143,11 @@
             app:key="destinationOverride"
             app:summary="@string/destination_override_summary"
             app:title="@string/destination_override" />
+        <SwitchPreference
+            app:icon="@drawable/ic_action_lock"
+            app:key="hijackDns0"
+            app:summary="@string/hijack_dns_message"
+            app:title="@string/hijack_dns" />
         <SwitchPreference
             app:icon="@drawable/baseline_wrap_text_24"
             app:key="resolveDestination"
@@ -204,6 +212,7 @@
             app:useSimpleSummaryProvider="true" />
         <com.takisoft.preferencex.SimpleMenuPreference
             android:icon="@drawable/baseline_flight_takeoff_24"
+            app:defaultValue="1"
             app:entries="@array/tuic5_provider"
             app:entryValues="@array/tuic5_provider_value"
             app:key="providerTuic5"
@@ -211,9 +220,9 @@
             app:useSimpleSummaryProvider="true" />
         <com.takisoft.preferencex.SimpleMenuPreference
             android:icon="@drawable/ic_baseline_push_pin_24"
-            app:defaultValue="0"
+            app:defaultValue="1"
             app:entries="@array/root_ca_provider_entry"
-            app:entryValues="@array/int_array_2"
+            app:entryValues="@array/int_array_3"
             app:key="providerRootCA"
             app:title="@string/root_ca_provider"
             app:useSimpleSummaryProvider="true" />
@@ -235,6 +244,7 @@
             app:title="@string/remote_dns_query_strategy"
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
+            app:dialogMessage="@string/edns_client_ip_sum"
             app:icon="@drawable/ic_baseline_push_pin_24"
             app:key="ednsClientIp"
             app:title="@string/edns_client_ip"
@@ -262,6 +272,7 @@
             app:key="useLocalDnsAsBootstrapDns"
             app:title="@string/use_local_dns_as_bootstrap_dns" />
         <io.nekohasekai.sagernet.widget.NonBlackEditTextPreference
+            app:dialogMessage="@string/bootstrap_dns_sum"
             app:icon="@drawable/ic_action_dns"
             app:key="bootstrapDns"
             app:title="@string/bootstrap_dns"
@@ -282,11 +293,6 @@
             app:key="enableFakeDns"
             app:summary="@string/fakedns_message"
             app:title="@string/enable_fakedns" />
-        <SwitchPreference
-            app:icon="@drawable/ic_action_lock"
-            app:key="hijackDns"
-            app:summary="@string/hijack_dns_message"
-            app:title="@string/hijack_dns" />
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/inbound_settings">
@@ -316,6 +322,7 @@
             app:summary="@string/append_http_proxy_sum"
             app:title="@string/append_http_proxy" />
         <EditTextPreference
+            app:dialogMessage="@string/one_per_line"
             app:icon="@drawable/ic_baseline_domain_24"
             app:key="httpProxyException"
             app:title="@string/http_proxy_exception_list" />
@@ -369,6 +376,23 @@
             app:key="allowAppsBypassVpn"
             app:summary="@string/allow_apps_bypass_vpn_sum"
             app:title="@string/allow_apps_bypass_vpn" />
+        <SwitchPreference
+            app:icon="@drawable/baseline_developer_board_24"
+            app:key="acquireWakeLock"
+            app:title="@string/acquire_wake_lock" />
+        <EditTextPreference
+            app:dialogMessage="@string/one_per_line"
+            app:icon="@drawable/ic_hardware_router"
+            app:key="stunServers"
+            app:title="@string/nat_stun_server_hint" />
+        <com.takisoft.preferencex.SimpleMenuPreference
+            app:defaultValue="0"
+            app:entries="@array/fab_style_entry"
+            app:entryValues="@array/int_array_2"
+            app:icon="@drawable/baseline_flight_takeoff_24"
+            app:key="fabStyle"
+            app:title="@string/fab_style"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
 
