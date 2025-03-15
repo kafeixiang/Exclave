@@ -24,7 +24,8 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import androidx.activity.addCallback
+import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
@@ -38,6 +39,7 @@ import io.nekohasekai.sagernet.Key
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.preference.OnPreferenceDataStoreChangeListener
+import io.nekohasekai.sagernet.ktx.FixedLinearLayoutManager
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.ktx.runOnMainDispatcher
@@ -49,6 +51,12 @@ class TaskerActivity : ThemedActivity(R.layout.layout_config_settings),
     OnPreferenceDataStoreChangeListener {
 
     val settings by lazy { TaskerBundle.fromIntent(intent) }
+
+    val callback = object : OnBackPressedCallback(enabled = false) {
+        override fun handleOnBackPressed() {
+            saveAndExit()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,9 +101,7 @@ class TaskerActivity : ThemedActivity(R.layout.layout_config_settings),
         DataStore.dirty = false
         DataStore.profileCacheStore.registerChangeListener(this)
 
-        onBackPressedDispatcher.addCallback {
-            if (needSave()) saveAndExit() else finish()
-        }
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     lateinit var profile: TaskerProfilePreference
@@ -121,6 +127,7 @@ class TaskerActivity : ThemedActivity(R.layout.layout_config_settings),
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         if (key != Key.PROFILE_DIRTY) {
             DataStore.dirty = true
+            callback.isEnabled = true
         }
         when (key) {
             Key.TASKER_ACTION -> {
@@ -148,11 +155,6 @@ class TaskerActivity : ThemedActivity(R.layout.layout_config_settings),
                 DataStore.taskerProfileId = profileId
             }
         }
-    }
-
-    fun needSave(): Boolean {
-        if (!DataStore.dirty) return false
-        return true
     }
 
     fun saveAndExit() {
@@ -200,6 +202,22 @@ class TaskerActivity : ThemedActivity(R.layout.layout_config_settings),
             }
         }
 
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+
+            ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
+                val bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+                            or WindowInsetsCompat.Type.displayCutout()
+                )
+                v.updatePadding(
+                    left = bars.left,
+                    right = bars.right,
+                    bottom = bars.bottom,
+                )
+                WindowInsetsCompat.CONSUMED
+            }
+        }
     }
 
 }

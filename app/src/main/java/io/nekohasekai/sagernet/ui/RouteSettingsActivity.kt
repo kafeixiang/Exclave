@@ -28,7 +28,7 @@ import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.activity.addCallback
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
@@ -55,6 +55,7 @@ import io.nekohasekai.sagernet.database.ProfileManager
 import io.nekohasekai.sagernet.database.RuleEntity
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.database.preference.OnPreferenceDataStoreChangeListener
+import io.nekohasekai.sagernet.ktx.FixedLinearLayoutManager
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.app
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
@@ -69,6 +70,14 @@ class RouteSettingsActivity(
     @LayoutRes resId: Int = R.layout.layout_settings_activity,
 ) : ThemedActivity(resId),
     OnPreferenceDataStoreChangeListener {
+
+    val callback = object : OnBackPressedCallback(enabled = false) {
+        override fun handleOnBackPressed() {
+            UnsavedChangesDialogFragment().apply {
+                key()
+            }.show(supportFragmentManager, null)
+        }
+    }
 
     fun init(packageName: String?) {
         RuleEntity().apply {
@@ -256,7 +265,6 @@ class RouteSettingsActivity(
             setNegativeButton(android.R.string.cancel) { _, _ ->
                 requireActivity().finish()
             }
-            setNeutralButton(android.R.string.cancel, null)
         }
     }
 
@@ -295,18 +303,6 @@ class RouteSettingsActivity(
                 top = bars.top,
                 left = bars.left,
                 right = bars.right,
-            )
-            WindowInsetsCompat.CONSUMED
-        }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings)) { v, insets ->
-            val bars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars()
-                        or WindowInsetsCompat.Type.displayCutout()
-            )
-            v.updatePadding(
-                left = bars.left,
-                right = bars.right,
-                bottom = bars.bottom,
             )
             WindowInsetsCompat.CONSUMED
         }
@@ -350,15 +346,7 @@ class RouteSettingsActivity(
 
         }
 
-        onBackPressedDispatcher.addCallback {
-            if (needSave()) {
-                UnsavedChangesDialogFragment().apply {
-                    key()
-                }.show(supportFragmentManager, null)
-            } else {
-                finish()
-            }
-        }
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     suspend fun saveAndExit() {
@@ -432,6 +420,7 @@ class RouteSettingsActivity(
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         if (key != Key.PROFILE_DIRTY) {
             DataStore.dirty = true
+            callback.isEnabled = true
         }
     }
 
@@ -453,6 +442,18 @@ class RouteSettingsActivity(
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
 
+            ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
+                val bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+                            or WindowInsetsCompat.Type.displayCutout()
+                )
+                v.updatePadding(
+                    left = bars.left,
+                    right = bars.right,
+                    bottom = bars.bottom,
+                )
+                WindowInsetsCompat.CONSUMED
+            }
             activity?.apply {
                 viewCreated(view, savedInstanceState)
             }
