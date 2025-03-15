@@ -27,7 +27,8 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
-import androidx.activity.addCallback
+import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
@@ -49,6 +50,7 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SubscriptionType
 import io.nekohasekai.sagernet.database.*
 import io.nekohasekai.sagernet.database.preference.OnPreferenceDataStoreChangeListener
+import io.nekohasekai.sagernet.ktx.FixedLinearLayoutManager
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.applyDefaultValues
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
@@ -62,6 +64,14 @@ class GroupSettingsActivity(
     @LayoutRes resId: Int = R.layout.layout_config_settings,
 ) : ThemedActivity(resId),
     OnPreferenceDataStoreChangeListener {
+
+    val callback = object : OnBackPressedCallback(enabled = false) {
+        override fun handleOnBackPressed() {
+            UnsavedChangesDialogFragment().apply {
+                key()
+            }.show(supportFragmentManager, null)
+        }
+    }
 
     private lateinit var frontProxyPreference: SimpleMenuPreference
     private lateinit var landingProxyPreference: SimpleMenuPreference
@@ -114,7 +124,9 @@ class GroupSettingsActivity(
     }
 
     fun needSave(): Boolean {
-        if (!DataStore.dirty) return false
+        if (!DataStore.dirty) {
+            return false
+        }
         return true
     }
 
@@ -261,18 +273,6 @@ class GroupSettingsActivity(
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings)) { v, insets ->
-            val bars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars()
-                        or WindowInsetsCompat.Type.displayCutout()
-            )
-            v.updatePadding(
-                left = bars.left,
-                right = bars.right,
-                bottom = bars.bottom,
-            )
-            WindowInsetsCompat.CONSUMED
-        }
 
         setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.apply {
@@ -310,15 +310,7 @@ class GroupSettingsActivity(
                 }
             }
 
-            onBackPressedDispatcher.addCallback {
-                if (needSave()) {
-                    UnsavedChangesDialogFragment().apply {
-                        key()
-                    }.show(supportFragmentManager, null)
-                } else {
-                    finish()
-                }
-            }
+            onBackPressedDispatcher.addCallback(this, callback)
         }
 
     }
@@ -381,6 +373,7 @@ class GroupSettingsActivity(
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         if (key != Key.PROFILE_DIRTY) {
             DataStore.dirty = true
+            callback.isEnabled = true
         }
     }
 
@@ -399,6 +392,22 @@ class GroupSettingsActivity(
             }
         }
 
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+
+            ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
+                val bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+                            or WindowInsetsCompat.Type.displayCutout()
+                )
+                v.updatePadding(
+                    left = bars.left,
+                    right = bars.right,
+                    bottom = bars.bottom,
+                )
+                WindowInsetsCompat.CONSUMED
+            }
+        }
     }
 
     object PasswordSummaryProvider : Preference.SummaryProvider<EditTextPreference> {

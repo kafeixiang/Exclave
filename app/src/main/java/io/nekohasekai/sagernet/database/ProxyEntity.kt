@@ -30,6 +30,8 @@ import io.nekohasekai.sagernet.aidl.TrafficStats
 import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.fmt.KryoConverters
 import io.nekohasekai.sagernet.fmt.Serializable
+import io.nekohasekai.sagernet.fmt.anytls.AnyTLSBean
+import io.nekohasekai.sagernet.fmt.anytls.toUri
 import io.nekohasekai.sagernet.fmt.brook.BrookBean
 import io.nekohasekai.sagernet.fmt.brook.toUri
 import io.nekohasekai.sagernet.fmt.buildV2RayConfig
@@ -121,6 +123,7 @@ data class ProxyEntity(
     var wgBean: WireGuardBean? = null,
     var juicityBean: JuicityBean? = null,
     var http3Bean: Http3Bean? = null,
+    var anytlsBean: AnyTLSBean? = null,
     var configBean: ConfigBean? = null,
     var chainBean: ChainBean? = null,
     var balancerBean: BalancerBean? = null,
@@ -148,6 +151,7 @@ data class ProxyEntity(
         const val TYPE_SHADOWTLS = 24
         const val TYPE_JUICITY = 25
         const val TYPE_HTTP3 = 26
+        const val TYPE_ANYTLS = 27
 
         const val TYPE_CHAIN = 8
         const val TYPE_BALANCER = 14
@@ -245,6 +249,7 @@ data class ProxyEntity(
             TYPE_SHADOWTLS -> shadowtlsBean = KryoConverters.shadowtlsDeserialize(byteArray)
             TYPE_JUICITY -> juicityBean = KryoConverters.juicityDeserialize(byteArray)
             TYPE_HTTP3 -> http3Bean = KryoConverters.http3Deserialize(byteArray)
+            TYPE_ANYTLS -> anytlsBean = KryoConverters.anytlsDeserialize(byteArray)
             TYPE_CONFIG -> configBean = KryoConverters.configDeserialize(byteArray)
             TYPE_CHAIN -> chainBean = KryoConverters.chainDeserialize(byteArray)
             TYPE_BALANCER -> balancerBean = KryoConverters.balancerBeanDeserialize(byteArray)
@@ -273,6 +278,7 @@ data class ProxyEntity(
         TYPE_SHADOWTLS -> "ShadowTLS"
         TYPE_JUICITY -> "Juicity"
         TYPE_HTTP3 -> "HTTP3"
+        TYPE_ANYTLS -> "AnyTLS"
         TYPE_CHAIN -> chainName
         TYPE_CONFIG -> configName
         TYPE_BALANCER -> balancerName
@@ -305,6 +311,7 @@ data class ProxyEntity(
             TYPE_SHADOWTLS -> shadowtlsBean
             TYPE_JUICITY -> juicityBean
             TYPE_HTTP3 -> http3Bean
+            TYPE_ANYTLS -> anytlsBean
 
             TYPE_CONFIG -> configBean
             TYPE_CHAIN -> chainBean
@@ -353,6 +360,7 @@ data class ProxyEntity(
             is MieruBean -> toUri()
             is Http3Bean -> toUri()
             is MatsuriBean -> if (this.haveStandardLink()) toUri() else null
+            is AnyTLSBean -> toUri()
             else -> null
         }
     }
@@ -473,6 +481,7 @@ data class ProxyEntity(
         shadowtlsBean = null
         juicityBean = null
         http3Bean = null
+        anytlsBean = null
 
         configBean = null
         chainBean = null
@@ -561,6 +570,10 @@ data class ProxyEntity(
                 type = TYPE_HTTP3
                 http3Bean = bean
             }
+            is AnyTLSBean -> {
+                type = TYPE_ANYTLS
+                anytlsBean = bean
+            }
 
             is ConfigBean -> {
                 type = TYPE_CONFIG
@@ -606,6 +619,7 @@ data class ProxyEntity(
             TYPE_SHADOWTLS -> ShadowTLSSettingsActivity::class.java
             TYPE_JUICITY -> JuicitySettingsActivity::class.java
             TYPE_HTTP3 -> Http3SettingsActivity::class.java
+            TYPE_ANYTLS -> AnyTLSSettingsActivity::class.java
             TYPE_CONFIG -> ConfigSettingsActivity::class.java
             TYPE_CHAIN -> ChainSettingsActivity::class.java
             TYPE_BALANCER -> BalancerSettingsActivity::class.java
