@@ -199,6 +199,7 @@ fun parseProxies(text: String): List<AbstractBean> {
                         }
                     }
                 }
+             }
         } else if (startsWith("anytls://")) {
             Logs.d("Try parse anytls link: $this")
             runCatching {
