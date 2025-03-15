@@ -784,7 +784,6 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
             }
         }
-        return true
     }
 
     inner class TestDialog {
@@ -1996,5 +1995,4 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
         }
     }
-
 }
