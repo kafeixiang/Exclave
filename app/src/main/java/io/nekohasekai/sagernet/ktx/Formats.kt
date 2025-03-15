@@ -183,31 +183,31 @@ fun parseProxies(text: String): List<AbstractBean> {
                 Logs.w(it)
             }
         } else { // Matsuri plugins
-            MatsuriPluginManager.getProtocols().forEach { obj ->
-                obj.protocolConfig.getJSONArray("links")?.forEach { any ->
-                    if (any is String && startsWith(any)) {
-                        runOnDefaultDispatcher {
-                            runCatching {
-                                entities.add(
-                                    parseShareLink(
-                                        obj.plgId, obj.protocolId, this@parseLink
-                                    )
-                                )
-                            }.onFailure {
-                                Logs.w(it)
-                            }
-                        }
-                    }
-                }
+             MatsuriPluginManager.getProtocols().forEach { obj ->
+                 obj.protocolConfig.getJSONArray("links")?.forEach { any ->
+                     if (any is String && startsWith(any)) {
+                         runOnDefaultDispatcher {
+                             runCatching {
+                                 entities.add(
+                                     parseShareLink(
+                                         obj.plgId, obj.protocolId, this@parseLink
+                                     )
+                                 )
+                             }.onFailure {
+                                 Logs.w(it)
+                             }
+                         }
+                     }
+                 }
              }
-        } else if (startsWith("anytls://")) {
-            Logs.d("Try parse anytls link: $this")
-            runCatching {
-                entities.add(parseAnyTLS(this))
-            }.onFailure {
-                Logs.w(it)
-            }
-        }
+         } else if (startsWith("anytls://")) {
+             Logs.d("Try parse anytls link: $this")
+             runCatching {
+                 entities.add(parseAnyTLS(this))
+             }.onFailure {
+                 Logs.w(it)
+             }
+         }
     }
 
     for (link in links) {
