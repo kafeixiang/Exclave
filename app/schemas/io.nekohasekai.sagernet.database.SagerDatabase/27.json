@@ -281,6 +281,12 @@
             "columnName": "balancerBean",
             "affinity": "BLOB",
             "notNull": false
+          },
+          {
+            "fieldPath": "matsuriBean",
+            "columnName": "matsuriBean",
+            "affinity": "BLOB",
+            "notNull": false
           }
         ],
         "primaryKey": {

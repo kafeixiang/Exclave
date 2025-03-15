@@ -564,5 +564,6 @@
     <string name="more">More</string>
     <string name="acquire_wake_lock">Acquire WakeLock</string>
     <string name="log_level">Log level</string>
+    <string name="matsuri_plugins" translatable="false">Matsuri plugins</string>
     <string name="fab_style">Floating action button style</string>
 </resources>
