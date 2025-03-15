@@ -499,6 +499,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 dialog = MaterialAlertDialogBuilder(context).setTitle(R.string.matsuri_plugins)
                     .setView(linearLayout)
                     .show()
+            }
             R.id.action_new_anytls -> {
                 startActivity(Intent(requireActivity(), AnyTLSSettingsActivity::class.java))
             }
@@ -784,6 +785,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
             }
         }
+        return true
     }
 
     inner class TestDialog {
@@ -1995,4 +1997,5 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
         }
     }
+
 }
