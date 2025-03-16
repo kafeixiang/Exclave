@@ -1,62 +1,3 @@
-/******************************************************************************
- *                                                                            *
- * Copyright (C) 2021 by nekohasekai <contact-sagernet@sekai.icu>             *
- *                                                                            *
- * This program is free software: you can redistribute it and/or modify       *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- *  (at your option) any later version.                                       *
- *                                                                            *
- * This program is distributed in the hope that it will be useful,            *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
- *                                                                            *
- ******************************************************************************/
-
-package io.nekohasekai.sagernet.ktx
-
-import cn.hutool.core.codec.Base64
-import cn.hutool.json.JSONObject
-import io.nekohasekai.sagernet.fmt.AbstractBean
-import io.nekohasekai.sagernet.fmt.Serializable
-import io.nekohasekai.sagernet.fmt.anytls.parseAnyTLS
-import io.nekohasekai.sagernet.fmt.brook.parseBrook
-import io.nekohasekai.sagernet.fmt.gson.gson
-import io.nekohasekai.sagernet.fmt.http.parseHttp
-import io.nekohasekai.sagernet.fmt.http3.parseHttp3
-import io.nekohasekai.sagernet.fmt.hysteria.parseHysteria
-import io.nekohasekai.sagernet.fmt.hysteria2.parseHysteria2
-import io.nekohasekai.sagernet.fmt.juicity.parseJuicity
-import io.nekohasekai.sagernet.fmt.matsuri.parseShareLink
-import io.nekohasekai.sagernet.fmt.mieru.parseMieru
-import io.nekohasekai.sagernet.fmt.naive.parseNaive
-import io.nekohasekai.sagernet.fmt.parseBackupLink
-import io.nekohasekai.sagernet.fmt.shadowsocks.parseShadowsocks
-import io.nekohasekai.sagernet.fmt.shadowsocksr.parseShadowsocksR
-import io.nekohasekai.sagernet.fmt.socks.parseSOCKS
-import io.nekohasekai.sagernet.fmt.trojan_go.parseTrojanGo
-import io.nekohasekai.sagernet.fmt.tuic5.parseTuic
-import io.nekohasekai.sagernet.fmt.v2ray.parseV2Ray
-import io.nekohasekai.sagernet.fmt.wireguard.parseV2rayNWireGuard
-import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
-import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
-
-fun formatObject(obj: Any): String {
-    return gson.toJson(obj).let { JSONObject(it).toStringPretty() }
-}
-
-fun String.decodeBase64UrlSafe(): String {
-    return Base64.decodeStr(
-        replace(' ', '-').replace('/', '_').replace('+', '-').replace("=", "")
-    )
-}
-
-class SubscriptionFoundException(val link: String) : RuntimeException()
-
 fun parseProxies(text: String): List<AbstractBean> {
     val links = text.split('\n').flatMap { it.trim().split(' ') }
     val linksByLine = text.split('\n').map { it.trim() }
@@ -182,32 +123,33 @@ fun parseProxies(text: String): List<AbstractBean> {
             }.onFailure {
                 Logs.w(it)
             }
+        } else if (startsWith("anytls://")) {
+            Logs.d("Try parse anytls link: $this")
+            runCatching {
+                entities.add(parseAnyTLS(this))
+            }.onFailure {
+                Logs.w(it)
+            }
+        }
         } else { // Matsuri plugins
-             MatsuriPluginManager.getProtocols().forEach { obj ->
-                 obj.protocolConfig.getJSONArray("links")?.forEach { any ->
-                     if (any is String && startsWith(any)) {
-                         runOnDefaultDispatcher {
-                             runCatching {
-                                 entities.add(
-                                     parseShareLink(
-                                         obj.plgId, obj.protocolId, this@parseLink
-                                     )
-                                 )
-                             }.onFailure {
-                                 Logs.w(it)
-                             }
-                         }
-                     }
-                 }
-             }
-         } else if (startsWith("anytls://")) {
-             Logs.d("Try parse anytls link: $this")
-             runCatching {
-                 entities.add(parseAnyTLS(this))
-             }.onFailure {
-                 Logs.w(it)
-             }
-         }
+            MatsuriPluginManager.getProtocols().forEach { obj ->
+                obj.protocolConfig.getJSONArray("links")?.forEach { any ->
+                    if (any is String && startsWith(any)) {
+                        runOnDefaultDispatcher {
+                            runCatching {
+                                entities.add(
+                                    parseShareLink(
+                                        obj.plgId, obj.protocolId, this@parseLink
+                                    )
+                                )
+                            }.onFailure {
+                                Logs.w(it)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     for (link in links) {
@@ -230,9 +172,4 @@ fun parseProxies(text: String): List<AbstractBean> {
         MatsuriJSInterface.Default.destroyAllJsi()
     }
     return if (entities.size > entitiesByLine.size) entities else entitiesByLine
-}
-
-fun <T : Serializable> T.applyDefaultValues(): T {
-    initializeDefaultValues()
-    return this
 }
