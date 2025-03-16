@@ -182,15 +182,7 @@ fun parseProxies(text: String): List<AbstractBean> {
             }.onFailure {
                 Logs.w(it)
             }
-        } else if (startsWith("anytls://")) {
-             Logs.d("Try parse anytls link: $this")
-             runCatching {
-                 entities.add(parseAnyTLS(this))
-             }.onFailure {
-                 Logs.w(it)
-             }
-         } 
-         } else { // Matsuri plugins
+        } else { // Matsuri plugins
              MatsuriPluginManager.getProtocols().forEach { obj ->
                  obj.protocolConfig.getJSONArray("links")?.forEach { any ->
                      if (any is String && startsWith(any)) {
@@ -208,7 +200,14 @@ fun parseProxies(text: String): List<AbstractBean> {
                      }
                  }
              }
-        }
+         } else if (startsWith("anytls://")) {
+             Logs.d("Try parse anytls link: $this")
+             runCatching {
+                 entities.add(parseAnyTLS(this))
+             }.onFailure {
+                 Logs.w(it)
+             }
+         }
     }
 
     for (link in links) {
