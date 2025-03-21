@@ -1058,4 +1058,36 @@
         <item>SagerNet</item>
         <item>Shadowsocks</item>
     </string-array>
+
+    <string-array name="language_entry">
+        <item>@string/language_system_default</item>
+        <item>@string/language_arabic</item>
+        <item>@string/language_english</item>
+        <item>@string/language_spainish</item>
+        <item>@string/language_persian</item>
+        <item>@string/language_french</item>
+        <item>@string/language_indonesian</item>
+        <item>@string/language_italian</item>
+        <item>@string/language_norwegian_bokmål</item>
+        <item>@string/language_russian</item>
+        <item>@string/language_turkish</item>
+        <item>@string/language_simplified_chinese_china</item>
+        <item>@string/language_traditional_chinese_taiwan</item>
+    </string-array>
+
+    <string-array name="language_value">
+        <item />
+        <item>ar</item>
+        <item>en-US</item>
+        <item>es</item>
+        <item>fa</item>
+        <item>fr</item>
+        <item>in</item>
+        <item>it</item>
+        <item>nb-NO</item>
+        <item>ru</item>
+        <item>tr</item>
+        <item>zh-Hans-CN</item>
+        <item>zh-Hant-TW</item>
+    </string-array>
 </resources>

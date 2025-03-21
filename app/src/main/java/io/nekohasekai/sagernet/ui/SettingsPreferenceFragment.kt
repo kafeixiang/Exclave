@@ -23,7 +23,9 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
+import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -43,6 +45,7 @@ import io.nekohasekai.sagernet.widget.LinkOrContentPreference
 import kotlinx.coroutines.delay
 import libcore.Libcore
 import java.io.File
+import java.util.Locale
 
 class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
@@ -96,6 +99,37 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             }
             true
         }
+
+        fun getLanguageDisplayName(code: String): String = run {
+            return when (code) {
+                "" -> getString(R.string.language_system_default)
+                "ar" -> getString(R.string.language_arabic)
+                "en-US" -> getString(R.string.language_english)
+                "es" -> getString(R.string.language_spainish)
+                "fa" -> getString(R.string.language_persian)
+                "fr" -> getString(R.string.language_french)
+                "in" -> getString(R.string.language_indonesian)
+                "it" -> getString(R.string.language_italian)
+                "nb-NO" -> getString(R.string.language_norwegian_bokmål)
+                "ru" -> getString(R.string.language_russian)
+                "tr" -> getString(R.string.language_turkish)
+                "zh-Hans-CN" -> getString(R.string.language_simplified_chinese_china)
+                "zh-Hant-TW" -> getString(R.string.language_traditional_chinese_taiwan)
+                else -> Locale.forLanguageTag(code).displayName // just a fallback name from Java
+            }
+        }
+        val appLanguage = findPreference<SimpleMenuPreference>(Key.APP_LANGUAGE)!!
+        val locale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        appLanguage.summary = getLanguageDisplayName(locale)
+        appLanguage.value = if (locale in resources.getStringArray(R.array.language_value)) locale else ""
+        appLanguage.setOnPreferenceChangeListener { _, newValue ->
+            newValue as String
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(newValue))
+            appLanguage.summary = getLanguageDisplayName(newValue)
+            appLanguage.value = newValue
+            true
+        }
+
         val portSocks5 = findPreference<EditTextPreference>(Key.SOCKS_PORT)!!
         val speedInterval = findPreference<Preference>(Key.SPEED_INTERVAL)!!
         val serviceMode = findPreference<Preference>(Key.SERVICE_MODE)!!
