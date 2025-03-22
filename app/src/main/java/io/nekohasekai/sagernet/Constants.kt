@@ -100,6 +100,8 @@ object Key {
     const val HYSTERIA_ENABLE_PORT_HOPPING = "hysteriaEnablePortHopping"
     const val PROVIDER_TUIC5 = "providerTuic5"
     const val PROVIDER_ROOT_CA = "providerRootCA"
+    const val MATSURI_PLUGINS = "matsuriPlugins"
+    const val MATSURI_PLUGIN_STORAGE = "matsuriPluginStorage"
 
     const val TUN_IMPLEMENTATION = "tunImplementation"
     const val ENABLE_PCAP = "enablePcap"

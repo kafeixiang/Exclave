@@ -228,6 +228,8 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var providerTuic5 by configurationStore.stringToInt(Key.PROVIDER_TUIC5) { 1 }
     var hysteriaEnablePortHopping by configurationStore.boolean(Key.HYSTERIA_ENABLE_PORT_HOPPING)
     var providerRootCA by configurationStore.stringToInt(Key.PROVIDER_ROOT_CA) { 1 }
+    var matsuriPlugins by configurationStore.string(Key.MATSURI_PLUGINS)
+    var matsuriPluginStorage by profileCacheStore.string(Key.MATSURI_PLUGIN_STORAGE)
 
     // cache
 
