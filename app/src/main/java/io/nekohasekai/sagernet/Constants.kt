@@ -32,6 +32,7 @@ object Key {
 
     const val APP_THEME = "appTheme"
     const val NIGHT_THEME = "nightTheme"
+    const val APP_LANGUAGE = "appLanguage"
     const val SERVICE_MODE = "serviceMode"
     const val MODE_VPN = "vpn"
     const val MODE_PROXY = "proxy"
@@ -224,6 +225,7 @@ object Key {
     const val SERVER_V3 = "serverV3"
     const val SERVER_MIERU_MUX_LEVEL = "serverMieruMuxLevel"
     const val SERVER_WIREGUARD_RESERVED = "serverWireGuardReserved"
+    const val SERVER_WIREGUARD_KEEPALIVE_INTERVAL = "serverWireGuardKeepaliveInterval"
 
     const val SERVER_PORTS = "serverPorts"
     const val SERVER_HOP_INTERVAL = "serverHopInterval"
