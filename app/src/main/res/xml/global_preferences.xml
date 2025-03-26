@@ -26,6 +26,13 @@
             app:title="@string/night_mode"
             app:useSimpleSummaryProvider="true" />
         <com.takisoft.preferencex.SimpleMenuPreference
+            app:defaultValue=""
+            app:entries="@array/language_entry"
+            app:entryValues="@array/language_value"
+            app:icon="@drawable/baseline_translate_24"
+            app:key="appLanguage"
+            app:title="@string/language" />
+        <com.takisoft.preferencex.SimpleMenuPreference
             app:defaultValue="vpn"
             app:entries="@array/service_modes"
             app:entryValues="@array/service_mode_values"
@@ -383,6 +390,19 @@
             app:icon="@drawable/baseline_developer_board_24"
             app:key="acquireWakeLock"
             app:title="@string/acquire_wake_lock" />
+        <EditTextPreference
+            app:dialogMessage="@string/one_per_line"
+            app:icon="@drawable/ic_hardware_router"
+            app:key="stunServers"
+            app:title="@string/nat_stun_server_hint" />
+        <com.takisoft.preferencex.SimpleMenuPreference
+            app:defaultValue="0"
+            app:entries="@array/fab_style_entry"
+            app:entryValues="@array/int_array_2"
+            app:icon="@drawable/baseline_flight_takeoff_24"
+            app:key="fabStyle"
+            app:title="@string/fab_style"
+            app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
 

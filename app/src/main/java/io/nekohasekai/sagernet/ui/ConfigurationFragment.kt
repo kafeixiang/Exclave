@@ -22,7 +22,6 @@ package io.nekohasekai.sagernet.ui
 import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.provider.OpenableColumns
@@ -90,6 +89,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.zip.ZipInputStream
 import kotlin.concurrent.timerTask
+import androidx.core.net.toUri
 
 class ConfigurationFragment @JvmOverloads constructor(
     val select: Boolean = false, val selectedItem: ProxyEntity? = null, val titleRes: Int = 0
@@ -178,6 +178,15 @@ class ConfigurationFragment @JvmOverloads constructor(
         if (searchView != null) {
             searchView.setOnQueryTextListener(this)
             searchView.maxWidth = Int.MAX_VALUE
+            searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    searchView.onActionViewCollapsed()
+                    searchView.clearFocus()
+                    (requireActivity() as? MainActivity)?.callback?.isEnabled = false
+                } else {
+                    (requireActivity() as? MainActivity)?.callback?.isEnabled = true
+                }
+            }
         }
 
         groupPager = view.findViewById(R.id.group_pager)
@@ -223,6 +232,32 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
 
         }
+
+        toolbar.setOnLongClickListener {
+            val selectedProxy = selectedItem
+                ?: SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
+                ?: return@setOnLongClickListener true
+            val groupIndex = adapter.groupList.indexOfFirst {
+                it.id == selectedProxy.groupId
+            }
+            if (groupIndex < 0) return@setOnLongClickListener true
+            DataStore.selectedGroup = selectedProxy.groupId
+            groupPager.currentItem = groupIndex
+
+            val fragment = (childFragmentManager.findFragmentByTag("f" + selectedGroup.id) as GroupFragment?)
+            if (fragment != null) {
+                val selectedProfileIndex = fragment.adapter.configurationIdList.indexOfFirst {
+                    it == selectedProxy.id
+                }
+                if (selectedProfileIndex > 0) {
+                    fragment.configurationListView.scrollTo(selectedProfileIndex, true)
+                }
+            }
+
+            true
+        }
+
+        (requireActivity() as? MainActivity)?.callback?.isEnabled = false
     }
 
     override fun onDestroy() {
@@ -243,6 +278,7 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     val importFile = registerForActivityResult(ActivityResultContracts.GetContent()) { file ->
+        var fileText = ""
         if (file != null) runOnDefaultDispatcher {
             try {
                 val fileName = requireContext().contentResolver.query(file, null, null, null, null)
@@ -255,12 +291,11 @@ class ConfigurationFragment @JvmOverloads constructor(
                 val proxies = mutableListOf<AbstractBean>()
                 if (fileName != null && fileName.endsWith(".zip")) {
                     // try parse wireguard zip
-
                     val zip = ZipInputStream(requireContext().contentResolver.openInputStream(file)!!)
                     while (true) {
                         val entry = zip.nextEntry ?: break
                         if (entry.isDirectory) continue
-                        val fileText = zip.bufferedReader().readText()
+                        fileText = zip.bufferedReader().readText()
                         RawUpdater.parseRaw(fileText)?.let { pl -> proxies.addAll(pl) }
                         zip.closeEntry()
                     }
@@ -268,20 +303,29 @@ class ConfigurationFragment @JvmOverloads constructor(
                         zip.close()
                     }
                 } else {
-                    val fileText = requireContext().contentResolver.openInputStream(file)!!.use {
+                    fileText = requireContext().contentResolver.openInputStream(file)!!.use {
                         it.bufferedReader().readText()
                     }
                     RawUpdater.parseRaw(fileText)?.let { pl -> proxies.addAll(pl) }
                 }
 
-                if (proxies.isEmpty()) onMainDispatcher {
-                    snackbar(getString(R.string.no_proxies_found_in_file)).show()
+                if (proxies.isEmpty()) {
+                    if (isUrl(fileText)) {
+                        val builder = Libcore.newURL("exclave").apply {
+                            host = "subscription"
+                        }
+                        builder.addQueryParameter("url", fileText)
+                        (requireActivity() as? MainActivity)?.importSubscription(builder.string.toUri())
+                    } else {
+                        onMainDispatcher {
+                            snackbar(getString(R.string.no_proxies_found_in_file)).show()
+                        }
+                    }
                 } else import(proxies)
             } catch (e: SubscriptionFoundException) {
-                (requireActivity() as MainActivity).importSubscription(Uri.parse(e.link))
+                (requireActivity() as? MainActivity)?.importSubscription(e.link.toUri())
             } catch (e: Exception) {
                 Logs.w(e)
-
                 onMainDispatcher {
                     snackbar(e.readableMessage).show()
                 }
@@ -318,26 +362,6 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     }
 
-    suspend fun importGroup(text: String) {
-        if (isUrl(text)) { // this url check is not strict enough
-            val group = ProxyGroup(type = GroupType.SUBSCRIPTION)
-            val subscription = SubscriptionBean()
-            group.subscription = subscription
-            subscription.link = text
-            group.name = "Group"
-            MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.subscription_import)
-                .setMessage(getString(R.string.subscription_import_message, text))
-                .setPositiveButton(android.R.string.ok) { _, _ ->
-                    runOnDefaultDispatcher {
-                        GroupManager.createGroup(group)
-                        GroupUpdater.startUpdate(group, true)
-                    }
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
-        }
-    }
-
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_scan_qr_code -> {
@@ -352,10 +376,12 @@ class ConfigurationFragment @JvmOverloads constructor(
                         try {
                             val proxies = RawUpdater.parseRaw(text)
                             if (proxies.isNullOrEmpty()) {
-                                if (isUrl(text)) { // this url check is not strict enough
-                                    onMainDispatcher {
-                                        importGroup(text)
+                                if (isUrl(text)) {
+                                    val builder = Libcore.newURL("exclave").apply {
+                                        host = "subscription"
                                     }
+                                    builder.addQueryParameter("url", text)
+                                    (requireActivity() as? MainActivity)?.importSubscription(builder.string.toUri())
                                 } else onMainDispatcher {
                                     snackbar(getString(R.string.no_proxies_found_in_clipboard)).show()
                                 }
@@ -363,7 +389,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                                 import(proxies)
                             }
                         } catch (e: SubscriptionFoundException) {
-                            (requireActivity() as MainActivity).importSubscription(Uri.parse(e.link))
+                            (requireActivity() as? MainActivity)?.importSubscription(e.link.toUri())
                         } catch (e: Exception) {
                             Logs.w(e)
                             onMainDispatcher {
@@ -464,6 +490,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                 dialog = MaterialAlertDialogBuilder(context).setTitle(R.string.matsuri_plugins)
                     .setView(linearLayout)
                     .show()
+            }
+            R.id.action_new_anytls -> {
+                startActivity(Intent(requireActivity(), AnyTLSSettingsActivity::class.java))
             }
             R.id.action_new_config -> {
                 startActivity(Intent(requireActivity(), ConfigSettingsActivity::class.java))
@@ -1022,6 +1051,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             testJobs.forEach { it.cancel() }
             runOnDefaultDispatcher {
                 ProfileManager.updateProfile(test.results.filter { it.status != 0 })
+                GroupManager.postReload(DataStore.currentGroupId())
             }
         }
     }
@@ -1371,7 +1401,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 v.updatePadding(
                     left = bars.left + dp2px(4),
                     right = bars.right + dp2px(4),
-                    bottom = bars.bottom + dp2px(4),
+                    bottom = bars.bottom + dp2px(64),
                 )
                 WindowInsetsCompat.CONSUMED
             }
@@ -1863,7 +1893,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                             }
                         }
 
-                        if (proxyEntity.brookBean != null || proxyEntity.shadowtlsBean != null) {
+                        if (proxyEntity.brookBean != null) {
                             popup.menu.removeItem(R.id.action_export_configuration)
                         }
 

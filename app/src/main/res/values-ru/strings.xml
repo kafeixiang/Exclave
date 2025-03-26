@@ -288,8 +288,8 @@
     <string name="early_data_header_name">Заголовок запроса ранних данных</string>
     <string name="pinned_peer_certificate_chain_sha256">Хэш цепочки закрепленного сертификата</string>
     <string name="certificates">Сертификаты</string>
-    <string name="alpn">Согласование протокола прикладного уровня (ALPN)</string>
-    <string name="sni">Индикация имени сервера (SNI)</string>
+    <string name="alpn">ALPN (согласование протокола прикладного уровня)</string>
+    <string name="sni">SNI (индикация имени сервера)</string>
     <string name="grpc_service_name">Имя службы gRPC</string>
     <string name="kcp_seed">mKCP Seed</string>
     <string name="quic_key">Ключ QUIC</string>
@@ -426,7 +426,6 @@
     <string name="reality_short_id">REALITY Short ID</string>
     <string name="reality_spider_x">REALITY SpiderX</string>
     <string name="reality_fingerprint">REALITY uTLS fingerprint</string>
-    <string name="shadowtls_v3">ShadowTLS v3</string>
     <string name="wireguard_reserved">Резервный</string>
     <string name="brook_udp_over_stream">UDP через поток</string>
     <string name="stun_legacy_test">Тест определения типа NAT</string>
@@ -523,4 +522,9 @@
     <string name="more">Другие</string>
     <string name="acquire_wake_lock">Включить WakeLock</string>
     <string name="log_level">Тип журнала</string>
+    <string name="fab_style">Стиль нижней панели</string>
+    <string name="core">ядро</string>
+    <string name="wireguard_keepalive_interval">Постоянное соединение</string>
+    <string name="language">Язык</string>
+    <string name="language_system_default">Системные настройки по умолчанию</string>
 </resources>

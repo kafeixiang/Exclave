@@ -446,7 +446,6 @@
     <string name="hysteria_hop_interval">Intervalo de salto</string>
     <string name="mux_settings">Configuración de Mux</string>
     <string name="reality_spider_x">REALITY SpiderX</string>
-    <string name="shadowtls_v3">ShadowTLS versión 3</string>
     <string name="wireguard_reserved">Reservado</string>
     <string name="shadowsocks_2022_implementation">Implementación de Shadowsocks 2022</string>
     <string name="action_open">Abrir</string>
@@ -499,4 +498,6 @@
     <string name="backup_all_profiles">Copia de seguridad de todos los perfiles</string>
     <string name="acquire_wake_lock">Adquirir WakeLock</string>
     <string name="log_level">Nivel de registro</string>
+    <string name="language">Idioma</string>
+    <string name="language_system_default">Predeterminado del sistema</string>
 </resources>

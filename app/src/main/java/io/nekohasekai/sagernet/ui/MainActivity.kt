@@ -33,8 +33,8 @@ import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.IdRes
-import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -43,6 +43,8 @@ import androidx.core.view.updatePadding
 import androidx.preference.PreferenceDataStore
 import cn.hutool.core.codec.Base64Decoder
 import cn.hutool.core.util.ZipUtil
+import com.google.android.material.bottomappbar.BottomAppBar.FAB_ALIGNMENT_MODE_CENTER
+import com.google.android.material.bottomappbar.BottomAppBar.FAB_ALIGNMENT_MODE_END
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
@@ -74,6 +76,12 @@ class MainActivity : ThemedActivity(),
 
     val userInterface by lazy { GroupInterfaceAdapter(this) }
 
+    val callback = object : OnBackPressedCallback(enabled = false) {
+        override fun handleOnBackPressed() {
+            displayFragmentWithId(R.id.nav_configuration)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -84,6 +92,21 @@ class MainActivity : ThemedActivity(),
         }
 
         binding = LayoutMainBinding.inflate(layoutInflater)
+        when (DataStore.fabStyle) {
+            FabStyle.SagerNet -> {
+                binding.stats.fabAlignmentMode = FAB_ALIGNMENT_MODE_END
+                binding.stats.fabCradleMargin = 0F
+                binding.stats.fabCradleRoundedCornerRadius = 0F
+                binding.stats.cradleVerticalOffset = dp2px(8).toFloat()
+            }
+            FabStyle.Shadowsocks -> {
+                binding.stats.fabAlignmentMode = FAB_ALIGNMENT_MODE_CENTER
+                binding.stats.fabCradleMargin = dp2px(6).toFloat()
+                binding.stats.fabCradleRoundedCornerRadius = dp2px(6).toFloat()
+                binding.stats.cradleVerticalOffset = 0F
+            }
+        }
+
         binding.fab.initProgress(binding.fabProgress)
         if (themeResId !in intArrayOf(
                 R.style.Theme_SagerNet_Black, R.style.Theme_SagerNet_LightBlack
@@ -97,6 +120,11 @@ class MainActivity : ThemedActivity(),
         }
         navigation.setNavigationItemSelectedListener(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // https://stackoverflow.com/questions/79319740/edge-to-edge-doesnt-work-when-activity-recreated-or-appcompatdelegate-setdefaul
+            // Baklava should have fixed this
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
         if (resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
@@ -126,6 +154,8 @@ class MainActivity : ThemedActivity(),
                 WindowInsetsCompat.CONSUMED
             }
         }
+
+        onBackPressedDispatcher.addCallback(this, callback)
 
         if (savedInstanceState == null) {
             displayFragmentWithId(R.id.nav_configuration)
@@ -561,23 +591,6 @@ class MainActivity : ThemedActivity(),
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
                 if (binding.drawerLayout.isOpen) {
                     binding.drawerLayout.close()
-                    return true
-                }
-            }
-            KeyEvent.KEYCODE_BACK -> {
-                if (binding.drawerLayout.isOpen) {
-                    binding.drawerLayout.close()
-                    return true
-                }
-                val configurationFragment = supportFragmentManager.findFragmentById(R.id.fragment_holder) as? ConfigurationFragment
-                if (configurationFragment == null) {
-                    displayFragmentWithId(R.id.nav_configuration)
-                    return true
-                }
-                val toolbarFragment = supportFragmentManager.findFragmentById(R.id.fragment_holder) as? ToolbarFragment
-                val searchView = toolbarFragment?.toolbar?.findViewById<SearchView>(R.id.action_search)
-                if (searchView?.isIconified == false) {
-                    searchView.isIconified = true
                     return true
                 }
             }

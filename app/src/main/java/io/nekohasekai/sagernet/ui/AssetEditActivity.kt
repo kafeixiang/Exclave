@@ -6,7 +6,8 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.view.Menu
 import android.view.MenuItem
-import androidx.activity.addCallback
+import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
@@ -36,6 +37,14 @@ class AssetEditActivity(
     @LayoutRes resId: Int = R.layout.layout_config_settings,
 ) : ThemedActivity(resId),
     OnPreferenceDataStoreChangeListener {
+
+    val callback = object : OnBackPressedCallback(enabled = false) {
+        override fun handleOnBackPressed() {
+            UnsavedChangesDialogFragment().apply {
+                key()
+            }.show(supportFragmentManager, null)
+        }
+    }
 
     fun AssetEntity.init() {
         DataStore.assetName = name
@@ -132,18 +141,6 @@ class AssetEditActivity(
             )
             WindowInsetsCompat.CONSUMED
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.settings)) { v, insets ->
-            val bars = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars()
-                        or WindowInsetsCompat.Type.displayCutout()
-            )
-            v.updatePadding(
-                left = bars.left,
-                right = bars.right,
-                bottom = bars.bottom,
-            )
-            WindowInsetsCompat.CONSUMED
-        }
 
         setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.apply {
@@ -183,14 +180,7 @@ class AssetEditActivity(
 
         }
 
-        onBackPressedDispatcher.addCallback {
-            if (DataStore.dirty) UnsavedChangesDialogFragment().apply {
-                key()
-            }.show(supportFragmentManager, null)
-            else {
-                finish()
-            }
-        }
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     suspend fun saveAndExit() {
@@ -261,6 +251,7 @@ class AssetEditActivity(
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         if (key != Key.PROFILE_DIRTY) {
             DataStore.dirty = true
+            callback.isEnabled = true
         }
     }
 
@@ -279,6 +270,22 @@ class AssetEditActivity(
             }
         }
 
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+
+            ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
+                val bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+                            or WindowInsetsCompat.Type.displayCutout()
+                )
+                v.updatePadding(
+                    left = bars.left,
+                    right = bars.right,
+                    bottom = bars.bottom,
+                )
+                WindowInsetsCompat.CONSUMED
+            }
+        }
     }
 
 }
