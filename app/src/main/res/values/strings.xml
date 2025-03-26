@@ -200,6 +200,7 @@
     <string name="action_tuic5" translatable="false">TUIC v5</string>
     <string name="action_shadowtls" translatable="false">ShadowTLS</string>
     <string name="action_http3" translatable="false">HTTP3</string>
+    <string name="action_anytls" translatable="false">AnyTLS</string>
     <string name="proxy_chain">Proxy chain</string>
     <string name="custom_config">Custom config</string>
     <string name="balancer">Balancer</string>
@@ -475,7 +476,6 @@
     <string name="reality_short_id">REALITY Short ID</string>
     <string name="reality_spider_x">REALITY SpiderX</string>
     <string name="reality_fingerprint">REALITY uTLS fingerprint</string>
-    <string name="shadowtls_v3">ShadowTLS v3</string>
     <string name="wireguard_reserved">Reserved</string>
     <string name="shadowsocks_2022_implementation">Shadowsocks 2022 implementation</string>
     <string name="action_open">Open</string>
@@ -564,4 +564,8 @@
     <string name="acquire_wake_lock">Acquire WakeLock</string>
     <string name="log_level">Log level</string>
     <string name="matsuri_plugins" translatable="false">Matsuri plugins</string>
+    <string name="fab_style">Floating action button style</string>
+    <string name="wireguard_keepalive_interval">Persistent keepalive</string>
+    <string name="language">Language</string>
+    <string name="language_system_default">System default</string>
 </resources>

@@ -32,6 +32,7 @@ object Key {
 
     const val APP_THEME = "appTheme"
     const val NIGHT_THEME = "nightTheme"
+    const val APP_LANGUAGE = "appLanguage"
     const val SERVICE_MODE = "serviceMode"
     const val MODE_VPN = "vpn"
     const val MODE_PROXY = "proxy"
@@ -107,6 +108,8 @@ object Key {
     const val MTU = "mtu"
     const val ALLOW_APPS_BYPASS_VPN = "allowAppsBypassVpn"
     const val ACQUIRE_WAKE_LOCK = "acquireWakeLock"
+    const val STUN_SERVERS = "stunServers"
+    const val FAB_STYLE = "fabStyle"
 
     const val ENABLE_FRAGMENT = "enableFragment"
     const val ENABLE_FRAGMENT_FOR_DIRECT = "enableFragmentForDirect"
@@ -219,9 +222,10 @@ object Key {
     const val SERVER_DISABLE_SNI = "serverDisableSNI"
     const val SERVER_REDUCE_RTT= "serverReduceRTT"
 
-    const val SERVER_V3 = "serverV3"
+    const val SERVER_SHADOWTLS_PROTOCOL_VERSION = "serverShadowTLSProtocolVersion"
     const val SERVER_MIERU_MUX_LEVEL = "serverMieruMuxLevel"
     const val SERVER_WIREGUARD_RESERVED = "serverWireGuardReserved"
+    const val SERVER_WIREGUARD_KEEPALIVE_INTERVAL = "serverWireGuardKeepaliveInterval"
 
     const val SERVER_PORTS = "serverPorts"
     const val SERVER_HOP_INTERVAL = "serverHopInterval"
@@ -355,4 +359,9 @@ object LogLevel {
     const val WARNING = 2
     const val INFO = 3
     const val DEBUG = 4
+}
+
+object FabStyle {
+    const val SagerNet = 0
+    const val Shadowsocks = 1
 }

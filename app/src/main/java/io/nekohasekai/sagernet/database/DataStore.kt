@@ -132,6 +132,8 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var enablePcap by configurationStore.boolean(Key.ENABLE_PCAP)
     var allowAppsBypassVpn by configurationStore.boolean(Key.ALLOW_APPS_BYPASS_VPN)
     var acquireWakeLock by configurationStore.boolean(Key.ACQUIRE_WAKE_LOCK)
+    var stunServers by configurationStore.string(Key.STUN_SERVERS)
+    var fabStyle by configurationStore.stringToInt(Key.FAB_STYLE)
 
     var enableFragment by configurationStore.boolean(Key.ENABLE_FRAGMENT)
     var enableFragmentForDirect by configurationStore.boolean(Key.ENABLE_FRAGMENT_FOR_DIRECT)
@@ -323,9 +325,10 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverDisableSNI by profileCacheStore.boolean(Key.SERVER_DISABLE_SNI)
     var serverReduceRTT by profileCacheStore.boolean(Key.SERVER_REDUCE_RTT)
 
-    var serverV3 by profileCacheStore.boolean(Key.SERVER_V3)
+    var serverShadowTLSProtocolVersion by profileCacheStore.stringToInt(Key.SERVER_SHADOWTLS_PROTOCOL_VERSION)
     var serverMieruMuxLevel by profileCacheStore.stringToInt(Key.SERVER_MIERU_MUX_LEVEL)
     var serverWireGuardReserved by profileCacheStore.string(Key.SERVER_WIREGUARD_RESERVED)
+    var serverWireGuardKeepaliveInterval by profileCacheStore.stringToInt(Key.SERVER_WIREGUARD_KEEPALIVE_INTERVAL)
 
     var serverNaiveNoPostQuantum by profileCacheStore.boolean(Key.SERVER_NAIVE_NO_POST_QUANTUM)
     var serverJuicityCongestionControl by profileCacheStore.string(Key.SERVER_JUICITY_CONGESTION_CONTROL)

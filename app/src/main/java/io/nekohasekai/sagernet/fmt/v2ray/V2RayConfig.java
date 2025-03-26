@@ -132,6 +132,7 @@ public class V2RayConfig {
 
             public String type;
             public List<String> domain;
+            public List<String> domains;
             public List<String> ip;
             public String port;
             public String sourcePort;
@@ -309,6 +310,8 @@ public class V2RayConfig {
                     return Shadowsocks2022RelayInboundConfigurationObject.class;
                 case "hysteria2":
                     return Hysteria2InboundConfigurationObject.class;
+                case "anytls":
+                    return AnyTLSInboundConfigurationObject.class;
             }
             return null;
         }
@@ -582,6 +585,16 @@ public class V2RayConfig {
         public String packetEncoding;
     }
 
+    public static class AnyTLSInboundConfigurationObject implements InboundConfigurationObject {
+        public UserObject users;
+        public List<String> paddingScheme;
+        public static class UserObject {
+            public String password;
+            public String email;
+            public Integer level;
+        }
+    }
+
     public List<OutboundObject> outbounds;
 
     public static class OutboundObject {
@@ -675,6 +688,10 @@ public class V2RayConfig {
                     return TUICOutboundConfigurationObject.class;
                 case "http3":
                     return HTTP3OutboundConfigurationObject.class;
+                case "shadowtls":
+                    return ShadowTLSOutboundConfigurationObject.class;
+                case "anytls":
+                    return AnyTLSOutboundConfigurationObject.class;
             }
             return null;
         }
@@ -911,7 +928,7 @@ public class V2RayConfig {
             public String publicKey;
             public String preSharedKey;
             public String endpoint;
-            public Boolean keepAlive;
+            public Integer keepAlive;
             public List<String> allowedIPs;
 
         }
@@ -960,6 +977,31 @@ public class V2RayConfig {
         public Boolean disableSNI;
 
     }
+
+
+    public static class ShadowTLSOutboundConfigurationObject implements OutboundConfigurationObject {
+
+        public String address;
+        public Integer port;
+        public String password;
+        public Integer version;
+        public Integer idleSessionTimeout;
+        public TLSObject tlsSettings;
+
+    }
+
+
+    public static class AnyTLSOutboundConfigurationObject implements OutboundConfigurationObject {
+
+        public String address;
+        public Integer port;
+        public String password;
+        public Integer idleSessionCheckInterval;
+        public Integer idleSessionTimeout;
+        public Integer minIdleSession;
+
+    }
+
 
     public TransportObject transport;
 
@@ -1088,6 +1130,7 @@ public class V2RayConfig {
         public String type;
         public Integer xver;
         public List<String> serverNames;
+        public String password; // alias of privateKey
         public String privateKey;
         public List<String> shortIds;
         public String serverName;

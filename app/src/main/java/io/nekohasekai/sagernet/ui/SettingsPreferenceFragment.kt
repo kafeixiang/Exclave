@@ -26,6 +26,9 @@ import android.view.View
 import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.app.ActivityCompat
+import androidx.core.os.LocaleListCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -46,6 +49,7 @@ import io.nekohasekai.sagernet.widget.PluginListPreference
 import kotlinx.coroutines.delay
 import libcore.Libcore
 import java.io.File
+import java.util.Locale
 
 class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
@@ -103,9 +107,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             val theme = Theme.getTheme(newTheme as Int)
             app.setTheme(theme)
             requireActivity().apply {
-                // FIXME
-                this.finish()
-                startActivity(intent)
+                ActivityCompat.recreate(this)
             }
             true
         }
@@ -114,12 +116,41 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             Theme.currentNightMode = (newTheme as String).toInt()
             Theme.applyNightTheme()
             requireActivity().apply {
-                // FIXME
-                this.finish()
-                startActivity(intent)
+                ActivityCompat.recreate(this)
             }
             true
         }
+
+        fun getLanguageDisplayName(code: String): String = run {
+            return when (code) {
+                "" -> getString(R.string.language_system_default)
+                "ar" -> getString(R.string.language_ar_display_name)
+                "en-US" -> getString(R.string.language_en_display_name)
+                "es" -> getString(R.string.language_es_display_name)
+                "fa" -> getString(R.string.language_fa_display_name)
+                "fr" -> getString(R.string.language_fr_display_name)
+                "in" -> getString(R.string.language_in_display_name)
+                "it" -> getString(R.string.language_it_display_name)
+                "nb-NO" -> getString(R.string.language_nb_NO_display_name)
+                "ru" -> getString(R.string.language_ru_display_name)
+                "tr" -> getString(R.string.language_tr_display_name)
+                "zh-Hans-CN" -> getString(R.string.language_zh_Hans_CN_display_name)
+                "zh-Hant-TW" -> getString(R.string.language_zh_Hant_TW_display_name)
+                else -> Locale.forLanguageTag(code).displayName // just a fallback name from Java
+            }
+        }
+        val appLanguage = findPreference<SimpleMenuPreference>(Key.APP_LANGUAGE)!!
+        val locale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        appLanguage.summary = getLanguageDisplayName(locale)
+        appLanguage.value = if (locale in resources.getStringArray(R.array.language_value)) locale else ""
+        appLanguage.setOnPreferenceChangeListener { _, newValue ->
+            newValue as String
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(newValue))
+            appLanguage.summary = getLanguageDisplayName(newValue)
+            appLanguage.value = newValue
+            true
+        }
+
         val portSocks5 = findPreference<EditTextPreference>(Key.SOCKS_PORT)!!
         val speedInterval = findPreference<Preference>(Key.SPEED_INTERVAL)!!
         val serviceMode = findPreference<Preference>(Key.SERVICE_MODE)!!
@@ -307,6 +338,14 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
+        val fabStyle = findPreference<SimpleMenuPreference>(Key.FAB_STYLE)!!
+        fabStyle.setOnPreferenceChangeListener { _, _ ->
+            requireActivity().apply {
+                this.finish()
+                startActivity(intent)
+            }
+            true
+        }
         val enableFragment = findPreference<SwitchPreference>(Key.ENABLE_FRAGMENT)!!
         val enableFragmentForDirect = findPreference<SwitchPreference>(Key.ENABLE_FRAGMENT_FOR_DIRECT)!!
         val fragmentLength = findPreference<EditTextPreference>(Key.FRAGMENT_LENGTH)!!
