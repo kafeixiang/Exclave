@@ -39,14 +39,20 @@ fun parseHysteria2(rawURL: String): Hysteria2Bean {
     var url = rawURL
 
     // fuck port hopping URL
-    val hostPort = url.substringAfter("://").substringAfter("@")
-        .substringBefore("#").substringBefore("?").substringBefore("/")
-    var port = ""
-    if (!hostPort.endsWith("]") && hostPort.lastIndexOf(":") > 0) {
-        port = hostPort.substringAfterLast(":")
-    }
-    if (port.isNotEmpty() && port.isValidHysteriaMultiPort()) {
-        url = url.replace(":$port", ":0")
+    var isPortHoppingURL = false
+    val rawHostPort = url.substringBefore("#") // remove fragment if present
+        .substringAfter("://") // remove scheme
+        .substringBefore("?") // remove queries if present
+        .substringBefore("/") // remove path `/` if present
+        .substringAfter("@") // remove userinfo if present
+    var rawPort = ""
+    if (!rawHostPort.endsWith("]") && rawHostPort.lastIndexOf(":") > 0) {
+        // port present
+        rawPort = rawHostPort.substringAfterLast(":")
+        if (rawPort.isNotEmpty() && rawPort.isValidHysteriaMultiPort()) {
+            isPortHoppingURL = true
+            url = url.replaceFirst(":$rawPort", ":0")
+        }
     }
 
     val link = Libcore.parseURL(url)
@@ -54,8 +60,8 @@ fun parseHysteria2(rawURL: String): Hysteria2Bean {
         name = link.fragment
 
         serverAddress = link.host
-        serverPorts = if (port.isNotEmpty() && port.isValidHysteriaMultiPort()) {
-            port
+        serverPorts = if (isPortHoppingURL) {
+            rawPort
         } else if (link.port > 0) {
             link.port.toString()
         } else {
@@ -63,6 +69,7 @@ fun parseHysteria2(rawURL: String): Hysteria2Bean {
         }
 
         link.queryParameter("mport")?.also {
+            // the workaround widely used because port hopping URL is so non-standard
             serverPorts = it
         }
 
@@ -133,13 +140,10 @@ fun Hysteria2Bean.toUri(): String? {
     }
     builder.rawPath = "/"
     val url = builder.string
-    if (serverPorts.isValidHysteriaMultiPort()) {
+    return if (serverPorts.isValidHysteriaMultiPort()) {
         // fuck port hopping URL
-        val port = url.substringAfter("://").substringAfter("@")
-            .substringBefore("/").substringAfterLast(":")
-        return url.replace(":$port/", ":$serverPorts/")
-    }
-    return url
+        url.replaceFirst(":0/", ":$serverPorts/")
+    } else url
 }
 
 fun Hysteria2Bean.buildHysteria2Config(port: Int, isVpn: Boolean, cacheFile: (() -> File)?): String {
@@ -252,8 +256,8 @@ fun Hysteria2Bean.buildHysteria2Config(port: Int, isVpn: Boolean, cacheFile: (()
     confObject["fastOpen"] = true
 
     val options = DumperOptions()
-    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-    options.isPrettyFlow = true;
+    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
+    options.isPrettyFlow = true
     val yaml = Yaml(options)
     return yaml.dump(confObject)
 }
