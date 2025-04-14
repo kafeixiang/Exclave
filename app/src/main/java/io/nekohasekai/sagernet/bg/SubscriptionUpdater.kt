@@ -38,9 +38,7 @@ import java.util.concurrent.TimeUnit
 
 object SubscriptionUpdater {
 
-    // It seems that The original work name conflicts with other SagerNet forks.
-    // private const val WORK_NAME = "SubscriptionUpdater"
-    private const val WORK_NAME = "SubscriptionUpdater.Exclave"
+    private const val WORK_NAME = "SubscriptionUpdater"
 
     suspend fun reconfigureUpdater() {
         RemoteWorkManager.getInstance(app).cancelUniqueWork(WORK_NAME)
