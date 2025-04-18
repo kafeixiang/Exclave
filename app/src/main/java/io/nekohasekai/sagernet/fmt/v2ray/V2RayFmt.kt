@@ -20,14 +20,12 @@
 package io.nekohasekai.sagernet.fmt.v2ray
 
 import cn.hutool.json.JSONObject
+import cn.hutool.json.JSONUtil
 import io.nekohasekai.sagernet.fmt.trojan.TrojanBean
 import io.nekohasekai.sagernet.ktx.*
 import libcore.Libcore
 
 fun parseV2Ray(link: String): StandardV2RayBean {
-    if (link.startsWith("vmess://") && !link.contains("@")) {
-        return parseV2RayN(link)
-    }
     // https://github.com/XTLS/Xray-core/issues/91
     // https://github.com/XTLS/Xray-core/discussions/716
     val url = Libcore.parseURL(link)
@@ -36,6 +34,34 @@ fun parseV2Ray(link: String): StandardV2RayBean {
         "vless" -> VLESSBean()
         "trojan" -> TrojanBean()
         else -> error("impossible")
+    }
+
+    if (url.scheme == "vmess" && url.port == 0 && url.username.isEmpty() && url.password.isEmpty()) {
+        val decoded = url.host.decodeBase64UrlSafe()
+        try {
+            JSONUtil.parse(decoded)?.let {
+                return parseV2RayN(it as JSONObject)
+            }
+        } catch (_: Exception) {
+        }
+
+        if (decoded.filterNot { it.isWhitespace() }.contains("=vmess,")) {
+            // vmess://{BASE64_ENCODED}
+            // name = vmess, example.com, 8388, aes-128-gcm, 00000000-0000-0000-0000-000000000000, param=value
+            // quan?
+            error("unsupported format")
+        }
+        if (decoded.contains("@")) {
+            // vmess://{BASE64_ENCODED}?param=value&remarks=name
+            // aes-128-gcm:00000000-0000-0000-0000-000000000000@example.com:8388
+            // rocket?
+            error("unsupported format")
+        }
+    }
+
+    if (url.scheme == "vmess" && url.password.isNotEmpty()) {
+        // https://github.com/v2fly/v2fly-github-io/issues/26
+        error("unsupported format")
     }
 
     bean.serverAddress = url.host
@@ -260,14 +286,9 @@ fun parseV2Ray(link: String): StandardV2RayBean {
     return bean
 }
 
-fun parseV2RayN(link: String): VMessBean {
+private fun parseV2RayN(json: JSONObject): VMessBean {
     // https://github.com/2dust/v2rayN/wiki/%E5%88%86%E4%BA%AB%E9%93%BE%E6%8E%A5%E6%A0%BC%E5%BC%8F%E8%AF%B4%E6%98%8E(ver-2)
-    val result = link.substringAfter("vmess://").decodeBase64UrlSafe()
-    if (result.contains("= vmess")) {
-        return parseCsvVMess(result)
-    }
     val bean = VMessBean()
-    val json = JSONObject(result)
 
     bean.serverAddress = json.getStr("add")?.takeIf { it.isNotEmpty() }
     bean.serverPort = json.getInt("port")
@@ -348,25 +369,31 @@ fun parseV2RayN(link: String): VMessBean {
         }
     }
 
-    bean.name = json.getStr("ps")?.takeIf { it.isNotEmpty() }
-    bean.sni = json.getStr("sni")?.takeIf { it.isNotEmpty() } ?: bean.host
-    bean.alpn = json.getStr("alpn")?.takeIf { it.isNotEmpty() }?.split(",")?.joinToString("\n")
-    // bad format from where?
-    json.getStr("allowInsecure")?.let { // Boolean or Int or String
-        if (it == "1" || it.lowercase() == "true") {
-            bean.allowInsecure = true // non-standard
-        }
-    } ?: json.getStr("insecure")?.let { // Boolean or Int or String
-        if (it == "1" || it.lowercase() == "true") {
-            bean.allowInsecure = true // non-standard
-        }
-    }
     when (val security = json.getStr("tls")) {
-        "tls", "reality" -> bean.security = security
+        "tls", "reality" -> {
+            bean.security = security
+            bean.name = json.getStr("ps")?.takeIf { it.isNotEmpty() }
+            bean.sni = json.getStr("sni")?.takeIf { it.isNotEmpty() } ?: bean.host
+            bean.alpn = json.getStr("alpn")?.takeIf { it.isNotEmpty() }?.split(",")?.joinToString("\n")
+            // bad format from where?
+            json.getStr("allowInsecure")?.let { // Boolean or Int or String
+                if (it == "1" || it.lowercase() == "true") {
+                    bean.allowInsecure = true // non-standard
+                }
+            } ?: json.getStr("insecure")?.let { // Boolean or Int or String
+                if (it == "1" || it.lowercase() == "true") {
+                    bean.allowInsecure = true // non-standard
+                }
+            }
+            /*if (security == "tls") {
+                bean.utlsFingerprint = ? // do not support this intentionally
+            }*/
+            if (security == "reality") {
+                bean.realityFingerprint = json.getStr("fp")?.takeIf { it.isNotEmpty() }
+            }
+        }
         else -> bean.security = "none"
     }
-    bean.realityFingerprint = json.getStr("fp")?.takeIf { it.isNotEmpty() }
-    // bean.utlsFingerprint = ? // do not support this intentionally
 
     // https://github.com/2dust/v2rayN/blob/737d563ebb66d44504c3a9f51b7dcbb382991dfd/v2rayN/v2rayN/Handler/ConfigHandler.cs#L701-L743
     if (json.getStr("v").isNullOrEmpty() || json.getStr("v").toInt() < 2) {
@@ -384,41 +411,6 @@ fun parseV2RayN(link: String): VMessBean {
                 }
             }
         }
-    }
-
-    return bean
-
-}
-
-private fun parseCsvVMess(csv: String): VMessBean {
-
-    val args = csv.split(",")
-
-    val bean = VMessBean()
-
-    bean.serverAddress = args[1]
-    bean.serverPort = args[2].toInt()
-    bean.encryption = args[3]
-    bean.uuid = args[4].replace("\"", "")
-
-    args.subList(5, args.size).forEach {
-
-        when {
-            it == "over-tls=true" -> bean.security = "tls"
-            it.startsWith("tls-host=") -> bean.host = it.substringAfter("=")
-            it.startsWith("obfs=") -> bean.type = it.substringAfter("=")
-            it.startsWith("obfs-path=") || it.contains("Host:") -> {
-                runCatching {
-                    bean.path = it.substringAfter("obfs-path=\"").substringBefore("\"obfs")
-                }
-                runCatching {
-                    bean.host = it.substringAfter("Host:").substringBefore("[")
-                }
-
-            }
-
-        }
-
     }
 
     return bean

@@ -344,23 +344,18 @@ object RawUpdater : GroupUpdater() {
             }
             else -> {
                 val beans = ArrayList<AbstractBean>()
-                var maybeV2Ray = true
-                var maybeSingBox = true
                 json.getArray("endpoints")?.filterIsInstance<JSONObject>()?.forEach { endpoint ->
-                    maybeV2Ray = false
                     beans.addAll(parseSingBoxEndpoint(endpoint))
                 }
                 json.getArray("outbounds")?.filterIsInstance<JSONObject>()?.forEach { outbound ->
                     when {
-                        maybeV2Ray && outbound.contains("protocol") -> {
-                            maybeSingBox = false
+                        outbound.contains("protocol") -> {
                             beans.addAll(
                                 parseV2ray5Outbound(outbound).takeIf { it.isNotEmpty() } ?:
                                 parseV2RayOutbound(outbound)
                             )
                         }
-                        maybeSingBox && outbound.contains("type") -> {
-                            maybeV2Ray = false
+                        outbound.contains("type") -> {
                             beans.addAll(parseSingBoxOutbound(outbound))
                         }
                     }
