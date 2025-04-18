@@ -26,6 +26,7 @@ import io.nekohasekai.sagernet.ktx.*
 import libcore.Libcore
 import java.io.File
 
+// https://v1.hysteria.network/docs/uri-scheme/
 // hysteria://host:port?auth=123456&peer=sni.domain&insecure=1|0&upmbps=100&downmbps=100&alpn=hysteria&obfs=xplus&obfsParam=123456#remarks
 
 fun parseHysteria(url: String): HysteriaBean {
@@ -33,7 +34,7 @@ fun parseHysteria(url: String): HysteriaBean {
 
     return HysteriaBean().apply {
         serverAddress = link.host
-        serverPorts = link.port.toString()
+        serverPorts = if (link.port > 0) link.port.toString() else "443"
         name = link.fragment
 
         link.queryParameter("mport")?.also {
@@ -41,19 +42,23 @@ fun parseHysteria(url: String): HysteriaBean {
         }
         link.queryParameter("peer")?.also {
             sni = it
+        } ?: link.queryParameter("sni")?.also {
+            sni = it
         }
         link.queryParameter("auth")?.also {
             authPayloadType = HysteriaBean.TYPE_STRING
             authPayload = it
         }
-        link.queryParameter("insecure")?.also {
-            allowInsecure = it == "1"
+        link.queryParameter("insecure")?.takeIf { it == "1" || it == "true" }?.also {
+            allowInsecure = true
         }
         link.queryParameter("alpn")?.also {
-            alpn = it
+            alpn = it.split(",")[0]
         }
-        link.queryParameter("obfsParam")?.also {
-            obfuscation = it
+        link.queryParameter("obfs")?.takeIf { it == "xplus" }?.also {
+            link.queryParameter("obfsParam")?.also {
+                obfuscation = it
+            }
         }
         link.queryParameter("protocol")?.also {
             when (it) {

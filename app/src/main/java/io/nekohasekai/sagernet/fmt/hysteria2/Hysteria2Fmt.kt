@@ -50,7 +50,6 @@ fun parseHysteria2(rawURL: String): Hysteria2Bean {
     val link = Libcore.parseURL(url)
     return Hysteria2Bean().apply {
         name = link.fragment
-
         serverAddress = link.host
         serverPorts = if (port.isNotEmpty() && port.isValidHysteriaMultiPort()) {
             port
@@ -59,33 +58,27 @@ fun parseHysteria2(rawURL: String): Hysteria2Bean {
         } else {
             "443"
         }
-
         link.queryParameter("mport")?.also {
             serverPorts = it
         }
-
         if (link.username.isNotEmpty()) {
             auth = link.username
         }
-
         if (link.password.isNotEmpty()) {
             auth += ":" + link.password
         }
-
         link.queryParameter("sni")?.also {
             sni = it
         }
-        link.queryParameter("insecure")?.also {
-            allowInsecure = it == "1"
+        link.queryParameter("insecure")?.takeIf { it == "1" || it == "true" }?.also {
+            allowInsecure = true
         }
         link.queryParameter("pinSHA256")?.also {
             pinSHA256 = it
         }
-        link.queryParameter("obfs")?.also { it ->
-            if (it.lowercase() == "salamander") {
-                link.queryParameter("obfs-password")?.also {
-                    obfs = it
-                }
+        link.queryParameter("obfs")?. takeIf { it == "salamander" }?.also {
+            link.queryParameter("obfs-password")?.also {
+                obfs = it
             }
         }
     }

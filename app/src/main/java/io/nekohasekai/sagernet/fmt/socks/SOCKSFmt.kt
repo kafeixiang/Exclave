@@ -57,6 +57,7 @@ fun parseSOCKS(link: String): SOCKSBean {
             "socks4" -> SOCKSBean.PROTOCOL_SOCKS4
             "socks4a" -> SOCKSBean.PROTOCOL_SOCKS4A
             "socks5", "socks5h" /* blame cURL for this */, "socks" -> SOCKSBean.PROTOCOL_SOCKS5
+            "socks+tls" -> SOCKSBean.PROTOCOL_SOCKS5 // Who TF invent this?
             else -> error("impossible")
         }
         serverAddress = url.host
@@ -66,6 +67,14 @@ fun parseSOCKS(link: String): SOCKSBean {
         name = url.fragment
         url.queryParameter("tls")?.takeIf { it == "true" || it == "1" }?.let {
             // non-standard
+            security = "tls"
+            url.queryParameter("sni")?.let {
+                sni = it
+            }
+        }
+        if (url.scheme == "socks+tls") {
+            // non-standard
+            security = "tls"
             url.queryParameter("sni")?.let {
                 sni = it
             }

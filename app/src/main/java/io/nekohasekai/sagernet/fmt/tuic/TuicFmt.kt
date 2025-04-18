@@ -29,6 +29,7 @@ import libcore.Libcore
 import java.io.File
 
 fun TuicBean.toUri(): String {
+    // No standard at all. What a mess.
     val builder = Libcore.newURL("tuic")
     builder.host = serverAddress
     builder.port = serverPort
@@ -36,6 +37,7 @@ fun TuicBean.toUri(): String {
     builder.addQueryParameter("version", "4")
     builder.addQueryParameter("udp_relay_mode", udpRelayMode)
     builder.addQueryParameter("congestion_control", congestionController)
+    builder.addQueryParameter("congestion_controller", congestionController)
     if (sni.isNotEmpty()) {
         builder.addQueryParameter("sni", sni)
     }
@@ -45,11 +47,12 @@ fun TuicBean.toUri(): String {
     if (disableSNI) {
         builder.addQueryParameter("disable_sni", "1")
     }
+    if (reduceRTT) {
+        builder.addQueryParameter("reduce_rtt", "1")
+    }
     if (name.isNotEmpty()) {
         builder.fragment = name
     }
-    builder.addQueryParameter("udp_relay-mode", udpRelayMode)
-    builder.addQueryParameter("congestion_controller", congestionController)
     return builder.string
 }
 
