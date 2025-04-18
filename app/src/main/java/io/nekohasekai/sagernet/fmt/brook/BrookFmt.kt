@@ -117,9 +117,7 @@ fun parseBrook(text: String): AbstractBean {
             link.queryParameter("insecure")?.let {
                 bean.insecure = it == "true"
             }
-            link.queryParameter("tlsfingerprint")?.let {
-                bean.tlsfingerprint = it
-            }
+            // link.queryParameter("tlsfingerprint")
             link.queryParameter("fragment")?.let {
                 bean.fragment = it
             }
@@ -180,6 +178,7 @@ fun parseBrook(text: String): AbstractBean {
                 bean.password = it
             }
         }
+        else -> error("invalid")
     }
     return bean
 }
