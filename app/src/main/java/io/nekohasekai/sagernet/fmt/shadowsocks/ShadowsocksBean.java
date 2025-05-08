@@ -49,10 +49,10 @@ public class ShadowsocksBean extends StandardV2RayBean {
     }
 
     @Override
-    public boolean canMapping() {
-        if (plugin.isEmpty()) return true;
+    public boolean needProtect() {
+        if (plugin.isEmpty()) return false;
         PluginConfiguration pluginConfiguration = new PluginConfiguration(plugin);
-        return pluginConfiguration.getSelected().isEmpty();
+        return !pluginConfiguration.getSelected().isEmpty();
     }
 
     @Override

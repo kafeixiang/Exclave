@@ -36,7 +36,6 @@ import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.database.StatsEntity
 import io.nekohasekai.sagernet.fmt.LOCALHOST
-import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.listByLineOrComma
 import io.nekohasekai.sagernet.ui.VpnRequestActivity
@@ -199,10 +198,10 @@ class VpnService : BaseVpnService(),
         val proxyApps = DataStore.proxyApps
         val tunImplementation = DataStore.tunImplementation
         val needIncludeSelf = tunImplementation == TunImplementation.SYSTEM /*data.proxy!!.config.index.any { !it.isBalancer && it.chain.size > 1 }*/
-        val needBypassRootUid = data.proxy!!.config.outboundTagsAll.values.any {
-            it.hysteriaBean?.protocol == HysteriaBean.PROTOCOL_FAKETCP
+        val needBypassRootUID = data.proxy!!.config.outboundTagsAll.values.any {
+            it.requireBean().needBypassRootUID()
         }
-        if (proxyApps || needBypassRootUid) {
+        if (proxyApps || needBypassRootUID) {
             var bypass = DataStore.bypass
             val individual = mutableSetOf<String>()
             val allApps by lazy {
@@ -218,7 +217,7 @@ class VpnService : BaseVpnService(),
             }
             if (proxyApps) {
                 individual.addAll(DataStore.individual.split('\n').filter { it.isNotEmpty() })
-                if (bypass && needBypassRootUid) {
+                if (bypass && needBypassRootUID) {
                     val individualNew = allApps.toMutableList()
                     individualNew.removeAll(individual)
                     individual.clear()
@@ -290,12 +289,10 @@ class VpnService : BaseVpnService(),
             localResolver = this@VpnService
         }
 
-        if (tunImplementation == TunImplementation.SYSTEM &&
-            data.proxy!!.config.outboundTagsAll.values.any {
-                it.hysteria2Bean?.canMapping() == false ||
-                        it.hysteriaBean?.canMapping() == false ||
-                        it.ssBean?.canMapping() == false
-            }) {
+        val needProtect = data.proxy!!.config.outboundTagsAll.values.any {
+            it.requireBean().needProtect()
+        }
+        if (needProtect && tunImplementation == TunImplementation.SYSTEM) {
             config.protectPath = SagerNet.deviceStorage.noBackupFilesDir.toString() + "/protect_path"
         }
 
