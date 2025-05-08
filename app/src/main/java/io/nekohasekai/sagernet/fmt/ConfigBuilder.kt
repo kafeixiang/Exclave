@@ -174,7 +174,28 @@ fun buildV2RayConfig(
             val beanList = ArrayList<ProxyEntity>()
             for ((index, proxyId) in bean.proxies.withIndex()) {
                 val item = beansMap[proxyId] ?: continue
-                if (!item.requireBean().canMapping() && index != 0) error("Some configurations are incompatible with chain.")
+                when (item.type) {
+                    ProxyEntity.TYPE_HYSTERIA -> {
+                        if (!item.requireBean().canMapping() && index != 0) {
+                            error("Configuration ${item.displayName()} is incompatible with chain. Hysteria with port hopping can only be the front proxy.")
+                        }
+                    }
+                    ProxyEntity.TYPE_HYSTERIA2 -> {
+                        if (!item.requireBean().canMapping() && index != 0) {
+                            error("Configuration ${item.displayName()} is incompatible with chain. Hysteria 2 with port hopping can only be the front proxy.")
+                        }
+                    }
+                    ProxyEntity.TYPE_SS -> {
+                        if (!item.requireBean().canMapping() && index != 0) {
+                            error("Configuration ${item.displayName()} is incompatible with chain. Shadowsocks with plugin can only be the front proxy.")
+                        }
+                    }
+                    ProxyEntity.TYPE_WG -> {
+                        if (index != bean.proxies.size - 1) {
+                            error("Configuration ${item.displayName()} is incompatible with chain. WireGuard can only be the landing proxy.")
+                        }
+                    }
+                }
                 beanList.addAll(item.resolveChain())
             }
             return beanList.asReversed()
