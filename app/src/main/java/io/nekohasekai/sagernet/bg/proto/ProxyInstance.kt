@@ -297,6 +297,9 @@ class ProxyInstance(profile: ProxyEntity, val service: BaseService.Interface) : 
                     }
                 }
             } catch (e: IOException) {
+                // See https://github.com/dyhkwong/Exclave/commit/59d91330d9854bb093c15ea9dad71b5a36594a43
+                // for a traffic stats bug.
+                // DirectBoot is not used for now.
                 if (!DataStore.directBootAware) throw e // we should only reach here because we're in direct boot
                 val profile = DirectBoot.getDeviceProfile()!!
                 profile.tx += outboundStats.uplinkTotal
