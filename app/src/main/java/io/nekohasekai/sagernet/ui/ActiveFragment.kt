@@ -160,10 +160,9 @@ class ActiveFragment : Fragment(R.layout.layout_traffic_list) {
         fun bind(stats: AppStats) {
             PackageCache.awaitLoadSync()
 
-            val packageName = if (stats.uid > 1000) {
-                PackageCache.uidMap[stats.uid]?.iterator()?.next() ?: "android"
-            } else {
-                "android"
+            val packageName = when (stats.uid) {
+                1000 -> "android"
+                else -> PackageCache.uidMap[stats.uid]?.iterator()?.next() ?: "${stats.uid}"
             }
 
             binding.menu.setOnClickListener {
