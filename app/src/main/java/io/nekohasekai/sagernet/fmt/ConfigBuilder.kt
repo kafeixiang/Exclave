@@ -182,25 +182,18 @@ fun buildV2RayConfig(
                     error("Configuration ${item.displayName()} can be the landing proxy only.")
                 }
                 beanList.addAll(item.resolveChain())
-            }
-            return beanList.asReversed()
-        } else if (bean is BalancerBean) {
-            val beans = if (bean.type == BalancerBean.TYPE_LIST) {
-                SagerDatabase.proxyDao.getEntities(bean.proxies)
-            } else {
-                SagerDatabase.proxyDao.getByGroup(bean.groupId)
-            }
-
-            val beansMap = beans.associateBy { it.id }
-            val beanList = ArrayList<ProxyEntity>()
-            for (proxyId in beansMap.keys) {
-                val item = beansMap[proxyId] ?: continue
-                if (item.id == id) continue
-                when (item.type) {
-                    ProxyEntity.TYPE_BALANCER -> error("Nested balancers are not supported")
-                    ProxyEntity.TYPE_CHAIN -> error("Chain is incompatible with balancer")
+                SagerDatabase.groupDao.getById(item.groupId)?.let { group ->
+                    group.frontProxy.takeIf { it > 0L }?.let { id ->
+                        SagerDatabase.proxyDao.getById(id)?.let {
+                            beanList.add(0, it)
+                        } ?: error("front proxy set but not found for group ${group.displayName()}")
+                    }
+                    group.landingProxy.takeIf { it > 0L }?.let { id ->
+                        SagerDatabase.proxyDao.getById(id)?.let {
+                            beanList.add(it)
+                        } ?: error("landing proxy set but not found for group ${group.displayName()}")
+                    }
                 }
-                beanList.add(item)
             }
             return beanList
         }
@@ -209,26 +202,46 @@ fun buildV2RayConfig(
         SagerDatabase.groupDao.getById(groupId)?.let { group ->
             group.frontProxy.takeIf { it > 0L }?.let { id ->
                 SagerDatabase.proxyDao.getById(id)?.let {
-                    list.add(it)
+                    list.add(0, it)
                 } ?: error("front proxy set but not found for group ${group.displayName()}")
             }
             group.landingProxy.takeIf { it > 0L }?.let { id ->
                 SagerDatabase.proxyDao.getById(id)?.let {
-                    list.add(0, it)
+                    list.add(it)
                 } ?: error("landing proxy set but not found for group ${group.displayName()}")
             }
         }
         return list
     }
 
-    val proxies = proxy.resolveChain()
+    fun ProxyEntity.resolveBalancer(): MutableList<ProxyEntity> {
+        val bean = requireBean() as? BalancerBean ?: error("not balancer")
+        val beansMap = (if (bean.type == BalancerBean.TYPE_LIST) {
+            SagerDatabase.proxyDao.getEntities(bean.proxies)
+        } else {
+            SagerDatabase.proxyDao.getByGroup(bean.groupId)
+        }).associateBy { it.id }
+        val beanList = ArrayList<ProxyEntity>()
+        for (proxyId in beansMap.keys) {
+            val item = beansMap[proxyId] ?: continue
+            if (item.id == id) continue
+            when (item.type) {
+                ProxyEntity.TYPE_BALANCER -> error("Nested balancers are not supported")
+                ProxyEntity.TYPE_CHAIN -> error("Chain is incompatible with balancer")
+            }
+            beanList.add(item)
+        }
+        return beanList
+    }
+
+    val proxies = if (proxy.requireBean() is BalancerBean) proxy.resolveBalancer() else proxy.resolveChain().asReversed()
     val extraRules = if (forTest) listOf() else SagerDatabase.rulesDao.enabledRules()
     val extraProxies = if (forTest) mapOf() else SagerDatabase.proxyDao.getEntities(extraRules.mapNotNull { rule ->
         rule.outbound.takeIf { it > 0 && it != proxy.id }
     }.toHashSet().toList()).associate {
         (it.id to ((it.type == ProxyEntity.TYPE_BALANCER) to lazy {
             it.balancerBean
-        })) to it.resolveChain()
+        })) to if (it.requireBean() is BalancerBean) it.resolveBalancer() else it.resolveChain().asReversed()
     }
 
     val allowAccess = DataStore.allowAccess
