@@ -486,6 +486,9 @@ class ConfigurationFragment @JvmOverloads constructor(
             R.id.action_new_anytls -> {
                 startActivity(Intent(requireActivity(), AnyTLSSettingsActivity::class.java))
             }
+            /*R.id.action_new_shadowquic -> {
+                startActivity(Intent(requireActivity(), ShadowQUICSettingsActivity::class.java))
+            }*/
             R.id.action_new_config -> {
                 startActivity(Intent(requireActivity(), ConfigSettingsActivity::class.java))
             }
