@@ -18,8 +18,15 @@ import io.nekohasekai.sagernet.ktx.decodeBase64UrlSafe
 import io.nekohasekai.sagernet.ktx.parseShareLinks
 import io.nekohasekai.sagernet.ktx.*
 import libcore.Libcore
+import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.TypeDescription
 import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.Constructor
+import org.yaml.snakeyaml.nodes.Tag
+import org.yaml.snakeyaml.representer.Representer
+import org.yaml.snakeyaml.resolver.Resolver
+import java.util.regex.Pattern
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 object RawUpdater : GroupUpdater() {
@@ -236,7 +243,19 @@ object RawUpdater : GroupUpdater() {
     fun parseRaw(text: String): List<AbstractBean>? {
         if (text.contains("proxies")) {
             try {
-                (Yaml().apply {
+                val options = DumperOptions()
+                val yaml = Yaml(Constructor(LoaderOptions()), Representer(options), options, object : Resolver() {
+                    override fun addImplicitResolver(tag: Tag, regexp: Pattern, first: String?, limit: Int) {
+                        when (tag) {
+                            Tag.FLOAT -> {
+                                // Stupid config providers write ambiguous strings without quoting.
+                                // e.g. short-id 9e123456 -> Infinity
+                            }
+                            else -> super.addImplicitResolver(tag, regexp, first, limit)
+                        }
+                    }
+                })
+                (yaml.apply {
                     addTypeDescription(TypeDescription(String::class.java, "str"))
                 }.loadAs(text, Map::class.java)["proxies"] as? List<Map<String, Any?>>)?.let { proxies ->
                     val beans = mutableListOf<AbstractBean>()
