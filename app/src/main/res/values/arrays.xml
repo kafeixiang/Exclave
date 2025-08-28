@@ -246,6 +246,7 @@
         <item>auth_aes128_md5</item>
         <item>auth_chain_a</item>
         <item>auth_chain_b</item>
+        <item>verify_sha1</item>
     </string-array>
 
     <string-array name="obfs_value">
