@@ -96,11 +96,28 @@ fun parseV2RayOutbound(outbound: Map<String, Any?>): List<AbstractBean> {
                                 (tlsSettings.getAny("certificates") as? List<Map<String, Any?>>)?.asReversed()?.forEach { certificate ->
                                     when (certificate.getString("usage")?.lowercase()) {
                                         null, "", "encipherment" -> {
-                                            v2rayBean.mtlsCertificate = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
-                                            v2rayBean.mtlsCertificatePrivateKey = (certificate.getAny("key") as? List<String>)?.joinToString("\n")
+                                            if (!certificate.contains("certificateFile") && !certificate.contains("keyFile")) {
+                                                val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                                }
+                                                val key = (certificate.getAny("key") as? List<String>)?.joinToString("\n")?.takeIf {
+                                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                                                }
+                                                if (cert != null && key != null) {
+                                                    v2rayBean.mtlsCertificate = cert
+                                                    v2rayBean.mtlsCertificatePrivateKey = key
+                                                }
+                                            }
                                         }
                                         "verify" -> {
-                                            v2rayBean.certificates = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
+                                            if (!certificate.contains("certificateFile")) {
+                                                val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                                }
+                                                if (cert != null) {
+                                                    v2rayBean.certificates = cert
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -855,11 +872,28 @@ fun parseV2RayOutbound(outbound: Map<String, Any?>): List<AbstractBean> {
                                 (tlsSettings.getAny("certificates") as? List<Map<String, Any?>>)?.asReversed()?.forEach { certificate ->
                                     when (certificate.getString("usage")?.lowercase()) {
                                         null, "", "encipherment" -> {
-                                            hysteria2Bean.mtlsCertificate = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
-                                            hysteria2Bean.mtlsCertificatePrivateKey = (certificate.getAny("key") as? List<String>)?.joinToString("\n")
+                                            if (!certificate.contains("certificateFile") && !certificate.contains("keyFile")) {
+                                                val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                                }
+                                                val key = (certificate.getAny("key") as? List<String>)?.joinToString("\n")?.takeIf {
+                                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                                                }
+                                                if (cert != null && key != null) {
+                                                    hysteria2Bean.mtlsCertificate = cert
+                                                    hysteria2Bean.mtlsCertificatePrivateKey = key
+                                                }
+                                            }
                                         }
                                         "verify" -> {
-                                            hysteria2Bean.certificates = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
+                                            if (!certificate.contains("certificateFile")) {
+                                                val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                                }
+                                                if (cert != null) {
+                                                    hysteria2Bean.certificates = cert
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -1002,11 +1036,28 @@ fun parseV2RayOutbound(outbound: Map<String, Any?>): List<AbstractBean> {
                     (tlsSettings.getAny("certificates") as? List<Map<String, Any?>>)?.asReversed()?.forEach { certificate ->
                         when (certificate.getString("usage")?.lowercase()) {
                             null, "", "encipherment" -> {
-                                http3Bean.mtlsCertificate = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
-                                http3Bean.mtlsCertificatePrivateKey = (certificate.getAny("key") as? List<String>)?.joinToString("\n")
+                                if (!certificate.contains("certificateFile") && !certificate.contains("keyFile")) {
+                                    val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                        it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                    }
+                                    val key = (certificate.getAny("key") as? List<String>)?.joinToString("\n")?.takeIf {
+                                        it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                                    }
+                                    if (cert != null && key != null) {
+                                        http3Bean.mtlsCertificate = cert
+                                        http3Bean.mtlsCertificatePrivateKey = key
+                                    }
+                                }
                             }
                             "verify" -> {
-                                http3Bean.certificates = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
+                                if (!certificate.contains("certificateFile")) {
+                                    val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                        it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                    }
+                                    if (cert != null) {
+                                        http3Bean.certificates = cert
+                                    }
+                                }
                             }
                         }
                     }
@@ -1078,11 +1129,28 @@ fun parseV2RayOutbound(outbound: Map<String, Any?>): List<AbstractBean> {
                             (tlsSettings.getAny("certificates") as? List<Map<String, Any?>>)?.asReversed()?.forEach { certificate ->
                                 when (certificate.getString("usage")?.lowercase()) {
                                     null, "", "encipherment" -> {
-                                        anytlsBean.mtlsCertificate = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
-                                        anytlsBean.mtlsCertificatePrivateKey = (certificate.getAny("key") as? List<String>)?.joinToString("\n")
+                                        if (!certificate.contains("certificateFile") && !certificate.contains("keyFile")) {
+                                            val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                                it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                            }
+                                            val key = (certificate.getAny("key") as? List<String>)?.joinToString("\n")?.takeIf {
+                                                it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                                            }
+                                            if (cert != null && key != null) {
+                                                anytlsBean.mtlsCertificate = cert
+                                                anytlsBean.mtlsCertificatePrivateKey = key
+                                            }
+                                        }
                                     }
                                     "verify" -> {
-                                        anytlsBean.certificates = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
+                                        if (!certificate.contains("certificateFile")) {
+                                            val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                                it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                            }
+                                            if (cert != null) {
+                                                anytlsBean.certificates = cert
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1159,11 +1227,28 @@ fun parseV2RayOutbound(outbound: Map<String, Any?>): List<AbstractBean> {
                     (tlsSettings.getAny("certificates") as? List<Map<String, Any?>>)?.asReversed()?.forEach { certificate ->
                         when (certificate.getString("usage")?.lowercase()) {
                             null, "", "encipherment" -> {
-                                juicityBean.mtlsCertificate = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
-                                juicityBean.mtlsCertificatePrivateKey = (certificate.getAny("key") as? List<String>)?.joinToString("\n")
+                                if (!certificate.contains("certificateFile") && !certificate.contains("keyFile")) {
+                                    val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                        it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                    }
+                                    val key = (certificate.getAny("key") as? List<String>)?.joinToString("\n")?.takeIf {
+                                        it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                                    }
+                                    if (cert != null && key != null) {
+                                        juicityBean.mtlsCertificate = cert
+                                        juicityBean.mtlsCertificatePrivateKey = key
+                                    }
+                                }
                             }
                             "verify" -> {
-                                juicityBean.certificates = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")
+                                if (!certificate.contains("certificateFile")) {
+                                    val cert = (certificate.getAny("certificate") as? List<String>)?.joinToString("\n")?.takeIf {
+                                        it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                    }
+                                    if (cert != null) {
+                                        juicityBean.certificates = cert
+                                    }
+                                }
                             }
                         }
                     }
