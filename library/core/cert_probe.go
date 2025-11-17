@@ -172,6 +172,9 @@ func ProbeCert(host string, port int32, sni, alpn string, protocol string, useSO
 	if _, verifyErr := certs[0].Verify(opts); verifyErr != nil {
 		result.VerifyError = verifyErr.Error()
 	}
+	if len(sni) == 0 {
+		result.VerifyError = "ServerName is not specified in the tls.Config, VerifyHostname skipped"
+	}
 	return result
 }
 
