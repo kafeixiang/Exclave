@@ -42,6 +42,9 @@ public abstract class StandardV2RayBean extends AbstractBean {
     public String alpn;
 
     public String grpcServiceName;
+    public Boolean grpcServiceNameCompat;
+    public Boolean grpcMultiMode;
+    public String grpcAuthority;
     public Integer maxEarlyData;
     public String earlyDataHeaderName;
     public String meekUrl;
@@ -120,6 +123,9 @@ public abstract class StandardV2RayBean extends AbstractBean {
         if (alpn == null) alpn = "";
 
         if (grpcServiceName == null) grpcServiceName = "";
+        if (grpcServiceNameCompat == null) grpcServiceNameCompat = false;
+        if (grpcMultiMode == null) grpcMultiMode = false;
+        if (grpcAuthority == null) grpcAuthority = "";
         if (maxEarlyData == null) maxEarlyData = 0;
         if (wsUseBrowserForwarder == null) wsUseBrowserForwarder = false;
         if (shUseBrowserForwarder == null) shUseBrowserForwarder = false;
@@ -162,7 +168,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
 
     @Override
     public void serialize(ByteBufferOutput output) {
-        output.writeInt(32);
+        output.writeInt(33);
         super.serialize(output);
 
         output.writeString(uuid);
@@ -217,6 +223,9 @@ public abstract class StandardV2RayBean extends AbstractBean {
             }
             case "grpc": {
                 output.writeString(grpcServiceName);
+                output.writeBoolean(grpcServiceNameCompat);
+                output.writeBoolean(grpcMultiMode);
+                output.writeString(grpcAuthority);
                 break;
             }
             case "meek": {
@@ -341,6 +350,11 @@ public abstract class StandardV2RayBean extends AbstractBean {
                 grpcServiceName = input.readString();
                 if (version >= 8 && version <= 12) {
                     input.readString(); // grpcMode, removed
+                }
+                if (version >= 33) {
+                    grpcServiceNameCompat = input.readBoolean();
+                    grpcMultiMode = input.readBoolean();
+                    grpcAuthority = input.readString();
                 }
                 if (version >= 16) {
                     break;
@@ -569,6 +583,7 @@ public abstract class StandardV2RayBean extends AbstractBean {
         bean.realityDisableX25519Mlkem768 = realityDisableX25519Mlkem768;
         bean.hy2DownMbps = hy2DownMbps;
         bean.hy2UpMbps = hy2UpMbps;
+        bean.grpcServiceNameCompat = grpcServiceNameCompat;
         bean.mux = mux;
         bean.muxConcurrency = muxConcurrency;
         bean.muxPacketEncoding = muxPacketEncoding;

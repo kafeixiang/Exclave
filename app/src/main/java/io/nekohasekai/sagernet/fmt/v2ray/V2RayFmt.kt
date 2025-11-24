@@ -369,6 +369,14 @@ fun parseV2Ray(link: String): StandardV2RayBean {
                 // So do not fix the compatibility with Xray.
                 bean.grpcServiceName = it
             }
+            url.queryParameter("mode")?.takeIf { it == "multi" }?.let {
+                // Xray private
+                bean.grpcMultiMode = true
+            }
+            url.queryParameter("authority")?.let {
+                // Xray private
+                bean.grpcAuthority = it
+            }
         }
         "meek" -> {
             // https://github.com/v2fly/v2ray-core/discussions/2638
@@ -482,6 +490,12 @@ private fun parseV2RayN(json: JsonObject): VMessBean {
             // Fixing the compatibility with Xray will break the compatibility with V2Ray and others.
             // So do not fix the compatibility with Xray.
             bean.grpcServiceName = bean.path
+            bean.grpcAuthority = bean.host // Xray private
+            type?.let {
+                if (it == "multi") {
+                    bean.grpcMultiMode = true // Xray private
+                }
+            }
         }
         "splithttp" -> {
             bean.host = host
@@ -683,6 +697,12 @@ fun StandardV2RayBean.toUri(): String? {
         "grpc" -> {
             if (grpcServiceName.isNotEmpty()) {
                 builder.addQueryParameter("serviceName", grpcServiceName)
+            }
+            if (grpcMultiMode) {
+                builder.addQueryParameter("mode", "multi") // Xray private
+            }
+            if (grpcAuthority.isNotEmpty()) {
+                builder.addQueryParameter("authority", grpcAuthority) // Xray private
             }
         }
         "meek" -> {

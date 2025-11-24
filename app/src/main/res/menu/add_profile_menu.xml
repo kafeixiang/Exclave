@@ -87,18 +87,6 @@
                                 android:id="@+id/action_new_ssr"
                                 android:title="@string/action_shadowsocksr" />
                             <item
-                                android:id="@+id/action_new_brook"
-                                android:title="@string/action_brook" />
-                            <item
-                                android:id="@+id/action_new_tuic"
-                                android:title="@string/action_tuic" />
-                            <item
-                                android:id="@+id/action_new_hysteria"
-                                android:title="@string/action_hysteria" />
-                            <item
-                                android:id="@+id/action_new_trojan_go"
-                                android:title="@string/action_trojan_go" />
-                            <item
                                 android:id="@+id/action_new_shadowtls"
                                 android:title="@string/action_shadowtls" />
                         </menu>
@@ -146,21 +134,6 @@
                     android:id="@+id/action_order_by_delay"
                     android:title="@string/group_order_by_delay" />
             </group>
-        </menu>
-    </item>
-    <item
-        android:id="@+id/action_group_filter"
-        android:title="@string/group_filter">
-        <menu>
-            <item
-                android:id="@+id/action_filter_groups"
-                android:title="@string/group_filter_groups" />
-            <item
-                android:id="@+id/group_filter_owners"
-                android:title="@string/group_filter_owners" />
-            <item
-                android:id="@+id/action_filter_tags"
-                android:title="@string/group_filter_tags" />
         </menu>
     </item>
 
