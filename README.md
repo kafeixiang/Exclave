@@ -9,13 +9,6 @@ A proxy client powered by a modified version of v2ray-core. It is a fork of Sage
   [<img src="images/get-it-on-github.png" alt="Get it on GitHub" height="80">](https://github.com/dyhkwong/Exclave/releases) [<img src="images/get-it-on-f-droid.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.github.dyhkwong.sagernet)
 
 - [NaïveProxy plugin](https://github.com/klzgrad/naiveproxy/releases)
-  - This plugin is distributed by upstream directly.
-- [Mieru plugin](https://github.com/dyhkwong/Exclave/releases?q=mieru-plugin-3)
-  - You can also use the [version](https://github.com/enfein/NekoBoxPlugins/releases) distributed by upstream directly.
-- [Hysteria 2 plugin](https://github.com/dyhkwong/Exclave/releases?q=hysteria-plugin-2), [TUIC v5 plugin](https://github.com/dyhkwong/Exclave/releases?q=tuic-plugin-1) and [Juicity plugin](https://github.com/dyhkwong/Exclave/releases?q=juicity-plugin)
-  - These protocols have been implemented in core. These plugins are updated for compatibility reason only.
-- [Other obsolete plugins](https://github.com/dyhkwong/Exclave/releases/tag/0.12.0-0-legacy-plugins)
-  - These plugins are no longer maintained for various reasons. They are provided for archival purpose only. It is not recommended to use them.
 
 Google will soon block apps from directly installing (or so-called "sideloading"). If you are a user who values digital freedom, we need your voice to say no. Your support will not only help save this app, but also help defend software freedom and open distribution.
 
@@ -69,15 +62,10 @@ Please report issues [here](https://github.com/dyhkwong/Exclave/issues). Do not 
     ALIAS_NAME=your_alias_name
     ALIAS_PASS=your_alias_pass
 ```
-- Build Exclave:
-  - Build `libcore`: `./run lib core`
-  - Download assets: `./gradlew :app:downloadAssets` (or update assets: `./gradlew :app:updateAssets`)
-  - Build the app: `./gradlew :app:assembleOssRelease`
-  - APK files are located in `app/build/outputs/apk/`
-- Build a plugin:
-  - Build native binaries: `./run plugin [hysteria2|juicity|mieru|tuic5|shadowquic|naive]`
-  - Build the plugin:`./gradlew :plugin:[hysteria2|juicity|mieru|tuic5|shadowquic|naive]:assembleOssRelease`
-  - Plugin APK files are located in `plugin/[hysteria2|juicity|mieru|tuic5|shadowquic|naive]/build/outputs/apk/`
+- Build `libcore`: `./run lib core`
+- Download assets: `./gradlew :app:downloadAssets` (or update assets: `./gradlew :app:updateAssets`)
+- Build the app: `./gradlew :app:assembleOssRelease`
+- APK files are located in `app/build/outputs/apk/`
 
 ## Dependencies, submodules and assets
 
