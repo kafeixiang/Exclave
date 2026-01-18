@@ -3,15 +3,7 @@ plugins {
     id("kotlin-parcelize")
     id("com.google.protobuf")
     id("com.google.devtools.ksp")
-    id("com.jaredsburrows.license")
-}
-
-
-licenseReport {
-  generateCsvReport = true
-  generateHtmlReport = false
-  generateJsonReport = false
-  generateTextReport = false
+    id("com.mikepenz.aboutlibraries.plugin")
 }
 
 setupApp()
@@ -23,6 +15,14 @@ android {
 ksp {
     arg("room.incremental", "true")
     arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+// ./gradlew :app:exportLibraryDefinitions
+aboutLibraries {
+    export {
+        outputFile = file("src/main/res/raw/aboutlibraries.json")
+        prettyPrint = true
+    }
 }
 
 dependencies {
