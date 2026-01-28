@@ -26,8 +26,17 @@
             <item android:title="@string/add_profile_methods_manual_settings">
                 <menu>
                     <item
+                        android:id="@+id/action_new_http"
+                        android:title="@string/action_http" />
+                    <item
+                        android:id="@+id/action_new_socks"
+                        android:title="@string/action_socks" />
+                    <item
                         android:id="@+id/action_new_ss"
                         android:title="@string/action_shadowsocks" />
+                    <item
+                        android:id="@+id/action_new_ssr"
+                        android:title="@string/action_shadowsocksr" />
                     <item
                         android:id="@+id/action_new_trojan"
                         android:title="@string/action_trojan" />
@@ -43,9 +52,6 @@
                     <item
                         android:id="@+id/action_new_anytls"
                         android:title="@string/action_anytls" />
-                    <item
-                        android:id="@+id/action_new_naive"
-                        android:title="@string/action_naive" />
                     <item
                         android:id="@+id/action_new_mieru"
                         android:title="@string/action_mieru" />
@@ -68,12 +74,6 @@
                         android:title="@string/more">
                         <menu>
                             <item
-                                android:id="@+id/action_new_socks"
-                                android:title="@string/action_socks" />
-                            <item
-                                android:id="@+id/action_new_http"
-                                android:title="@string/action_http" />
-                            <item
                                 android:id="@+id/action_new_http3"
                                 android:title="@string/action_http3" />
                             <item
@@ -90,11 +90,11 @@
                                 android:id="@+id/action_new_wg"
                                 android:title="@string/action_wireguard" />
                             <item
+                                android:id="@+id/action_new_naive"
+                                android:title="@string/action_naive" />
+                            <item
                                 android:id="@+id/action_new_shadowquic"
                                 android:title="@string/action_shadowquic" />
-                            <item
-                                android:id="@+id/action_new_ssr"
-                                android:title="@string/action_shadowsocksr" />
                         </menu>
                     </item>
                 </menu>
