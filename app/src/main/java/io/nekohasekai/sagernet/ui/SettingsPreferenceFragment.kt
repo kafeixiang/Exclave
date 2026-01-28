@@ -48,6 +48,7 @@ import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.ui.profile.ProfileSettingsActivity
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.nekohasekai.sagernet.utils.Theme
+import io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory
 import io.nekohasekai.sagernet.widget.ColorPickerPreference
 import io.nekohasekai.sagernet.widget.LinkOrContentPreference
 import kotlinx.coroutines.delay
@@ -620,6 +621,24 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             }
             true
         }
+
+        val categoryMisc = findPreference<CollapsiblePreferenceCategory>("category_misc")!!
+        val enableAutoSwitchTimeout = findPreference<SwitchPreference>(Key.ENABLE_AUTO_SWITCH_TIMEOUT)!!
+        val autoSwitchTimeoutDuration = findPreference<SimpleMenuPreference>(Key.AUTO_SWITCH_TIMEOUT_DURATION)!!
+
+        fun updateAutoSwitchTimeoutVisibility() {
+            autoSwitchTimeoutDuration.isVisible = categoryMisc.expanded && enableAutoSwitchTimeout.isChecked
+        }
+
+        enableAutoSwitchTimeout.setOnPreferenceChangeListener { _, newValue ->
+            autoSwitchTimeoutDuration.isVisible = categoryMisc.expanded && newValue as Boolean
+            needReload()
+            true
+        }
+        categoryMisc.onExpandListeners.add {
+            updateAutoSwitchTimeoutVisibility()
+        }
+        updateAutoSwitchTimeoutVisibility()
     }
 
 
