@@ -17,6 +17,7 @@
     <string name="group_name">Group name</string>
     <string name="group_update">Update</string>
     <string name="group_subscription_link">Subscription link</string>
+    <string name="subscription_token">Subscription token</string>
     <string name="group_create">Create group</string>
     <string name="group_edit">Edit group</string>
     <string name="group_status_empty">Empty group</string>
@@ -258,6 +259,8 @@
     <string name="ignore_battery_optimizations_sum">Remove some restrictions</string>
     <string name="force_resolve">Force resolve</string>
     <string name="force_resolve_sum">Force resolve all server addresses in this subscription</string>
+    <string name="ooc_subscription_token_invalid">Invalid subscription token</string>
+    <string name="ooc_missing_protocol">Subscription contains unsupported protocol: %s</string>
     <!-- plugin -->
     <string name="plugin">Plugin</string>
     <string name="plugin_configure">Configure…</string>
@@ -512,7 +515,7 @@
     <string name="one_per_line">One per line.</string>
     <string name="one_per_line_format">One per line. Format:\n%s</string>
     <string name="edns_client_ip_sum">Please input an IP address. IPv4 uses a subnet of /24 and IPv6 uses a subnet of /96.</string>
-    <string name="bootstrap_dns_sum">If the address of direct DNS is a domain name and "resolve destination" is enabled, use bootstrap DNS to resolve it. Please input a DNS server with IP address or with "+local".</string>
+    <string name="bootstrap_dns_sum">If the address of direct DNS is a domain name and \"resolve destination\" is enabled, use bootstrap DNS to resolve it. Please input a DNS server with IP address or with \"+local\".</string>
     <string name="more">More</string>
     <string name="acquire_wake_lock">Acquire WakeLock</string>
     <string name="log_level">Log level</string>
@@ -574,8 +577,8 @@
     <string name="tls_record_fragmentation_and_tcp_segmentation">TLS record fragmentation and TCP segmentation</string>
     <string name="pinned_peer_certificate_public_key_sha256">Pinned certificate public key SHA-256</string>
     <string name="pinned_peer_certificate_sha256">Pinned certificate SHA-256</string>
-    <string name="pinned_peer_certificate_sha256_base64_dialog_message">Use with "skip certificate verification" if the certificate itself is untrusted or invalid. One per line in Base64 encoding.</string>
-    <string name="pinned_peer_certificate_sha256_hex_dialog_message">Use with "skip certificate verification" if the certificate itself is untrusted or invalid. One per line in hex encoding.</string>
+    <string name="pinned_peer_certificate_sha256_base64_dialog_message">Use with \"skip certificate verification\" if the certificate itself is untrusted or invalid. One per line in Base64 encoding.</string>
+    <string name="pinned_peer_certificate_sha256_hex_dialog_message">Use with \"skip certificate verification\" if the certificate itself is untrusted or invalid. One per line in hex encoding.</string>
     <string name="mtls_certificate">mTLS certificate</string>
     <string name="mtls_certificate_private_key">mTLS certificate private key</string>
     <string name="delete_multi_confirm_prompt">Are you sure you want to remove these profiles?</string>
