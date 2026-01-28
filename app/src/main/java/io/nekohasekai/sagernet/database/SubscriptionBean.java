@@ -32,7 +32,9 @@ public class SubscriptionBean extends Serializable {
 
     public Integer type;
     public String link;
+    public String token;
     public Boolean deduplication;
+    public Boolean subscriptionForceResolve;
     public Boolean updateWhenConnectedOnly;
     public String customUserAgent;
     public Boolean autoUpdate;
@@ -54,7 +56,14 @@ public class SubscriptionBean extends Serializable {
     public void serializeToBuffer(ByteBufferOutput output) {
         output.writeInt(9);
         output.writeInt(type);
-        output.writeString(link);
+
+        if (type == SubscriptionType.OOCv1) {
+            output.writeString(token);
+        } else {
+            output.writeString(link);
+        }
+
+        output.writeBoolean(subscriptionForceResolve);
         output.writeBoolean(deduplication);
         output.writeBoolean(updateWhenConnectedOnly);
         output.writeString(customUserAgent);
@@ -73,7 +82,14 @@ public class SubscriptionBean extends Serializable {
     public void serializeForShare(ByteBufferOutput output) {
         output.writeInt(8);
         output.writeInt(type);
-        output.writeString(link);
+
+        if (type == SubscriptionType.OOCv1) {
+            output.writeString(token);
+        } else {
+            output.writeString(link);
+        }
+
+        output.writeBoolean(subscriptionForceResolve);
         output.writeBoolean(deduplication);
         output.writeBoolean(updateWhenConnectedOnly);
         output.writeString(customUserAgent);
@@ -93,15 +109,16 @@ public class SubscriptionBean extends Serializable {
         type = input.readInt();
 
         if (version < 7 && type == SubscriptionType.OOCv1) {
-            input.readString(); // token, removed
+            token = input.readString();
             link = "";
         } else {
             link = input.readString();
         }
-        if (version < 6) {
+        if (version >= 6) {
+            subscriptionForceResolve = input.readBoolean();
+        } else {
             input.readBoolean(); // forceResolve, removed
         }
-
         deduplication = input.readBoolean();
         if (version < 2) input.readBoolean();
         updateWhenConnectedOnly = input.readBoolean();
@@ -129,6 +146,8 @@ public class SubscriptionBean extends Serializable {
         }
 
         if (version >= 5) {
+            nameFilter = input.readString();
+        } else if (version >= 7) {
             nameFilter = input.readString();
         }
 
@@ -168,12 +187,14 @@ public class SubscriptionBean extends Serializable {
         type = input.readInt();
 
         if (version < 6 && type == SubscriptionType.OOCv1) {
-            input.readString(); // token, removed
+            token = input.readString();
             link = "";
         } else {
             link = input.readString();
         }
-        if (version < 5) {
+        if (version >= 6) {
+            subscriptionForceResolve = input.readBoolean();
+        } else if (version >= 5) {
             input.readBoolean(); // forceResolve, removed
         }
         deduplication = input.readBoolean();
@@ -230,7 +251,9 @@ public class SubscriptionBean extends Serializable {
     public void initializeDefaultValues() {
         if (type == null) type = SubscriptionType.RAW;
         if (link == null) link = "";
+        if (token == null) token = "";
         if (deduplication == null) deduplication = false;
+        if (subscriptionForceResolve == null) subscriptionForceResolve = false;
         if (updateWhenConnectedOnly == null) updateWhenConnectedOnly = false;
         if (customUserAgent == null) customUserAgent = "";
         if (autoUpdate == null) autoUpdate = false;
