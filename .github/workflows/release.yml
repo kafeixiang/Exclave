@@ -66,6 +66,9 @@ jobs:
         run: |
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
           export LOCAL_PROPERTIES="${{ secrets.LOCAL_PROPERTIES }}"
+          export KEYSTORE_PASS="${{ secrets.KEYSTORE_PASS }}"
+          export ALIAS_NAME="${{ secrets.ALIAS_NAME }}"
+          export ALIAS_PASS="${{ secrets.ALIAS_PASS }}"
           ./gradlew :app:downloadAssets
           ./gradlew :app:assembleOssRelease :app:assembleLegacyRelease
       - name: Upload Artifacts
