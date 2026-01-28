@@ -323,6 +323,7 @@ object Key {
     const val SUBSCRIPTION_AUTO_UPDATE = "subscriptionAutoUpdate"
     const val SUBSCRIPTION_AUTO_UPDATE_DELAY = "subscriptionAutoUpdateDelay"
     const val SUBSCRIPTION_LAST_UPDATED = "subscriptionLastUpdated"
+    const val SUBSCRIPTION_USERNAME = "subscriptionUsername"
     const val SUBSCRIPTION_BYTES_USED = "subscriptionBytesUsed"
     const val SUBSCRIPTION_BYTES_REMAINING = "subscriptionBytesRemaining"
     const val SUBSCRIPTION_EXPIRY_DATE = "subscriptionExpiryDate"
@@ -376,14 +377,14 @@ object GroupType {
 
 object SubscriptionType {
     const val RAW = 0
-    const val OOCv1 = 1 // removed
+    const val OOCv1 = 1
     const val SIP008 = 2
     const val AGE = 3
 }
 
 object ExtraType {
     const val NONE = 0
-    const val OOCv1 = 1 // removed
+    const val OOCv1 = 1
     const val SIP008 = 2
 }
 
