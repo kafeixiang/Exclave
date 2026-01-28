@@ -29,6 +29,7 @@ import com.esotericsoftware.kryo.io.ByteBufferOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.List;
 
 import io.nekohasekai.sagernet.ExtraType;
 import io.nekohasekai.sagernet.ktx.KryosKt;
@@ -46,6 +47,9 @@ public abstract class AbstractBean extends Serializable {
 
     public int extraType;
     public String profileId;
+    public String group;
+    public String owner;
+    public List<String> tags;
 
     public String displayName() {
         if (!name.isEmpty()) {
@@ -92,6 +96,9 @@ public abstract class AbstractBean extends Serializable {
         output.writeInt(extraType);
         if (extraType == ExtraType.NONE) return;
         output.writeString(profileId);
+        output.writeString(group);
+        output.writeString(owner);
+        KryosKt.writeStringList(output, tags);
     }
 
     @Override
@@ -102,13 +109,16 @@ public abstract class AbstractBean extends Serializable {
         extraType = input.readInt();
         if (extraType == ExtraType.NONE) return;
         profileId = input.readString();
-
-        if (extraVersion < 2 && extraType == ExtraType.OOCv1) {
-            input.readString();
+        if (extraVersion >= 2) {
+            group = input.readString();
+            owner = input.readString();
+            tags = KryosKt.readStringList(input);
+        } else if (extraType == ExtraType.OOCv1) {
+            group = input.readString();
             if (extraVersion >= 1) {
-                input.readString();
+                owner = input.readString();
             }
-            KryosKt.readStringList(input);
+            tags = KryosKt.readStringList(input);
         }
     }
 
