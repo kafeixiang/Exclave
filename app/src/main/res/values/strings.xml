@@ -506,6 +506,8 @@
     <string name="rules_geoip_url">geoip.dat URL</string>
     <string name="http_proxy_exception_list">HTTP proxy exception list</string>
     <string name="mux_settings">Mux settings</string>
+    <string name="force_resolve">Force resolve</string>
+    <string name="force_resolve_sum">Force resolve all server addresses in this subscription</string>
     <string name="update_subscription">Update subscription</string>
     <string name="group_not_a_subscription">This group is not a subscription.</string>
     <string name="plugin_settings">Plugin settings</string>

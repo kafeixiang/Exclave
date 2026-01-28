@@ -28,8 +28,11 @@ import io.nekohasekai.sagernet.database.*
 import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.fmt.shadowsocks.ShadowsocksBean
 import io.nekohasekai.sagernet.ktx.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import libcore.Libcore
 import libcore.URL
+import java.net.InetAddress
 
 object OpenOnlineConfigUpdater : GroupUpdater() {
 
@@ -158,6 +161,19 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
         if (subscription.nameFilter.isNotEmpty()) {
             val pattern = Regex(subscription.nameFilter)
             profiles = profiles.filter { !pattern.containsMatchIn(it.name) }.toMutableList()
+        }
+
+        if (subscription.subscriptionForceResolve == true) {
+            for (proxy in profiles) {
+                if (!proxy.serverAddress.isIP()) {
+                    val resolved = withContext(Dispatchers.IO) {
+                        runCatching { InetAddress.getByName(proxy.serverAddress).hostAddress }.getOrNull()
+                    }
+                    if (resolved != null) {
+                        proxy.serverAddress = resolved
+                    }
+                }
+            }
         }
 
         val exists = SagerDatabase.proxyDao.getByGroup(proxyGroup.id)

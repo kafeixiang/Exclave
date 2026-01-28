@@ -86,6 +86,7 @@ class GroupSettingsActivity(
         DataStore.subscriptionLink = subscription.link
         DataStore.subscriptionToken = subscription.token
         DataStore.subscriptionDeduplication = subscription.deduplication
+        DataStore.subscriptionForceResolve = subscription.subscriptionForceResolve
         DataStore.subscriptionUpdateWhenConnectedOnly = subscription.updateWhenConnectedOnly
         DataStore.subscriptionUserAgent = subscription.customUserAgent
         DataStore.subscriptionAutoUpdate = subscription.autoUpdate
@@ -117,6 +118,7 @@ class GroupSettingsActivity(
                 link = DataStore.subscriptionLink
                 token = DataStore.subscriptionToken
                 deduplication = DataStore.subscriptionDeduplication
+                subscriptionForceResolve = DataStore.subscriptionForceResolve
                 updateWhenConnectedOnly = DataStore.subscriptionUpdateWhenConnectedOnly
                 customUserAgent = DataStore.subscriptionUserAgent
                 autoUpdate = DataStore.subscriptionAutoUpdate

@@ -39,6 +39,7 @@ public class SubscriptionBean extends Serializable {
     public String link;
     public String token;
     public Boolean deduplication;
+    public Boolean subscriptionForceResolve;
     public Boolean updateWhenConnectedOnly;
     public String customUserAgent;
     public Boolean autoUpdate;
@@ -63,7 +64,7 @@ public class SubscriptionBean extends Serializable {
 
     @Override
     public void serializeToBuffer(ByteBufferOutput output) {
-        output.writeInt(6);
+        output.writeInt(7);
 
         output.writeInt(type);
 
@@ -73,6 +74,7 @@ public class SubscriptionBean extends Serializable {
             output.writeString(link);
         }
 
+        output.writeBoolean(subscriptionForceResolve);
         output.writeBoolean(deduplication);
         output.writeBoolean(updateWhenConnectedOnly);
         output.writeString(customUserAgent);
@@ -95,7 +97,7 @@ public class SubscriptionBean extends Serializable {
     }
 
     public void serializeForShare(ByteBufferOutput output) {
-        output.writeInt(5);
+        output.writeInt(6);
 
         output.writeInt(type);
 
@@ -105,6 +107,7 @@ public class SubscriptionBean extends Serializable {
             output.writeString(link);
         }
 
+        output.writeBoolean(subscriptionForceResolve);
         output.writeBoolean(deduplication);
         output.writeBoolean(updateWhenConnectedOnly);
         output.writeString(customUserAgent);
@@ -130,7 +133,9 @@ public class SubscriptionBean extends Serializable {
         } else {
             link = input.readString();
         }
-        if (version < 6) {
+        if (version >= 6) {
+            subscriptionForceResolve = input.readBoolean();
+        } else {
             input.readBoolean(); // forceResolve, removed
         }
         deduplication = input.readBoolean();
@@ -161,6 +166,8 @@ public class SubscriptionBean extends Serializable {
 
         if (version >= 5) {
             nameFilter = input.readString();
+        } else if (version >= 7) {
+            nameFilter = input.readString();
         }
 
         if (type == SubscriptionType.OOCv1) {
@@ -188,7 +195,9 @@ public class SubscriptionBean extends Serializable {
         } else {
             link = input.readString();
         }
-        if (version < 5) {
+        if (version >= 6) {
+            subscriptionForceResolve = input.readBoolean();
+        } else if (version >= 5) {
             input.readBoolean(); // forceResolve, removed
         }
         deduplication = input.readBoolean();
@@ -228,6 +237,7 @@ public class SubscriptionBean extends Serializable {
         if (link == null) link = "";
         if (token == null) token = "";
         if (deduplication == null) deduplication = false;
+        if (subscriptionForceResolve == null) subscriptionForceResolve = false;
         if (updateWhenConnectedOnly == null) updateWhenConnectedOnly = false;
         if (customUserAgent == null) customUserAgent = "";
         if (autoUpdate == null) autoUpdate = false;
