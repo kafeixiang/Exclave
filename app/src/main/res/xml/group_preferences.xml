@@ -51,6 +51,12 @@
             app:title="@string/group_subscription_link"
             app:useSimpleSummaryProvider="true" />
 
+        <EditTextPreference
+            app:icon="@drawable/ic_baseline_vpn_key_24"
+            app:key="subscriptionToken"
+            app:title="@string/subscription_token"
+            app:useSimpleSummaryProvider="true" />
+
         <SwitchPreference
             app:icon="@drawable/ic_baseline_import_contacts_24"
             app:key="subscriptionDeduplication"

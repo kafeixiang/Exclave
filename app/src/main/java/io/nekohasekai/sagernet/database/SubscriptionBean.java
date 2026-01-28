@@ -24,6 +24,8 @@ import androidx.annotation.NonNull;
 import com.esotericsoftware.kryo.io.ByteBufferInput;
 import com.esotericsoftware.kryo.io.ByteBufferOutput;
 
+import java.util.List;
+
 import io.nekohasekai.sagernet.SubscriptionType;
 import io.nekohasekai.sagernet.fmt.Serializable;
 import io.nekohasekai.sagernet.ktx.KryosKt;
@@ -43,6 +45,8 @@ public class SubscriptionBean extends Serializable {
     public Long bytesUsed;
     public Long bytesRemaining;
     public Long expiryDate;
+    public String username;
+    public List<String> protocols;
 
     public String nameFilter;
     public String nameFilter1;
@@ -141,16 +145,14 @@ public class SubscriptionBean extends Serializable {
 
         if (version >= 5) {
             nameFilter = input.readString();
-        } else if (version >= 7) {
-            nameFilter = input.readString();
         }
 
         if (version < 7 && type == SubscriptionType.OOCv1) {
-            input.readString();
+            username = input.readString();
             if (version <= 3) {
                 input.readInt();
             }
-            KryosKt.readStringList(input);
+            protocols = KryosKt.readStringList(input);
             if (input.canReadVarInt()) {
                 KryosKt.readStringSet(input);
                 if (version >= 1) {
@@ -204,11 +206,11 @@ public class SubscriptionBean extends Serializable {
         }
 
         if (version < 6 && type == SubscriptionType.OOCv1) {
-            input.readString();
+            username = input.readString();
             if (version <= 2) {
                 input.readInt();
             }
-            KryosKt.readStringList(input);
+            protocols = KryosKt.readStringList(input);
         }
 
         if (version >= 7) {
@@ -235,6 +237,9 @@ public class SubscriptionBean extends Serializable {
         if (nameFilter1 == null) nameFilter1 = "";
 
         if (expiryDate == null) expiryDate = 0L;
+
+        if (username == null) username = "";
+        if (protocols == null) protocols = new java.util.ArrayList<>();
     }
 
     public static final Creator<SubscriptionBean> CREATOR = new CREATOR<SubscriptionBean>() {
