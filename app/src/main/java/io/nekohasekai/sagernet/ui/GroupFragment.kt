@@ -532,6 +532,9 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
             if (group.type == GroupType.SUBSCRIPTION) {
                 val subscription = group.subscription!!
                 val text = mutableListOf<String>()
+                if (subscription.username.isNotEmpty()) {
+                    text.add(subscription.username)
+                }
                 if (subscription.bytesUsed > 0L || subscription.bytesRemaining > 0L) {
                     text.add(if (subscription.bytesRemaining > 0L) {
                         getString(

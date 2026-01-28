@@ -57,6 +57,15 @@ fun ByteBufferOutput.writeStringList(list: Set<String>) {
     for (str in list) writeString(str)
 }
 
+fun ByteBufferInput.readStringArray(): Array<String> {
+    return Array(readInt()) { readString() }
+}
+
+fun ByteBufferOutput.writeStringArray(array: Array<String>) {
+    writeInt(array.size)
+    for (str in array) writeString(str)
+}
+
 fun Parcelable.marshall(): ByteArray {
     val parcel = Parcel.obtain()
     writeToParcel(parcel, 0)
