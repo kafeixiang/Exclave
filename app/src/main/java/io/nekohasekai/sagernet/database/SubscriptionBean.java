@@ -24,6 +24,8 @@ import androidx.annotation.NonNull;
 import com.esotericsoftware.kryo.io.ByteBufferInput;
 import com.esotericsoftware.kryo.io.ByteBufferOutput;
 
+import java.util.List;
+
 import io.nekohasekai.sagernet.SubscriptionType;
 import io.nekohasekai.sagernet.fmt.Serializable;
 import io.nekohasekai.sagernet.ktx.KryosKt;
@@ -43,6 +45,8 @@ public class SubscriptionBean extends Serializable {
     public Long bytesUsed;
     public Long bytesRemaining;
     public Long expiryDate;
+    public String username;
+    public List<String> protocols;
 
     public String nameFilter;
     public String nameFilter1;
@@ -54,7 +58,7 @@ public class SubscriptionBean extends Serializable {
 
     @Override
     public void serializeToBuffer(ByteBufferOutput output) {
-        output.writeInt(9);
+        output.writeInt(10);
         output.writeInt(type);
 
         if (type == SubscriptionType.OOCv1) {
@@ -77,6 +81,8 @@ public class SubscriptionBean extends Serializable {
         output.writeString(nameFilter1);
         output.writeString(httpHeaders);
         output.writeString(agePrivateKey);
+        output.writeString(username);
+        KryosKt.writeStringList(output, protocols);
     }
 
     public void serializeForShare(ByteBufferOutput output) {
@@ -108,7 +114,7 @@ public class SubscriptionBean extends Serializable {
 
         type = input.readInt();
 
-        if (version < 7 && type == SubscriptionType.OOCv1) {
+        if (type == SubscriptionType.OOCv1) {
             token = input.readString();
             link = "";
         } else {
@@ -147,16 +153,14 @@ public class SubscriptionBean extends Serializable {
 
         if (version >= 5) {
             nameFilter = input.readString();
-        } else if (version >= 7) {
-            nameFilter = input.readString();
         }
 
         if (version < 7 && type == SubscriptionType.OOCv1) {
-            input.readString();
+            username = input.readString();
             if (version <= 3) {
                 input.readInt();
             }
-            KryosKt.readStringList(input);
+            protocols = KryosKt.readStringList(input);
             if (input.canReadVarInt()) {
                 KryosKt.readStringSet(input);
                 if (version >= 1) {
@@ -179,6 +183,11 @@ public class SubscriptionBean extends Serializable {
                 agePrivateKey = "";
             }
         }
+
+        if (version >= 10) {
+            username = input.readString();
+            protocols = KryosKt.readStringList(input);
+        }
     }
 
     public void deserializeFromShare(ByteBufferInput input) {
@@ -186,7 +195,7 @@ public class SubscriptionBean extends Serializable {
 
         type = input.readInt();
 
-        if (version < 6 && type == SubscriptionType.OOCv1) {
+        if (type == SubscriptionType.OOCv1) {
             token = input.readString();
             link = "";
         } else {
@@ -220,11 +229,11 @@ public class SubscriptionBean extends Serializable {
         }
 
         if (version < 6 && type == SubscriptionType.OOCv1) {
-            input.readString();
+            username = input.readString();
             if (version <= 2) {
                 input.readInt();
             }
-            KryosKt.readStringList(input);
+            protocols = KryosKt.readStringList(input);
         }
 
         if (version >= 7) {
@@ -269,6 +278,8 @@ public class SubscriptionBean extends Serializable {
 
         if (httpHeaders == null) httpHeaders = "";
         if (agePrivateKey == null) agePrivateKey = "";
+        if (username == null) username = "";
+        if (protocols == null) protocols = new java.util.ArrayList<>();
     }
 
     public static final Creator<SubscriptionBean> CREATOR = new CREATOR<>() {
