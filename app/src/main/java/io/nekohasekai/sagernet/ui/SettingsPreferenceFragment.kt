@@ -51,7 +51,6 @@ import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.widget.ColorPickerPreference
 import io.nekohasekai.sagernet.widget.LinkOrContentPreference
 import kotlinx.coroutines.delay
-import libcore.Libcore
 import java.io.File
 import java.util.Locale
 
@@ -620,6 +619,20 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             }
             true
         }
+
+        val enableAutoSwitchTimeout = findPreference<SwitchPreference>(Key.ENABLE_AUTO_SWITCH_TIMEOUT)!!
+        val autoSwitchTimeoutDuration = findPreference<Preference>(Key.AUTO_SWITCH_TIMEOUT_DURATION)!!
+
+        fun updateAutoSwitchTimeoutVisibility() {
+            autoSwitchTimeoutDuration.isVisible = enableAutoSwitchTimeout.isChecked
+        }
+
+        enableAutoSwitchTimeout.setOnPreferenceChangeListener { _, newValue ->
+            autoSwitchTimeoutDuration.isVisible = newValue as Boolean
+            needReload()
+            true
+        }
+        updateAutoSwitchTimeoutVisibility()
     }
 
 
