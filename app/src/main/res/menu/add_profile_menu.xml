@@ -24,8 +24,17 @@
             <item android:title="@string/add_profile_methods_manual_settings">
                 <menu>
                     <item
+                        android:id="@+id/action_new_http"
+                        android:title="@string/action_http" />
+                    <item
+                        android:id="@+id/action_new_socks"
+                        android:title="@string/action_socks" />
+                    <item
                         android:id="@+id/action_new_ss"
                         android:title="@string/action_shadowsocks" />
+                    <item
+                        android:id="@+id/action_new_ssr"
+                        android:title="@string/action_shadowsocksr" />
                     <item
                         android:id="@+id/action_new_trojan"
                         android:title="@string/action_trojan" />
@@ -41,12 +50,6 @@
                     <item
                         android:id="@+id/action_new_tuic5"
                         android:title="@string/action_tuic5" />
-                    <item
-                        android:id="@+id/action_new_socks"
-                        android:title="@string/action_socks" />
-                    <item
-                        android:id="@+id/action_new_http"
-                        android:title="@string/action_http" />
                     <item
                         android:id="@+id/action_new_http3"
                         android:title="@string/action_http3" />
@@ -70,7 +73,8 @@
                         android:title="@string/action_juicity" />
                     <item
                         android:id="@+id/action_new_shadowquic"
-                        android:title="@string/action_shadowquic" />
+                        android:title="@string/action_shadowquic"
+                        android:visible="true" />
                     <item
                         android:id="@+id/action_new_config"
                         android:title="@string/custom_config" />
@@ -83,9 +87,6 @@
                     <item
                         android:title="@string/more">
                         <menu>
-                            <item
-                                android:id="@+id/action_new_ssr"
-                                android:title="@string/action_shadowsocksr" />
                             <item
                                 android:id="@+id/action_new_brook"
                                 android:title="@string/action_brook" />

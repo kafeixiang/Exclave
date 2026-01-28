@@ -183,20 +183,6 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                             }
                         }
                         .build())
-                    .addCard(MaterialAboutCard.Builder()
-                        .outline(false)
-                        .title(R.string.project)
-                        .addItem(MaterialAboutActionItem.Builder()
-                            .icon(R.drawable.ic_baseline_sanitizer_24)
-                            .text(R.string.github)
-                            .setOnClickAction {
-                                startActivity(Intent(
-                                    Intent.ACTION_VIEW,
-                                    "https://github.com/dyhkwong/Exclave".toUri()
-                                ))
-                            }
-                            .build())
-                        .build())
                     .build()
             } catch (_: IllegalStateException) {
                 return MaterialAboutList.Builder().build()
