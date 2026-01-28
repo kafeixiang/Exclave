@@ -57,6 +57,12 @@
             app:summary="@string/deduplication_sum"
             app:title="@string/deduplication" />
 
+        <SwitchPreferenceCompat
+            app:defaultValue="false"
+            app:key="subscriptionForceResolve"
+            app:summary="@string/force_resolve_sum"
+            app:title="@string/force_resolve" />
+
         <EditTextPreference
             app:icon="@drawable/ic_action_delete"
             app:key="subscriptionNameFilter"
