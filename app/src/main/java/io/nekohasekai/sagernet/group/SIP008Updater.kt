@@ -28,6 +28,9 @@ import io.nekohasekai.sagernet.database.*
 import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.fmt.shadowsocks.parseShadowsocksConfig
 import io.nekohasekai.sagernet.ktx.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.InetAddress
 import libexclavecore.Libexclavecore
 
 object SIP008Updater : GroupUpdater() {
@@ -41,36 +44,40 @@ object SIP008Updater : GroupUpdater() {
 
         val link = subscription.link
         val sip008Response: JsonObject
-        if (link.startsWith("content://", ignoreCase = true)) {
-            val contentText = app.contentResolver.openInputStream(link.toUri())
-                ?.bufferedReader()
-                ?.readText()
+        try {
+            if (link.startsWith("content://", ignoreCase = true)) {
+                val contentText = app.contentResolver.openInputStream(link.toUri())
+                    ?.bufferedReader()
+                    ?.readText()
 
-            sip008Response = contentText?.let { parseJson(contentText).asJsonObject }
-                ?: error(app.getString(R.string.no_proxies_found_in_subscription))
-        } else {
+                sip008Response = contentText?.let { parseJson(contentText).asJsonObject }
+                    ?: error(app.getString(R.string.no_proxies_found_in_subscription))
+            } else {
 
-            val response = Libexclavecore.newHttpClient().apply {
-                if (SagerNet.started && DataStore.startedProfile > 0) {
-                    useUDS(SagerNet.deviceStorage.noBackupFilesDir.toString() + "/ipc.sock")
-                }
-            }.newRequest().apply {
-                setURL(subscription.link)
-                if (subscription.customUserAgent.isNotEmpty()) {
-                    setUserAgent(subscription.customUserAgent)
-                } else {
-                    setUserAgent(USER_AGENT)
-                    if (subscription.httpHeaders.isNotEmpty()) {
-                        for (header in subscription.httpHeaders.replace("\r\n", "\n").split("\n")) {
-                            if (header.isEmpty()) continue
-                            if (!header.contains(":")) error("invalid http header")
-                            setHeader(header.substringBefore(":"), header.substringAfter(":").trimStart())
+                val response = Libexclavecore.newHttpClient().apply {
+                    if (SagerNet.started && DataStore.startedProfile > 0) {
+                        useUDS(SagerNet.deviceStorage.noBackupFilesDir.toString() + "/ipc.sock")
+                    }
+                }.newRequest().apply {
+                    setURL(subscription.link)
+                    if (subscription.customUserAgent.isNotEmpty()) {
+                        setUserAgent(subscription.customUserAgent)
+                    } else {
+                        setUserAgent(USER_AGENT)
+                        if (subscription.httpHeaders.isNotEmpty()) {
+                            for (header in subscription.httpHeaders.replace("\r\n", "\n").split("\n")) {
+                                if (header.isEmpty()) continue
+                                if (!header.contains(":")) error("invalid http header")
+                                setHeader(header.substringBefore(":"), header.substringAfter(":").trimStart())
+                            }
                         }
                     }
-                }
-            }.execute()
+                }.execute()
 
-            sip008Response = parseJson(response.contentString).asJsonObject
+                sip008Response = parseJson(response.contentString).asJsonObject
+            }
+        } catch (_: Exception) {
+            error("invalid response")
         }
 
         subscription.bytesUsed = sip008Response.getLong("bytes_used") ?: -1
