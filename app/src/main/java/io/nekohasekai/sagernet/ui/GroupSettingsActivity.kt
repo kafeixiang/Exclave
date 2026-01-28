@@ -85,7 +85,9 @@ class GroupSettingsActivity(
         }
         DataStore.subscriptionType = sub.type
         DataStore.subscriptionLink = sub.link
+        DataStore.subscriptionToken = sub.token
         DataStore.subscriptionDeduplication = sub.deduplication
+        DataStore.subscriptionForceResolve = sub.subscriptionForceResolve
         DataStore.subscriptionUpdateWhenConnectedOnly = sub.updateWhenConnectedOnly
         DataStore.subscriptionUserAgent = sub.customUserAgent
         DataStore.subscriptionAutoUpdate = sub.autoUpdate
@@ -120,7 +122,9 @@ class GroupSettingsActivity(
             subscription = SubscriptionBean().applyDefaultValues().apply {
                 type = DataStore.subscriptionType
                 link = DataStore.subscriptionLink
+                token = DataStore.subscriptionToken
                 deduplication = DataStore.subscriptionDeduplication
+                subscriptionForceResolve = DataStore.subscriptionForceResolve
                 updateWhenConnectedOnly = DataStore.subscriptionUpdateWhenConnectedOnly
                 customUserAgent = DataStore.subscriptionUserAgent
                 autoUpdate = DataStore.subscriptionAutoUpdate
