@@ -73,6 +73,8 @@ class BaseService {
         var proxy: ProxyInstance? = null
         var notification: ServiceNotification? = null
 
+        var timeoutMonitorJob: Job? = null
+
         val receiver = broadcastReceiver { _, intent ->
             when (intent.action) {
                 Intent.ACTION_SHUTDOWN -> service.persistStats()
@@ -383,6 +385,96 @@ class BaseService {
             }
         }
 
+        fun startTimeoutMonitor() {
+            if (!DataStore.enableAutoSwitchTimeout) return
+
+            // If there's no selected profile or the current profile's group has <= 1 proxy,
+            // skip starting the timeout monitor and do not enter the loop or run tests.
+            val currentProfile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
+            if (currentProfile == null) {
+                Logs.d("Auto-switch skipped: no selected profile")
+                return
+            }
+            val groupProxies = SagerDatabase.proxyDao.getByGroup(currentProfile.groupId)
+            if (groupProxies.size <= 1) {
+                Logs.d("Auto-switch skipped: only ${groupProxies.size} proxy(ies) in group, nothing to switch to")
+                return
+            }
+
+            data.timeoutMonitorJob?.cancel()
+            data.timeoutMonitorJob = data.binder.launch {
+                while (isActive) {
+                    val timeoutSeconds = DataStore.autoSwitchTimeoutDuration.toLong()
+                    delay(timeoutSeconds * 1000)
+
+                    if (!isActive) break
+
+                    // Check again before testing in case the selected profile changed to an un-switchable group
+                    val curProfile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
+                    if (curProfile == null) {
+                        Logs.d("Timeout monitor: no selected profile, stopping monitor")
+                        break
+                    }
+                    val curGroupProxies = SagerDatabase.proxyDao.getByGroup(curProfile.groupId)
+                    if (curGroupProxies.size <= 1) {
+                        Logs.d("Timeout monitor: group has <=1 proxy, stopping monitor")
+                        break
+                    }
+
+                    // Check if connection is still alive
+                    try {
+                        if (data.proxy?.v2rayPoint != null) {
+                            val result = Libcore.urlTest(
+                                data.proxy!!.v2rayPoint,
+                                TAG_SOCKS,
+                                DataStore.connectionTestURL,
+                                3000
+                            )
+                            if (result > 0) {
+                                // Connection is alive, continue monitoring
+                                continue
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Logs.d("Timeout check error: ${e.readableMessage}")
+                    }
+
+                    // No response, try to switch to next config
+                    try {
+                        switchToNextProxy()
+                    } catch (e: Exception) {
+                        Logs.d("Error switching proxy: ${e.readableMessage}")
+                    }
+                    break // Stop monitoring after switch
+                }
+            }
+        }
+
+        fun switchToNextProxy() {
+            val currentProfile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy) ?: return
+            val groupProxies = SagerDatabase.proxyDao.getByGroup(currentProfile.groupId)
+
+            // If there's 0 or 1 proxy in the group, nothing to switch to.
+            if (groupProxies.size <= 1) {
+                Logs.d("switchToNextProxy: no available alternative proxies in group (count=${groupProxies.size})")
+                return
+            }
+
+            val currentIndex = groupProxies.indexOfFirst { it.id == currentProfile.id }
+            val nextIndex = if (currentIndex >= 0 && currentIndex < groupProxies.size - 1) {
+                currentIndex + 1
+            } else {
+                0
+            }
+
+            if (nextIndex < groupProxies.size) {
+                DataStore.selectedProxy = groupProxies[nextIndex].id
+                runOnMainDispatcher {
+                    stopRunner(true)
+                }
+            }
+        }
+
         suspend fun startProcesses() {
             data.proxy!!.launch()
         }
@@ -394,6 +486,8 @@ class BaseService {
 
         fun killProcesses() {
             data.proxy?.close()
+            data.timeoutMonitorJob?.cancel()
+            data.timeoutMonitorJob = null
             wakeLock?.apply {
                 release()
                 wakeLock = null
@@ -511,6 +605,7 @@ class BaseService {
                     startProcesses()
                     data.changeState(State.Connected)
                     data.binder.checkLoop()
+                    startTimeoutMonitor()
 
                     for ((type, routeName) in proxy.config.alerts) {
                         data.binder.broadcast {

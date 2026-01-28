@@ -967,4 +967,13 @@
         <item>@string/pinned_peer_certificate_public_key_sha256</item>
         <item>@string/pinned_peer_certificate_chain_sha256</item>
     </string-array>
+
+    <string-array name="auto_switch_timeout_values">
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+    </string-array>
+
 </resources>

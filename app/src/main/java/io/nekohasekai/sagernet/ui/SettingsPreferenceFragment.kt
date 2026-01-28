@@ -42,6 +42,7 @@ import io.nekohasekai.sagernet.database.preference.EditTextPreferenceModifiers
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.nekohasekai.sagernet.utils.Theme
+import io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory
 import io.nekohasekai.sagernet.widget.ColorPickerPreference
 import io.nekohasekai.sagernet.widget.LinkOrContentPreference
 import kotlinx.coroutines.delay
@@ -430,6 +431,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         findPreference<EditTextPreference>(Key.EXPERIMENTAL_FLAGS)!!.isVisible = DataStore.enableDebug
 
         // misc settings
+        val categoryMisc = findPreference<CollapsiblePreferenceCategory>("category_misc")!!
         findPreference<SwitchPreference>(Key.SHOW_GROUP_NAME)!!.onPreferenceChangeListener = reloadListener
         findPreference<SwitchPreference>(Key.ACQUIRE_WAKE_LOCK)!!.onPreferenceChangeListener = reloadListener
         findPreference<SimpleMenuPreference>(Key.FAB_STYLE)!!.setOnPreferenceChangeListener { _, _ ->
@@ -439,6 +441,30 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             }
             true
         }
+
+        val enableAutoSwitchTimeout = findPreference<SwitchPreference>(Key.ENABLE_AUTO_SWITCH_TIMEOUT)!!
+        val autoSwitchTimeoutDuration = findPreference<SimpleMenuPreference>(Key.AUTO_SWITCH_TIMEOUT_DURATION)!!
+        
+        // 定义同步逻辑：可见性 = 分类展开 且 功能开启
+        fun syncAutoSwitch() {
+            autoSwitchTimeoutDuration.isVisible = categoryMisc.expanded && enableAutoSwitchTimeout.isChecked
+        }
+        
+        // 监听分类展开/折叠
+        categoryMisc.onStateChanged = ::syncAutoSwitch
+        
+        // 监听开关变化
+        enableAutoSwitchTimeout.setOnPreferenceChangeListener { _, newValue ->
+            val isEnabled = newValue as Boolean
+            autoSwitchTimeoutDuration.isVisible = categoryMisc.expanded && isEnabled
+            needReload()
+            true
+        }
+        
+        // 初始化
+        syncAutoSwitch()
+
+        findPreference<SwitchPreference>(Key.USE_IEC_UNIT)!!.onPreferenceChangeListener = reloadListener
     }
 
 

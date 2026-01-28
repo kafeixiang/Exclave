@@ -51,6 +51,10 @@ object Key {
 
     const val ENABLE_VPN_INTERFACE_IPV6_ADDRESS = "enableVPNInterfaceIPv6Address"
 
+    // Auto-switch timeout settings
+    const val ENABLE_AUTO_SWITCH_TIMEOUT = "enableAutoSwitchTimeout"
+    const val AUTO_SWITCH_TIMEOUT_DURATION = "autoSwitchTimeoutDuration"
+
     const val PROXY_APPS = "proxyApps"
     const val BYPASS_MODE = "bypassMode"
     const val INDIVIDUAL = "individual"
