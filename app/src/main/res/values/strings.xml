@@ -256,6 +256,8 @@
     <string name="deduplication">Deduplication</string>
     <string name="ignore_battery_optimizations">Ignore battery optimizations</string>
     <string name="ignore_battery_optimizations_sum">Remove some restrictions</string>
+    <string name="force_resolve">Force resolve</string>
+    <string name="force_resolve_sum">Force resolve all server addresses in this subscription</string>
     <!-- plugin -->
     <string name="plugin">Plugin</string>
     <string name="plugin_configure">Configure…</string>
