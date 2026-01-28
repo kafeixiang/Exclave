@@ -446,6 +446,15 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             }
             true
         }
+
+        val enableAutoSwitchTimeout = findPreference<SwitchPreference>(Key.ENABLE_AUTO_SWITCH_TIMEOUT)!!
+        val autoSwitchTimeoutDuration = findPreference<SimpleMenuPreference>(Key.AUTO_SWITCH_TIMEOUT_DURATION)!!
+        enableAutoSwitchTimeout.setOnPreferenceChangeListener { _, newValue ->
+            autoSwitchTimeoutDuration.isVisible = newValue as Boolean
+            needReload()
+            true
+        }
+        autoSwitchTimeoutDuration.isVisible = enableAutoSwitchTimeout.isChecked
     }
 
 

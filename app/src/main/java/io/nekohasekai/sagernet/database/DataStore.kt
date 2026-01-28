@@ -262,6 +262,10 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var appTrafficStatistics by configurationStore.boolean(Key.APP_TRAFFIC_STATISTICS)
     var profileTrafficStatistics by configurationStore.boolean(Key.PROFILE_TRAFFIC_STATISTICS) { true }
 
+    // Auto-switch timeout settings
+    var enableAutoSwitchTimeout by configurationStore.boolean(Key.ENABLE_AUTO_SWITCH_TIMEOUT) { false }
+    var autoSwitchTimeoutDuration by configurationStore.stringToInt(Key.AUTO_SWITCH_TIMEOUT_DURATION) { 10 }
+
     // protocol
 
     var shadowsocks2022Implementation by configurationStore.stringToInt(Key.SHADOWSOCKS_2022_IMPLEMENTATION)
