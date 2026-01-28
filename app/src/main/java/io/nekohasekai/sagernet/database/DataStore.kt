@@ -467,6 +467,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var subscriptionAutoUpdate by profileCacheStore.boolean(Key.SUBSCRIPTION_AUTO_UPDATE)
     var subscriptionAutoUpdateDelay by profileCacheStore.stringToInt(Key.SUBSCRIPTION_AUTO_UPDATE_DELAY) { 1440 }
     var subscriptionLastUpdated by profileCacheStore.long(Key.SUBSCRIPTION_LAST_UPDATED)
+    var subscriptionUsername by profileCacheStore.string(Key.SUBSCRIPTION_USERNAME)
     var subscriptionBytesUsed by profileCacheStore.long(Key.SUBSCRIPTION_BYTES_USED)
     var subscriptionBytesRemaining by profileCacheStore.long(Key.SUBSCRIPTION_BYTES_REMAINING)
     var subscriptionExpiryDate by profileCacheStore.long(Key.SUBSCRIPTION_EXPIRY_DATE)
