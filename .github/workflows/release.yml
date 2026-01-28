@@ -9,16 +9,7 @@ on:
       - "library/**"
       - ".github/workflows/release.yml"
   workflow_dispatch:
-    inputs:
-      release:
-        description: 'Release (y/n)'
-        required: false
-      prerelease:
-        description: 'Mark as pre-release (y/n)'
-        required: false
-      tag:
-        description: 'Release Tag'
-        required: false
+
 jobs:
   build:
     name: Build
@@ -83,7 +74,7 @@ jobs:
           path: app/build/outputs/apk/legacy/release
   publish:
     name: Publish Release
-    if: github.event.inputs.release == 'y' && github.event.inputs.tag != ''
+    if: github.event.inputs.release != 'y'
     runs-on: ubuntu-latest
     needs: build
     env:
@@ -97,21 +88,22 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: APKs
-          path: artifacts/oss
-      - name: Download Artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: APKs-legacy
-          path: artifacts/legacy
-      - name: Publish Pre-release
-        if: github.event.inputs.prerelease == 'y'
+          path: artifacts
+      - name: Set Release Tag
         run: |
-          mkdir apks
-          find artifacts -name "*.apk" -exec cp {} apks \;
-          gh release create ${{ github.event.inputs.tag }} --notes="" --title=${{ github.event.inputs.tag }} --prerelease ./apks/*
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          else
+            VERSION_NAME=$(grep '^VERSION_NAME=' version.properties | cut -d'=' -f2 | tr -d '\r')
+            BRANCH_NAME="${GITHUB_REF_NAME}"
+            TAG_NAME="${BRANCH_NAME}-${VERSION_NAME}"
+            echo "RELEASE_TAG=${TAG_NAME}" >> $GITHUB_ENV
+          fi
       - name: Publish Release
         if: github.event.inputs.prerelease != 'y'
         run: |
           mkdir apks
           find artifacts -name "*.apk" -exec cp {} apks \;
-          gh release create ${{ github.event.inputs.tag }} --notes="" --title=${{ github.event.inputs.tag }} ./apks/*
+          gh release create "${{ env.RELEASE_TAG }}" --title "${{ env.RELEASE_TAG }}" --prerelease \
+            --notes $'# :memo: Release Notes\n\n* Fixes and improvements.' || echo "Release already exists"
+          gh release upload "${{ env.RELEASE_TAG }}" ./apks/* --clobber
