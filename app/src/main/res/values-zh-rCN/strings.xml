@@ -13,6 +13,7 @@
     <string name="group_name">分组名</string>
     <string name="group_update">更新</string>
     <string name="group_subscription_link">订阅链接</string>
+    <string name="subscription_token">订阅令牌</string>
     <string name="group_create">创建分组</string>
     <string name="group_edit">编辑</string>
     <string name="group_status_empty">空</string>
@@ -548,6 +549,8 @@
     <string name="create_shortcut">创建快捷方式</string>
     <string name="force_resolve">强制解析</string>
     <string name="force_resolve_sum">更新时解析所有域名到 IP 地址. 如果可能, 主机与服务器名称指示值将被自动覆盖</string>
+    <string name="ooc_subscription_token_invalid">订阅令牌无效</string>
+    <string name="ooc_missing_protocol">订阅包含不支持的协议：%s</string>
     <string name="mieru_port_range">服务器端口范围</string>
     <string name="cag_grpc">gRPC 设置</string>
     <string name="grpc_service_name_compat">gRPC service name 兼容性</string>
