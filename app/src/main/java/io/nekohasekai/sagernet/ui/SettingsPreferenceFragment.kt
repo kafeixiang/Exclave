@@ -91,6 +91,9 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
         // app settings
         findPreference<ColorPickerPreference>(Key.APP_THEME)!!.setOnPreferenceChangeListener { _, newTheme ->
+            if (SagerNet.started) {
+                SagerNet.reloadService()
+            }
             val theme = Theme.getTheme(newTheme as Int)
             app.setTheme(theme)
             requireActivity().apply {
