@@ -53,6 +53,7 @@ import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.widget.ColorPickerPreference
 import io.nekohasekai.sagernet.widget.LinkOrContentPreference
 import kotlinx.coroutines.delay
+import libcore.Libcore
 import java.io.File
 import java.util.Locale
 
@@ -107,6 +108,9 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         findPreference<SwitchPreference>(Key.PERSIST_ACROSS_REBOOT)!!.onPreferenceChangeListener = restartListener
 
         findPreference<ColorPickerPreference>(Key.APP_THEME)!!.setOnPreferenceChangeListener { _, newTheme ->
+            if (SagerNet.started) {
+                SagerNet.reloadService()
+            }
             val theme = Theme.getTheme(newTheme as Int)
             app.setTheme(theme)
             requireActivity().apply {
