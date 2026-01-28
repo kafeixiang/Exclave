@@ -210,6 +210,14 @@ fun Context.getColorAttr(@AttrRes resId: Int): Int {
     }.resourceId)
 }
 
+fun String.hexToByteArray(): ByteArray {
+    val b = ByteArray(length / 2)
+    for (i in b.indices) {
+        b[i] = substring(i * 2, i * 2 + 2).toInt(16).toByte()
+    }
+    return b
+}
+
 fun <T> Continuation<T>.tryResume(value: T) {
     try {
         resumeWith(Result.success(value))

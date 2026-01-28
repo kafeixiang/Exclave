@@ -82,6 +82,7 @@ abstract class GroupUpdater {
                 try {
                     when (subscription.type) {
                         SubscriptionType.RAW -> RawUpdater
+                        SubscriptionType.OOCv1 -> OpenOnlineConfigUpdater
                         SubscriptionType.SIP008 -> SIP008Updater
                         SubscriptionType.AGE -> AgeUpdater
                         else -> error("unsupported")
