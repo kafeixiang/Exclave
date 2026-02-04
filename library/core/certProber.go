@@ -276,8 +276,8 @@ func CertificateToPrettyInfo(input string) (string, error) {
 		if len(cert.ExcludedURIDomains) > 0 {
 			certInfo.WriteString("  Excluded URI Domains: " + strings.Join(cert.ExcludedURIDomains, ",") + "\n\n")
 		}
-		certInfo.WriteString("  Not Before: " + cert.NotBefore.String() + "\n\n")
-		certInfo.WriteString("  Not After: " + cert.NotAfter.String())
+		certInfo.WriteString("  Not Before: " + cert.NotBefore.Local().Format("2006-01-02 15:04:05 -0700") + "\n\n")
+		certInfo.WriteString("  Not After: " + cert.NotAfter.Local().Format("2006-01-02 15:04:05 -0700"))
 		if i < len(certs)-1 {
 			certInfo.WriteString("\n\n")
 		}
