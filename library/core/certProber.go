@@ -195,3 +195,92 @@ func CalculatePEMCertPublicKeySHA256Hash(input string) (string, error) {
 func CalculatePEMCertChainSHA256Hash(input string) (string, error) {
 	return v2tls.CalculatePEMCertChainSHA256Hash([]byte(input)), nil
 }
+
+func CertificateToPrettyInfo(input string) (string, error) {
+	data := []byte(input)
+	var certs []*x509.Certificate
+	for {
+		var block *pem.Block
+		block, data = pem.Decode(data)
+		if block == nil {
+			break
+		}
+		if block.Type != "CERTIFICATE" {
+			continue
+		}
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return "", err
+		}
+		certs = append(certs, cert)
+	}
+	if len(certs) == 0 {
+		return "", newError("no certificate found")
+	}
+	certInfo := new(strings.Builder)
+	for i, cert := range certs {
+		certInfo.WriteString(cert.Subject.CommonName + "\n\n")
+		certInfo.WriteString("  Signature Algorithm: " + cert.SignatureAlgorithm.String() + "\n\n")
+		certInfo.WriteString("  Public Key Algorithm: " + cert.PublicKeyAlgorithm.String() + "\n\n")
+		certInfo.WriteString("  Issuer: " + cert.Issuer.String() + "\n\n")
+		certInfo.WriteString("  Subject: " + cert.Subject.String() + "\n\n")
+		if len(cert.DNSNames) > 0 {
+			certInfo.WriteString("  DNS Names: " + strings.Join(cert.DNSNames, ",") + "\n\n")
+		}
+		if len(cert.IPAddresses) > 0 {
+			ipAddresses := make([]string, len(cert.IPAddresses))
+			for i, ip := range cert.IPAddresses {
+				ipAddresses[i] = ip.String()
+			}
+			certInfo.WriteString("  IP Addresses: " + strings.Join(ipAddresses, ",") + "\n\n")
+		}
+		if len(cert.EmailAddresses) > 0 {
+			certInfo.WriteString("  Email Addresses: " + strings.Join(cert.EmailAddresses, ",") + "\n\n")
+		}
+		if len(cert.URIs) > 0 {
+			uris := make([]string, len(cert.URIs))
+			for i, uri := range cert.URIs {
+				uris[i] = uri.String()
+			}
+			certInfo.WriteString("  URIs: " + strings.Join(uris, ",") + "\n\n")
+		}
+		if len(cert.PermittedDNSDomains) > 0 {
+			certInfo.WriteString("  Permitted DNS Domains: " + strings.Join(cert.PermittedDNSDomains, ",") + "\n\n")
+		}
+		if len(cert.ExcludedDNSDomains) > 0 {
+			certInfo.WriteString("  Excluded DNS Domains: " + strings.Join(cert.ExcludedDNSDomains, ",") + "\n\n")
+		}
+		if len(cert.PermittedIPRanges) > 0 {
+			permittedIPRanges := make([]string, len(cert.PermittedIPRanges))
+			for i, permittedIPRange := range cert.PermittedIPRanges {
+				permittedIPRanges[i] = permittedIPRange.String()
+			}
+			certInfo.WriteString("  Permitted IP Ranges: " + strings.Join(permittedIPRanges, ",") + "\n\n")
+		}
+		if len(cert.ExcludedIPRanges) > 0 {
+			excludedIPRanges := make([]string, len(cert.ExcludedIPRanges))
+			for i, excludedIPRange := range cert.ExcludedIPRanges {
+				excludedIPRanges[i] = excludedIPRange.String()
+			}
+			certInfo.WriteString("  Excluded IP Ranges: " + strings.Join(excludedIPRanges, ",") + "\n\n")
+		}
+		if len(cert.PermittedEmailAddresses) > 0 {
+			certInfo.WriteString("  Permitted Email Addresses: " + strings.Join(cert.PermittedEmailAddresses, ",") + "\n\n")
+		}
+		if len(cert.ExcludedEmailAddresses) > 0 {
+			certInfo.WriteString("  Excluded Email Addresses: " + strings.Join(cert.ExcludedEmailAddresses, ",") + "\n\n")
+		}
+		if len(cert.PermittedURIDomains) > 0 {
+			certInfo.WriteString("  Permitted URI Domains: " + strings.Join(cert.PermittedURIDomains, ",") + "\n\n")
+		}
+		if len(cert.ExcludedURIDomains) > 0 {
+			certInfo.WriteString("  Excluded URI Domains: " + strings.Join(cert.ExcludedURIDomains, ",") + "\n\n")
+		}
+		certInfo.WriteString("  Not Before: " + cert.NotBefore.String() + "\n\n")
+		certInfo.WriteString("  Not After: " + cert.NotAfter.String())
+		if i < len(certs)-1 {
+			certInfo.WriteString("\n\n")
+		}
+	}
+	return certInfo.String(), nil
+}
