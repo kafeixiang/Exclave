@@ -187,7 +187,7 @@ fun String.toHysteriaPort(disallowFromGreaterThanTo: Boolean = false): Int {
     error("invalid port range")
 }
 
-const val USER_AGENT = "Exclave/${BuildConfig.VERSION_NAME}"
+const val USER_AGENT = "Exclave/${BuildConfig.VERSION_NAME} (Prefer ClashMeta Format)"
 
 val PUBLIC_STUN_SERVERS = arrayOf(
     "stunserver2025.stunprotocol.org:3478",
