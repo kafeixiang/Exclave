@@ -49,7 +49,7 @@ import org.yaml.snakeyaml.representer.Representer
 import org.yaml.snakeyaml.resolver.Resolver
 import java.net.InetAddress
 import java.util.regex.Pattern
-
+import java.net.URLDecoder
 @Suppress("EXPERIMENTAL_API_USAGE")
 object RawUpdater : GroupUpdater() {
 
@@ -123,6 +123,33 @@ object RawUpdater : GroupUpdater() {
                     expiryDate = -1L
                 }
             }
+
+            // --- 自动改名逻辑 ---
+            val currentName = proxyGroup.name ?: ""
+            val defaultNamePattern = """^(Subscription|订阅|訂閱)[\s#]*\d*${'$'}""".toRegex(RegexOption.IGNORE_CASE)
+
+            if (defaultNamePattern.containsMatchIn(currentName)) {
+                // 尝试获取 Header
+                val disposition = response.getHeader("Content-Disposition").takeIf { it.isNotEmpty() }
+                    ?: response.getHeader("content-disposition")
+
+                if (!disposition.isNullOrEmpty()) {
+                    val nameRegex = """filename\*?=(?:UTF-8'')?["']?([^"';\n]+)["']?""".toRegex(RegexOption.IGNORE_CASE)
+                    val matchResult = nameRegex.find(disposition)
+                    val remoteName = matchResult?.groupValues?.get(1)?.let {
+                        try { URLDecoder.decode(it, "UTF-8") } catch (_: Exception) { it }
+                    }
+
+                    if (!remoteName.isNullOrBlank()) {
+                        proxyGroup.name = remoteName
+                        // 持久化到数据库
+                        kotlin.runCatching {
+                            SagerDatabase.groupDao.updateGroup(proxyGroup)
+                        }
+                    }
+                }
+            }
+
         }
 
         if (subscription.nameFilter.isNotEmpty()) {
