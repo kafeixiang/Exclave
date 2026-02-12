@@ -89,6 +89,9 @@
                                 android:id="@+id/action_new_shadowtls"
                                 android:title="@string/action_shadowtls" />
                             <item
+                                android:id="@+id/action_new_matsuri"
+                                android:title="@string/matsuri_plugins" />
+                            <item
                                 android:id="@+id/action_new_naive"
                                 android:title="@string/action_naive" />
                             <item

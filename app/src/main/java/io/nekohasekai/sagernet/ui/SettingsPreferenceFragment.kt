@@ -26,6 +26,9 @@ import android.view.View
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.os.LocaleListCompat
+import androidx.activity.result.component1
+import androidx.activity.result.component2
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -44,6 +47,7 @@ import io.nekohasekai.sagernet.utils.PackageCache
 import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.widget.ColorPickerPreference
 import io.nekohasekai.sagernet.widget.LinkOrContentPreference
+import io.nekohasekai.sagernet.widget.PluginListPreference
 import kotlinx.coroutines.delay
 import libcore.Libcore
 import java.io.File
@@ -52,6 +56,7 @@ import java.util.Locale
 class SettingsPreferenceFragment : PreferenceFragmentCompat() {
 
     private lateinit var isProxyApps: SwitchPreference
+    private lateinit var matsuriPlugins: PluginListPreference
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -81,6 +86,21 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         preferenceManager.preferenceDataStore = DataStore.configurationStore
         DataStore.initGlobal()
         addPreferencesFromResource(R.xml.global_preferences)
+
+        matsuriPlugins = findPreference(Key.MATSURI_PLUGINS)!!
+        val selectAppList = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { (_, _) ->
+            matsuriPlugins.postUpdate()
+        }
+        matsuriPlugins.setOnPreferenceClickListener {
+            selectAppList.launch(
+                Intent(
+                    context, MatsuriPluginListActivity::class.java
+                ).apply { putExtra(Key.MATSURI_PLUGINS, true) }
+            )
+            true
+        }
 
         // common
         isProxyApps = findPreference(Key.PROXY_APPS)!!
@@ -150,7 +170,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val serviceMode = findPreference<SimpleMenuPreference>(Key.SERVICE_MODE)!!
         val tunImplementation = findPreference<SimpleMenuPreference>(Key.TUN_IMPLEMENTATION)!!
         val mtu = findPreference<EditTextPreference>(Key.MTU)!!
-        val enableVPNInterfaceIPv6Address = findPreference<SwitchPreference>(Key.ENABLE_VPN_INTERFACE_IPV6_ADDRESS)!!
+        val enableVPNInterfaceIPv6Address = findPreference<SwitchPreference>(Key.ENABLE_VPN_INTERFACE_IPv6_ADDRESS)!!
         val allowAppsBypassVpn = findPreference<SwitchPreference>(Key.ALLOW_APPS_BYPASS_VPN)!!
         val meteredNetwork = findPreference<Preference>(Key.METERED_NETWORK)!!
         val enablePcap = findPreference<SwitchPreference>(Key.ENABLE_PCAP)!!
