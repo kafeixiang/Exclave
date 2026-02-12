@@ -110,6 +110,10 @@
             app:singleLineTitle="false"
             app:title="@string/root_ca_provider"
             app:useSimpleSummaryProvider="true" />
+        <io.nekohasekai.sagernet.widget.PluginListPreference
+            app:icon="@drawable/baseline_widgets_24"
+            app:key="matsuriPlugins"
+            app:title="@string/matsuri_plugins" />
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/cag_route">
