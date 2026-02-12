@@ -26,6 +26,7 @@ import io.nekohasekai.sagernet.fmt.http.parseHttp
 import io.nekohasekai.sagernet.fmt.http3.parseHttp3
 import io.nekohasekai.sagernet.fmt.hysteria2.parseHysteria2
 import io.nekohasekai.sagernet.fmt.juicity.parseJuicity
+import io.nekohasekai.sagernet.fmt.matsuri.parseShareLink
 import io.nekohasekai.sagernet.fmt.mieru.parseMieru
 import io.nekohasekai.sagernet.fmt.naive.parseNaive
 import io.nekohasekai.sagernet.fmt.parseBackup
@@ -37,6 +38,11 @@ import io.nekohasekai.sagernet.fmt.trusttunnel.parseTrustTunnel
 import io.nekohasekai.sagernet.fmt.tuic5.parseTuic
 import io.nekohasekai.sagernet.fmt.v2ray.parseV2Ray
 import io.nekohasekai.sagernet.fmt.wireguard.parseWireGuard
+import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
+import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
+import java.io.ByteArrayOutputStream
+import java.util.zip.Deflater
+import java.util.zip.Inflater
 import kotlin.io.encoding.Base64
 
 fun String.decodeBase64(): String {
@@ -130,6 +136,24 @@ fun parseShareLinks(text: String): List<AbstractBean> {
             runCatching {
                 entities.add(parseShadowQUIC(this))
             }
+        } else { // Matsuri plugins
+            MatsuriPluginManager.getProtocols().forEach { obj ->
+                obj.protocolConfig.getStringArray("links")?.forEach { any ->
+                    if (startsWith(any)) {
+                        runOnDefaultDispatcher {
+                            runCatching {
+                                entities.add(
+                                    parseShareLink(
+                                        obj.plgId, obj.protocolId, this@parseLink
+                                    )
+                                )
+                            }.onFailure {
+                                Logs.w(it)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -138,6 +162,10 @@ fun parseShareLinks(text: String): List<AbstractBean> {
     }
     for (link in linksByLine) {
         link.parseLink(entitiesByLine)
+    }
+
+    runOnDefaultDispatcher {
+        MatsuriJSInterface.Default.destroyAllJsi()
     }
 
     return if (entities.size > entitiesByLine.size) entities else entitiesByLine
