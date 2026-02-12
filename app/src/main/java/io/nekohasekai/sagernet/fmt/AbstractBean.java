@@ -28,6 +28,7 @@ import com.esotericsoftware.kryo.io.ByteBufferOutput;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -70,6 +71,14 @@ public abstract class AbstractBean extends Serializable {
         return true;
     }
 
+    public boolean needProtect() {
+        return false;
+    }
+
+    public boolean needBypassRootUID() {
+        return false;
+    }
+
     @Override
     public void initializeDefaultValues() {
         if (serverAddress == null) serverAddress = "127.0.0.1";
@@ -80,6 +89,8 @@ public abstract class AbstractBean extends Serializable {
         finalPort = serverPort;
 
         if (profileId == null) profileId = "";
+        if (group == null) group = "";
+        if (tags == null) tags = new ArrayList<>();
     }
 
 

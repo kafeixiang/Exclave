@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 object PackageCache {
 
     lateinit var installedPackages: Map<String, PackageInfo>
+    lateinit var installedPluginPackages: Map<String, PackageInfo>
     lateinit var installedApps: Map<String, ApplicationInfo>
     lateinit var packageMap: Map<String, Int>
     val uidMap = HashMap<Int, HashSet<String>>()
@@ -54,8 +55,9 @@ object PackageCache {
 
     @SuppressLint("InlinedApi")
     fun reload() {
+        val pm = app.packageManager
         installedPackages = if (DataStore.queryAllPackagesAlternativeMethod) {
-            app.packageManager.getPackagesHoldingPermissions(
+            pm.getPackagesHoldingPermissions(
                 arrayOf(Manifest.permission.INTERNET),
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     PackageManager.MATCH_UNINSTALLED_PACKAGES
@@ -65,7 +67,7 @@ object PackageCache {
                 }
             )
         } else {
-            app.packageManager.getInstalledPackages(
+            pm.getInstalledPackages(
                 PackageManager.GET_PERMISSIONS or
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             PackageManager.MATCH_UNINSTALLED_PACKAGES
@@ -81,10 +83,16 @@ object PackageCache {
             }
         }.associateBy { it.packageName }
 
+        installedPluginPackages = pm.getInstalledPackages(
+            PackageManager.GET_PROVIDERS or PackageManager.GET_META_DATA
+        ).filter {
+            it.providers?.getOrNull(0)?.authority?.startsWith("moe.matsuri.plugin.") == true
+        }.associateBy { it.packageName }
+
         val installed = if (DataStore.queryAllPackagesAlternativeMethod) {
             installedPackages.map { it.value.applicationInfo }
         } else {
-            app.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+            pm.getInstalledApplications(PackageManager.GET_META_DATA)
         }
         installedApps = installed.associateBy { it.packageName }
         packageMap = installed.associate { it.packageName to it.uid }
