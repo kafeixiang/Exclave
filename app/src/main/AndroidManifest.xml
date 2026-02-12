@@ -202,6 +202,8 @@
         <activity
             android:name="io.nekohasekai.sagernet.ui.profile.MASQUESettingsActivity" />
         <activity
+            android:name="io.nekohasekai.sagernet.ui.profile.MatsuriSettingsActivity" />
+        <activity
             android:name="io.nekohasekai.sagernet.ui.profile.ConfigSettingsActivity" />
         <activity
             android:name="io.nekohasekai.sagernet.ui.profile.ConfigEditActivity" />
@@ -219,6 +221,8 @@
             android:name="io.nekohasekai.sagernet.ui.AssetEditActivity" />
         <activity
             android:name="io.nekohasekai.sagernet.ui.AppListActivity" />
+        <activity
+            android:name="io.nekohasekai.sagernet.ui.MatsuriPluginListActivity" />
         <activity
             android:name="com.github.shadowsocks.plugin.v2ray.ConfigActivity" />
         <activity
@@ -270,6 +274,11 @@
             android:launchMode="singleInstance"
             android:taskAffinity="io.nekohasekai.sagernet.ui.SwitchActivity"
             android:theme="@style/Theme.SagerNet.Dialog" />
+
+        <activity
+            android:name="io.nekohasekai.sagernet.ui.WebDAVSettingsActivity"
+            android:label="@string/webdav_settings"
+            android:parentActivityName=".ui.MainActivity" />
 
         <service
             android:name="io.nekohasekai.sagernet.bg.ProxyService"
