@@ -59,8 +59,10 @@ import io.nekohasekai.sagernet.ui.ScannerActivity
 import io.nekohasekai.sagernet.utils.CrashHandler
 import io.nekohasekai.sagernet.utils.DefaultNetworkListener
 import io.nekohasekai.sagernet.utils.DeviceStorageApp
+import io.nekohasekai.sagernet.utils.JavaUtil
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.nekohasekai.sagernet.utils.Theme
+import io.nekohasekai.sagernet.utils.cleanWebview
 import kotlinx.coroutines.DEBUG_PROPERTY_NAME
 import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_ON
 import libexclavecore.AndroidCAStore
@@ -127,6 +129,16 @@ class SagerNet : Application(),
         }
 
         val isMainProcess = processName == BuildConfig.APPLICATION_ID
+        val isBgProcess = processName.endsWith(":bg")
+
+        if (isMainProcess || isBgProcess) {
+            // fix multi process issue in Android 9+
+            JavaUtil.handleWebviewDir(this)
+
+            runOnDefaultDispatcher {
+                cleanWebview()
+            }
+        }
 
         if (!isMainProcess) {
             Libexclavecore.setUidDumper(this, Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
