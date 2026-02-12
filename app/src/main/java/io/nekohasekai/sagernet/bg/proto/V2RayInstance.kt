@@ -34,9 +34,13 @@ import io.nekohasekai.sagernet.database.ProxyEntity
 import io.nekohasekai.sagernet.fmt.LOCALHOST
 import io.nekohasekai.sagernet.fmt.V2rayBuildResult
 import io.nekohasekai.sagernet.fmt.buildV2RayConfig
+import io.nekohasekai.sagernet.fmt.matsuri.MatsuriBean
+import io.nekohasekai.sagernet.fmt.matsuri.updateAllConfig
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean
 import io.nekohasekai.sagernet.fmt.naive.buildNaiveConfig
 import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
+import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
 import io.nekohasekai.sagernet.plugin.PluginManager
 import kotlinx.coroutines.*
 import libexclavecore.V2RayInstance
@@ -68,7 +72,8 @@ abstract class V2RayInstance(
         config = buildV2RayConfig(profile)
     }
 
-    protected open fun loadConfig() {
+    protected open suspend fun loadConfig() {
+        MatsuriJSInterface.Default.destroyAllJsi()
         v2rayPoint.loadConfig(config.config)
     }
 
@@ -84,6 +89,15 @@ abstract class V2RayInstance(
                     is NaiveBean -> {
                         initPlugin("naive-plugin")
                         pluginConfigs[port] = profile.type to bean.buildNaiveConfig(port, username, password)
+                    }
+                    is MatsuriBean -> {
+                        // check if plugin binary can be loaded
+                        initPlugin(bean.plgId)
+                        // build config and check if succeed
+                        bean.updateAllConfig(port)
+                        if (bean.allConfig == null) {
+                            throw MatsuriPluginManager.PluginInternalException(bean.protocolId)
+                        }
                     }
                 }
             }
@@ -140,6 +154,42 @@ abstract class V2RayInstance(
                             initPlugin("naive-plugin").path, configFile.absolutePath
                         )
                         processes.start(commands, env)
+                    }
+                    bean is MatsuriBean -> {
+                        // config built from JS
+                        val nekoRunConfigs = bean.allConfig?.getJsonArray("nekoRunConfigs")
+                        val configs = mutableMapOf<String, String>()
+
+                        nekoRunConfigs?.forEach { any ->
+                            val obj = any.asJsonObject
+
+                            val name = obj.getString("name") ?: ""
+                            val configFile = File(SagerNet.application.cacheDir, name)
+                            configFile.parentFile?.mkdirs()
+                            val content = obj.getString("content") ?: ""
+                            configFile.writeText(content)
+
+                            cacheFiles.add(configFile)
+                            configs[name] = configFile.absolutePath
+
+                            Logs.d(name + "\n\n" + content)
+                        }
+
+                        val nekoCommands = bean.allConfig?.getJsonArray("nekoCommands")
+                        val commands = mutableListOf<String>()
+
+                        nekoCommands?.forEach { any ->
+                            val anyStr = any.asString
+                            if (configs.containsKey(anyStr)) {
+                                commands.add(configs[anyStr]!!)
+                            } else if (anyStr == "%exe%") {
+                                commands.add(initPlugin(bean.plgId).path)
+                            } else {
+                                commands.add(anyStr)
+                            }
+                        }
+
+                        processes.start(commands)
                     }
                 }
             }
