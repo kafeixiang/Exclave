@@ -115,6 +115,9 @@ object Key {
 
     const val INTERRUPT_REUSED_CONNECTIONS = "interruptReusedConnections0"
 
+    const val MATSURI_PLUGINS = "matsuriPlugins"
+    const val MATSURI_PLUGIN_STORAGE = "matsuriPluginStorage"
+
     const val TUN_IMPLEMENTATION = "tunImplementation"
     const val ENABLE_PCAP = "enablePcap"
     const val MTU = "mtu"
@@ -161,7 +164,7 @@ object Key {
     const val SERVER_OBFS = "serverObfs"
     const val SERVER_OBFS_PARAM = "serverObfsParam"
 
-    const val SERVER_USER_ID = "serverUserId"
+    var SERVER_USER_ID = "serverUserId"
     const val SERVER_ALTER_ID = "serverAlterId"
     const val SERVER_SECURITY = "serverSecurity"
     const val SERVER_NETWORK = "serverNetwork"
