@@ -43,6 +43,10 @@ import io.nekohasekai.sagernet.fmt.internal.ChainBean
 import io.nekohasekai.sagernet.fmt.internal.ConfigBean
 import io.nekohasekai.sagernet.fmt.juicity.JuicityBean
 import io.nekohasekai.sagernet.fmt.juicity.toUri
+import io.nekohasekai.sagernet.fmt.matsuri.MatsuriBean
+import io.nekohasekai.sagernet.fmt.matsuri.canShare
+import io.nekohasekai.sagernet.fmt.matsuri.haveStandardLink
+import io.nekohasekai.sagernet.fmt.matsuri.toUri
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
 import io.nekohasekai.sagernet.fmt.mieru.toUri
 import io.nekohasekai.sagernet.fmt.naive.NaiveBean
@@ -85,7 +89,7 @@ data class ProxyEntity(
     var rx: Long = 0L,
     var status: Int = 0,
     var ping: Int = 0,
-    var uuid: String = "",
+    var uuid: String? = "",
     var error: String? = null,
     var socksBean: SOCKSBean? = null,
     var httpBean: HttpBean? = null,
@@ -108,7 +112,8 @@ data class ProxyEntity(
     var snellBean: SnellBean? = null,
     var configBean: ConfigBean? = null,
     var chainBean: ChainBean? = null,
-    var balancerBean: BalancerBean? = null
+    var balancerBean: BalancerBean? = null,
+    var matsuriBean: MatsuriBean? = null
 ) : Serializable() {
 
     companion object {
@@ -134,6 +139,8 @@ data class ProxyEntity(
         const val TYPE_CHAIN = 8
         const val TYPE_BALANCER = 14
         const val TYPE_CONFIG = 13
+
+        const val TYPE_MATSURI = 900
 
         val chainName by lazy { app.getString(R.string.proxy_chain) }
         val configName by lazy { app.getString(R.string.custom_config) }
@@ -228,10 +235,11 @@ data class ProxyEntity(
             TYPE_CONFIG -> configBean = KryoConverters.configDeserialize(byteArray)
             TYPE_CHAIN -> chainBean = KryoConverters.chainDeserialize(byteArray)
             TYPE_BALANCER -> balancerBean = KryoConverters.balancerBeanDeserialize(byteArray)
+            TYPE_MATSURI -> matsuriBean = KryoConverters.matsuriDeserialize(byteArray)
         }
     }
 
-    fun displayType() = when (type) {
+    fun displayType(): String = when (type) {
         TYPE_SOCKS -> socksBean!!.protocolName()
         TYPE_HTTP -> httpBean!!.protocolName()
         TYPE_SS -> ssBean!!.protocolName()
@@ -255,6 +263,7 @@ data class ProxyEntity(
         TYPE_CHAIN -> chainName
         TYPE_CONFIG -> configName
         TYPE_BALANCER -> balancerName
+        TYPE_MATSURI -> matsuriBean!!.displayType()
         else -> "Invalid"
     }
 
@@ -286,6 +295,8 @@ data class ProxyEntity(
             TYPE_CONFIG -> configBean
             TYPE_CHAIN -> chainBean
             TYPE_BALANCER -> balancerBean
+
+            TYPE_MATSURI -> matsuriBean
             else -> null
         } ?: SOCKSBean().applyDefaultValues()
     }
@@ -294,6 +305,7 @@ data class ProxyEntity(
         return when (type) {
             TYPE_CHAIN -> false
             TYPE_BALANCER -> false
+            TYPE_MATSURI -> matsuriBean!!.canShare()
             else -> true
         }
     }
@@ -302,6 +314,7 @@ data class ProxyEntity(
         return when (type) {
             TYPE_SSH, TYPE_WG, TYPE_SNELL -> false
             TYPE_CONFIG, TYPE_CHAIN, TYPE_BALANCER -> false
+            TYPE_MATSURI -> matsuriBean!!.haveStandardLink()
             else -> true
         }
     }
@@ -324,6 +337,7 @@ data class ProxyEntity(
             is AnyTLSBean -> toUri()
             is TrustTunnelBean -> toUri()
             is ShadowQUICBean -> toUri()
+            is MatsuriBean -> if (this.haveStandardLink()) toUri() else null
             else -> null
         }
     }
@@ -388,6 +402,8 @@ data class ProxyEntity(
         configBean = null
         chainBean = null
         balancerBean = null
+
+        matsuriBean = null
 
         when (bean) {
             is SOCKSBean -> {
@@ -479,13 +495,18 @@ data class ProxyEntity(
                 type = TYPE_BALANCER
                 balancerBean = bean
             }
+
+            is MatsuriBean -> {
+                type = TYPE_MATSURI
+                matsuriBean = bean
+            }
             else -> error("Undefined type $type")
         }
         return this
     }
 
     fun settingIntent(ctx: Context, isSubscription: Boolean): Intent? {
-        val cls = when (type) {
+        val cls: Class<*> = when (type) {
             TYPE_SOCKS -> SocksSettingsActivity::class.java
             TYPE_HTTP -> HttpSettingsActivity::class.java
             TYPE_SS -> ShadowsocksSettingsActivity::class.java
@@ -509,6 +530,7 @@ data class ProxyEntity(
             TYPE_CONFIG -> ConfigSettingsActivity::class.java
             TYPE_CHAIN -> ChainSettingsActivity::class.java
             TYPE_BALANCER -> BalancerSettingsActivity::class.java
+            TYPE_MATSURI -> MatsuriSettingsActivity::class.java
             else -> return null
         }
         return Intent(
