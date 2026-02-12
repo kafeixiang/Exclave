@@ -90,6 +90,9 @@
                                 android:id="@+id/action_new_wg"
                                 android:title="@string/action_wireguard" />
                             <item
+                                android:id="@+id/action_new_matsuri"
+                                android:title="@string/matsuri_plugins" />
+                            <item
                                 android:id="@+id/action_new_naive"
                                 android:title="@string/action_naive" />
                             <item
