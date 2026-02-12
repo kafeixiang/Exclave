@@ -95,6 +95,9 @@
                             <item
                                 android:id="@+id/action_new_shadowquic"
                                 android:title="@string/action_shadowquic" />
+                            <item
+                                android:id="@+id/action_new_matsuri"
+                                android:title="@string/matsuri_plugins" />
                         </menu>
                     </item>
                 </menu>
