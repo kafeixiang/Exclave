@@ -289,6 +289,7 @@ fun buildV2RayConfig(
     val requireTransproxy = if (forTest) false else DataStore.requireTransproxy
     val destinationOverride = DataStore.destinationOverride
     val trafficStatistics = !forTest && DataStore.profileTrafficStatistics
+    var hasTagDirect = false
 
     val shouldDumpUID = extraRules.any { it.packages.isNotEmpty() }
     val alerts = mutableListOf<Pair<Int, String>>()
@@ -521,6 +522,7 @@ fun buildV2RayConfig(
                                 domains = listOf(host)
                             }
                         }
+                        hasTagDirect = true
                     }
                     if (bean.security != "none" && bean.sni.isNotEmpty()) {
                         wsRules[bean.sni] = RoutingObject.RuleObject().apply {
@@ -531,6 +533,7 @@ fun buildV2RayConfig(
                                 domains = listOf(bean.sni)
                             }
                         }
+                        hasTagDirect = true
                     }
                     if (bean.serverAddress.isNotEmpty()) {
                         wsRules[bean.serverAddress] = RoutingObject.RuleObject().apply {
@@ -545,6 +548,7 @@ fun buildV2RayConfig(
                             } else {
                                 domains = listOf(bean.serverAddress)
                             }
+                            hasTagDirect = true
                         }
                     }
                 }
@@ -920,8 +924,13 @@ fun buildV2RayConfig(
                                                 if (bean.utlsFingerprint.isNotEmpty()) {
                                                     fingerprint = bean.utlsFingerprint
                                                 }
-                                                if (bean.echConfig.isNotEmpty()) {
-                                                    echConfigList = bean.echConfig
+                                                if (bean.echEnabled) {
+                                                    ech = TLSObject.ECHObject().apply {
+                                                        enabled = bean.echEnabled
+                                                        if (bean.echConfig.isNotEmpty()) {
+                                                            config = bean.echConfig
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -1399,8 +1408,13 @@ fun buildV2RayConfig(
                                                 })
                                             }
                                         }
-                                        if (bean.echConfig.isNotEmpty()) {
-                                            echConfigList = bean.echConfig
+                                        if (bean.echEnabled) {
+                                            ech = TLSObject.ECHObject().apply {
+                                                enabled = bean.echEnabled
+                                                if (bean.echConfig.isNotEmpty()) {
+                                                    config = bean.echConfig
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -1458,8 +1472,13 @@ fun buildV2RayConfig(
                                             if (bean.pinnedPeerCertificateChainSha256.isNotEmpty()) {
                                                 pinnedPeerCertificateChainSha256 = bean.pinnedPeerCertificateChainSha256.listByLineOrComma()
                                             }
-                                            if (bean.echConfig.isNotEmpty()) {
-                                                echConfigList = bean.echConfig
+                                            if (bean.echEnabled) {
+                                                ech = TLSObject.ECHObject().apply {
+                                                    enabled = bean.echEnabled
+                                                    if (bean.echConfig.isNotEmpty()) {
+                                                        config = bean.echConfig
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -1508,8 +1527,13 @@ fun buildV2RayConfig(
                                             if (bean.allowInsecure) {
                                                 allowInsecure = true
                                             }
-                                            if (bean.echConfig.isNotEmpty()) {
-                                                echConfigList = bean.echConfig
+                                            if (bean.echEnabled) {
+                                                ech = TLSObject.ECHObject().apply {
+                                                    enabled = bean.echEnabled
+                                                    if (bean.echConfig.isNotEmpty()) {
+                                                        config = bean.echConfig
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -1602,8 +1626,13 @@ fun buildV2RayConfig(
                                                 if (bean.utlsFingerprint.isNotEmpty()) {
                                                     fingerprint = bean.utlsFingerprint
                                                 }
-                                                if (bean.echConfig.isNotEmpty()) {
-                                                    echConfigList = bean.echConfig
+                                                if (bean.echEnabled) {
+                                                    ech = TLSObject.ECHObject().apply {
+                                                        enabled = bean.echEnabled
+                                                        if (bean.echConfig.isNotEmpty()) {
+                                                            config = bean.echConfig
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -1702,8 +1731,13 @@ fun buildV2RayConfig(
                                                     })
                                                 }
                                             }
-                                            if (bean.echConfig.isNotEmpty()) {
-                                                echConfigList = bean.echConfig
+                                            if (bean.echEnabled) {
+                                                ech = TLSObject.ECHObject().apply {
+                                                    enabled = bean.echEnabled
+                                                    if (bean.echConfig.isNotEmpty()) {
+                                                        config = bean.echConfig
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -1944,7 +1978,7 @@ fun buildV2RayConfig(
                             outboundTag = TAG_DIRECT
                         })
                     })
-
+                    hasTagDirect = true
                 }
 
                 if (!needGlobal) {
@@ -2194,10 +2228,13 @@ fun buildV2RayConfig(
             }
         }
 
-        outbounds.add(OutboundObject().apply {
-            tag = TAG_DIRECT
-            protocol = "freedom"
-        })
+        if (hasTagDirect) {
+            outbounds.add(OutboundObject().apply {
+                tag = TAG_DIRECT
+                protocol = "freedom"
+            })
+        }
+
         outbounds.add(OutboundObject().apply {
             tag = TAG_BYPASS
             protocol = "freedom"
@@ -2286,6 +2323,38 @@ fun buildV2RayConfig(
                 } else {
                     if (!Libcore.isIP(serverAddress)) {
                         bypassDomainSkipFakeDns.add("full:$serverAddress")
+                    }
+                    when (bean) {
+                        is StandardV2RayBean -> {
+                            if (bean.echEnabled && bean.echConfig.isEmpty() && !Libcore.isIP(bean.sni)) {
+                                bypassDomainSkipFakeDns.add("full:${bean.sni}")
+                            }
+                        }
+                        is AnyTLSBean -> {
+                            if (bean.echEnabled && bean.echConfig.isEmpty() && !Libcore.isIP(bean.sni)) {
+                                bypassDomainSkipFakeDns.add("full:${bean.sni}")
+                            }
+                        }
+                        is Http3Bean -> {
+                            if (bean.echEnabled && bean.echConfig.isEmpty() && !Libcore.isIP(bean.sni)) {
+                                bypassDomainSkipFakeDns.add("full:${bean.sni}")
+                            }
+                        }
+                        is Hysteria2Bean -> {
+                            if (bean.echEnabled && bean.echConfig.isEmpty() && !Libcore.isIP(bean.sni)) {
+                                bypassDomainSkipFakeDns.add("full:${bean.sni}")
+                            }
+                        }
+                        is JuicityBean -> {
+                            if (bean.echEnabled && bean.echConfig.isEmpty() && !Libcore.isIP(bean.sni)) {
+                                bypassDomainSkipFakeDns.add("full:${bean.sni}")
+                            }
+                        }
+                        is Tuic5Bean -> {
+                            if (bean.echEnabled && bean.echConfig.isEmpty() && !Libcore.isIP(bean.sni)) {
+                                bypassDomainSkipFakeDns.add("full:${bean.sni}")
+                            }
+                        }
                     }
                 }
             }
