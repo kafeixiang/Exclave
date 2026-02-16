@@ -192,5 +192,8 @@ func (w *pcapFileWrapper) Write(p []byte) (n int, err error) {
 	if err != nil {
 		newError("write pcap file failed").Base(err).AtDebug().WriteToLog()
 	}
-	return n, err
+	// NOT a bug.
+	// https://github.com/google/gvisor/blob/813e3124c3d7a8802a923a8a1381b13204983894/pkg/tcpip/link/sniffer/sniffer.go#L171
+	// https://github.com/SagerNet/LibSagerNetCore/blob/1fce969ea5d102145fc36f480fffdec87598ae54/gvisor/gvisor.go#L140
+	return n, nil
 }
