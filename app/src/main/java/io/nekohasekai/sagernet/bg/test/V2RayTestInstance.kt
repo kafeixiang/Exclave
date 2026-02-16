@@ -20,18 +20,17 @@
 package io.nekohasekai.sagernet.bg.test
 
 import android.net.Network
-import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.bg.GuardedProcessPool
 import io.nekohasekai.sagernet.bg.LocalResolver
 import io.nekohasekai.sagernet.bg.proto.V2RayInstance
 import io.nekohasekai.sagernet.database.ProxyEntity
 import io.nekohasekai.sagernet.fmt.buildV2RayConfig
 import io.nekohasekai.sagernet.ktx.Logs
-import io.nekohasekai.sagernet.ktx.onDefaultDispatcher
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.ktx.tryResume
 import io.nekohasekai.sagernet.ktx.tryResumeWithException
 import io.nekohasekai.sagernet.utils.DefaultNetworkListener
+import kotlinx.coroutines.delay
 import libcore.Libcore
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
@@ -51,6 +50,9 @@ class V2RayTestInstance(profile: ProxyEntity, val link: String, val timeout: Int
                 try {
                     init()
                     launch()
+                    if (pluginConfigs.isNotEmpty()) {
+                        delay(500L)
+                    }
                     c.tryResume(Libcore.urlTest(v2rayPoint, "", link, timeout))
                 } catch (e: Exception) {
                     c.tryResumeWithException(e)

@@ -196,9 +196,6 @@ abstract class V2RayInstance(
                 }
             }
         }
-
-        v2rayPoint.start()
-
         if (config.requireWs) {
             val url = "http://" + joinHostPort(LOCALHOST, config.wsPort) + "/"
 
@@ -265,6 +262,7 @@ abstract class V2RayInstance(
             }
         }
 
+        v2rayPoint.start()
     }
 
     private var isClosed = false
