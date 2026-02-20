@@ -319,6 +319,11 @@ object Key {
 
     const val RULES_FIRST_CREATE = "rulesFirstCreate"
 
+    const val WEBDAV_SERVER = "webdavServer"
+    const val WEBDAV_USERNAME = "webdavUsername"
+    const val WEBDAV_PASSWORD = "webdavPassword"
+    const val WEBDAV_PATH = "webdavPath"
+
 }
 
 object TunImplementation {

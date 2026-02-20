@@ -456,6 +456,11 @@ object DataStore : OnPreferenceDataStoreChangeListener {
 
     var rulesFirstCreate by configurationStore.boolean(Key.RULES_FIRST_CREATE)
 
+    var webdavServer by configurationStore.string(Key.WEBDAV_SERVER)
+    var webdavUsername by configurationStore.string(Key.WEBDAV_USERNAME)
+    var webdavPassword by configurationStore.string(Key.WEBDAV_PASSWORD)
+    var webdavPath by configurationStore.string(Key.WEBDAV_PATH) { "Exclave" }
+
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         when (key) {
             Key.PROFILE_ID -> if (directBootAware) DirectBoot.update()

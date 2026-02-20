@@ -51,6 +51,7 @@ dependencies {
     implementation("com.google.android.material:material:1.13.0")
     implementation("com.google.code.gson:gson:2.13.2")
     implementation("com.google.zxing:core:3.5.4")
+    implementation("com.squareup.okhttp3:okhttp:5.3.2")
 
     implementation("org.yaml:snakeyaml:2.5")
     implementation("com.github.daniel-stoneuk:material-about-library:3.2.0-rc01")
