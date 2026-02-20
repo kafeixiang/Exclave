@@ -359,6 +359,11 @@ object Key {
     const val CERT_PROBER_PROTOCOL = "certProberProtocol"
     const val CERT_PROBER_CERT_HASH_TYPE = "certProberCertHashType"
 
+    const val WEBDAV_SERVER = "webdavServer"
+    const val WEBDAV_USERNAME = "webdavUsername"
+    const val WEBDAV_PASSWORD = "webdavPassword"
+    const val WEBDAV_PATH = "webdavPath"
+
 }
 
 object TunImplementation {

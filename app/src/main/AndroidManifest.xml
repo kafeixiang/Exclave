@@ -271,6 +271,11 @@
             android:launchMode="singleInstance"
             android:theme="@style/Theme.SagerNet.Dialog" />
 
+        <activity
+            android:name="io.nekohasekai.sagernet.ui.WebDAVSettingsActivity"
+            android:label="@string/webdav_settings"
+            android:parentActivityName=".ui.MainActivity" />
+
         <service
             android:name="io.nekohasekai.sagernet.bg.ProxyService"
             android:exported="false"
