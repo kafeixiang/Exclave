@@ -604,6 +604,11 @@ object DataStore : OnPreferenceDataStoreChangeListener {
         }
     }
 
+    var webdavServer by configurationStore.string(Key.WEBDAV_SERVER)
+    var webdavUsername by configurationStore.string(Key.WEBDAV_USERNAME)
+    var webdavPassword by configurationStore.string(Key.WEBDAV_PASSWORD)
+    var webdavPath by configurationStore.string(Key.WEBDAV_PATH) { "Exclave" }
+
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         when (key) {
             Key.PROFILE_ID -> {}
