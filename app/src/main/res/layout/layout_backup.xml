@@ -11,6 +11,13 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/backup_local"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:paddingBottom="8dp" />
+
         <CheckBox
             android:id="@+id/backup_configurations"
             android:layout_width="wrap_content"
@@ -66,6 +73,53 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/action_import_file"
+            android:textColor="?whiteOrTextPrimary" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            android:background="?android:attr/listDivider" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/backup_webdav"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:paddingBottom="8dp" />
+
+        <Button
+            android:id="@+id/webdav_settings"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/webdav_settings"
+            android:textColor="?whiteOrTextPrimary" />
+
+        <Button
+            android:id="@+id/backup_to_webdav"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/backup_to_webdav"
+            android:textColor="?whiteOrTextPrimary" />
+
+        <Button
+            android:id="@+id/restore_from_webdav"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/restore_from_webdav"
+            android:textColor="?whiteOrTextPrimary" />
+
+        <Button
+            android:id="@+id/reset_settings"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="@string/reset_settings"
             android:textColor="?whiteOrTextPrimary" />
 
     </LinearLayout>
