@@ -1316,6 +1316,23 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             private fun getItemAt(index: Int) = getItem(configurationIdList[index])
 
+            private fun hasMiddleRow(p: ProxyEntity): Boolean {
+                val showTraffic = p.rx + p.tx != 0L
+                var address = p.displayAddress()
+                if (p.requireBean().name.isBlank() || !DataStore.alwaysShowAddress) {
+                    address = ""
+                }
+                return !((!showTraffic || p.status <= 0) && address.isBlank())
+            }
+
+            fun neighbourHasMiddleRow(position: Int): Boolean {
+                if (position == RecyclerView.NO_POSITION) return false
+                val np = if (position % 2 == 0) position + 1 else position - 1
+                if (np < 0 || np >= itemCount) return false
+                val profile = getItemAt(np) ?: return false
+                return hasMiddleRow(profile)
+            }
+
             override fun onCreateViewHolder(
                 parent: ViewGroup,
                 viewType: Int,
