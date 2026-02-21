@@ -598,6 +598,12 @@
     <string name="restore_from_webdav">从 WebDAV 恢复</string>
     <string name="reset_settings">恢复默认设置</string>
     <string name="reset_settings_message">恢复默认设置，但节点和分组数据将保留。要完全清除数据，请在系统设置中直接清除应用数据。</string>
+    <string name="layout">布局</string>
+    <string name="layout_single_column">单列</string>
+    <string name="layout_double_column">双列</string>
+    <string name="sort_and_layout">排序与布局</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
     <string name="server_name_to_verify">ServerNameToVerify</string>
     <string name="mieru_traffic_pattern">流量模式</string>
     <string name="insecure_warning_detail">此配置的安全性相当于明文。\n\n该警告被显示是因为“安全建议”被启用。</string>
