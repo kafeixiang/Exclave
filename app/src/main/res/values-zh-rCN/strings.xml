@@ -554,6 +554,8 @@
     <string name="bootstrap_dns_sum">如果直连 DNS 的地址是一个域名且“解析目标地址”启用，使用 bootstrap DNS 解析此域名。 请输入一个地址为 IP 或者带“+local”的 DNS 服务器。</string>
     <string name="more">更多</string>
     <string name="acquire_wake_lock">获取唤醒锁</string>
+    <string name="hide_from_recent_apps">从最近任务中隐藏</string>
+    <string name="hide_from_recent_apps_summary">应用在后台运行时，在最近任务中隐藏</string>
     <string name="log_level">日志级别</string>
     <string name="fab_style">悬浮操作按钮样式</string>
     <string name="wireguard_keepalive_interval">连接保活间隔（秒）</string>

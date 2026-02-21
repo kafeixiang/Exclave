@@ -454,6 +454,10 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         val categoryMisc = findPreference<CollapsiblePreferenceCategory>("category_misc")!!
         findPreference<SwitchPreference>(Key.SHOW_GROUP_NAME)!!.onPreferenceChangeListener = reloadListener
         findPreference<SwitchPreference>(Key.ACQUIRE_WAKE_LOCK)!!.onPreferenceChangeListener = reloadListener
+        findPreference<SwitchPreference>(Key.HIDE_FROM_RECENT_APPS)!!.setOnPreferenceChangeListener { _, newValue ->
+            (activity as? MainActivity)?.applyHideFromRecentApps(newValue as Boolean)
+            true
+        }
         findPreference<SimpleMenuPreference>(Key.FAB_STYLE)!!.setOnPreferenceChangeListener { _, _ ->
             requireActivity().apply {
                 this.finish()

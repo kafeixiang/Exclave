@@ -594,6 +594,8 @@
     <string name="bootstrap_dns_sum">If the address of direct DNS is a domain name and "resolve destination" is enabled, use bootstrap DNS to resolve it. Please input a DNS server with IP address or with "+local".</string>
     <string name="more">More</string>
     <string name="acquire_wake_lock">Acquire WakeLock</string>
+    <string name="hide_from_recent_apps">Hide from recent tasks</string>
+    <string name="hide_from_recent_apps_summary">Hide the app from recent tasks when running in background</string>
     <string name="log_level">Log level</string>
     <string name="fab_style">Floating action button style</string>
     <string name="wireguard_keepalive_interval">Persistent keepalive (s)</string>

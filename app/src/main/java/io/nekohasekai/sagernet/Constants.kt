@@ -119,6 +119,7 @@ object Key {
     const val DISCARD_ICMP = "discardICMP"
     const val ALLOW_APPS_BYPASS_VPN = "allowAppsBypassVpn"
     const val ACQUIRE_WAKE_LOCK = "acquireWakeLock"
+    const val HIDE_FROM_RECENT_APPS = "hideFromRecentApps"
     const val STUN_SERVERS = "stunServers"
     const val FAB_STYLE = "fabStyle"
     const val USE_IEC_UNIT = "useIECUnit"

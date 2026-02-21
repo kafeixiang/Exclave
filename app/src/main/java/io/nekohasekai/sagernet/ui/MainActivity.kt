@@ -24,6 +24,7 @@ package io.nekohasekai.sagernet.ui
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.Manifest
+import android.app.ActivityManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -204,6 +205,26 @@ class MainActivity : ThemedActivity(),
                     }
                 }.show()
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (DataStore.hideFromRecentApps) {
+            applyHideFromRecentApps(true)
+        }
+    }
+
+    fun applyHideFromRecentApps(hide: Boolean) {
+        try {
+            val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+            val tasks = activityManager.appTasks
+            if (tasks.isNotEmpty()) {
+                val task = tasks[0]
+                task.setExcludeFromRecents(hide)
+            }
+        } catch (e: Exception) {
+            Logs.w("Failed to set excludeFromRecents: ${e.message}")
         }
     }
 
