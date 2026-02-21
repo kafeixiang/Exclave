@@ -116,7 +116,8 @@
             app:title="@string/matsuri_plugins" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/cag_route">
+    <PreferenceCategory
+        app:title="@string/cag_route">
         <SwitchPreference
             app:icon="@drawable/ic_image_looks_6"
             app:key="enableVPNInterfaceIPv6Address"
@@ -223,7 +224,8 @@
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/protocol_settings">
+    <PreferenceCategory
+        app:title="@string/protocol_settings">
         <io.nekohasekai.sagernet.widget.LinkPreference
             app:defaultValue="https://www.google.com/generate_204"
             app:icon="@drawable/ic_baseline_cast_connected_24"
@@ -276,7 +278,8 @@
             app:title="@string/insecure_warn" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/cag_dns">
+    <PreferenceCategory
+        app:title="@string/cag_dns">
         <io.nekohasekai.sagernet.widget.NonBlackEditTextPreference
             app:defaultValue="tcp://1.1.1.1"
             app:icon="@drawable/ic_action_dns"
@@ -346,7 +349,8 @@
             app:title="@string/enable_fakedns" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/inbound_settings">
+    <PreferenceCategory
+        app:title="@string/inbound_settings">
         <SwitchPreference
             app:defaultValue="true"
             app:icon="@drawable/baseline_flight_takeoff_24"
@@ -473,6 +477,11 @@
             app:key="autoSwitchTimeoutDuration"
             app:title="@string/auto_switch_timeout_duration"
             app:useSimpleSummaryProvider="true" />
+        <SwitchPreference
+            app:icon="@drawable/ic_baseline_lock_24"
+            app:key="hideFromRecentApps"
+            app:summary="@string/hide_from_recent_apps_summary"
+            app:title="@string/hide_from_recent_apps" />
         <SwitchPreference
             app:icon="@drawable/ic_baseline_shutter_speed_24"
             app:key="useIECUnit"
