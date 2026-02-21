@@ -51,12 +51,10 @@ import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.ui.profile.ProfileSettingsActivity
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.nekohasekai.sagernet.utils.Theme
-import io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory
 import io.nekohasekai.sagernet.widget.ColorPickerPreference
 import io.nekohasekai.sagernet.widget.LinkOrContentPreference
 import io.nekohasekai.sagernet.widget.PluginListPreference
 import kotlinx.coroutines.delay
-import libcore.Libcore
 import java.io.File
 import java.util.Locale
 
@@ -634,6 +632,10 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         // misc settings
         findPreference<SwitchPreference>(Key.SHOW_GROUP_NAME)!!.onPreferenceChangeListener = reloadListener
         findPreference<SwitchPreference>(Key.ACQUIRE_WAKE_LOCK)!!.onPreferenceChangeListener = reloadListener
+        findPreference<SwitchPreference>(Key.HIDE_FROM_RECENT_APPS)!!.setOnPreferenceChangeListener { _, newValue ->
+            (activity as? MainActivity)?.applyHideFromRecentApps(newValue as Boolean)
+            true
+        }
         findPreference<ListPreference>(Key.FAB_STYLE)!!.setOnPreferenceChangeListener { _, _ ->
             requireActivity().apply {
                 this.finish()
@@ -642,21 +644,27 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             true
         }
 
-        val categoryMisc = findPreference<CollapsiblePreferenceCategory>("category_misc")!!
         val enableAutoSwitchTimeout = findPreference<SwitchPreference>(Key.ENABLE_AUTO_SWITCH_TIMEOUT)!!
+        val autoSwitchStrategy = findPreference<SimpleMenuPreference>(Key.AUTO_SWITCH_STRATEGY)!!
         val autoSwitchTimeoutDuration = findPreference<SimpleMenuPreference>(Key.AUTO_SWITCH_TIMEOUT_DURATION)!!
 
         fun updateAutoSwitchTimeoutVisibility() {
-            autoSwitchTimeoutDuration.isVisible = categoryMisc.expanded && enableAutoSwitchTimeout.isChecked
+            val enabled = enableAutoSwitchTimeout.isChecked
+            autoSwitchStrategy.isVisible = enabled
+            autoSwitchTimeoutDuration.isVisible = enabled && autoSwitchStrategy.value == "${AutoSwitchStrategy.NEXT}"
         }
 
         enableAutoSwitchTimeout.setOnPreferenceChangeListener { _, newValue ->
-            autoSwitchTimeoutDuration.isVisible = categoryMisc.expanded && newValue as Boolean
+            val enabled = newValue as Boolean
+            autoSwitchStrategy.isVisible = enabled
+            autoSwitchTimeoutDuration.isVisible = enabled && autoSwitchStrategy.value == "${AutoSwitchStrategy.NEXT}"
             needReload()
             true
         }
-        categoryMisc.onExpandListeners.add {
-            updateAutoSwitchTimeoutVisibility()
+        autoSwitchStrategy.setOnPreferenceChangeListener { _, newValue ->
+            autoSwitchTimeoutDuration.isVisible = enableAutoSwitchTimeout.isChecked && (newValue as String).toInt() == AutoSwitchStrategy.NEXT
+            needReload()
+            true
         }
         updateAutoSwitchTimeoutVisibility()
     }
