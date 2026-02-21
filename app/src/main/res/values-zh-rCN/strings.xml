@@ -611,4 +611,11 @@
     <string name="restore_from_webdav">从 WebDAV 恢复</string>
     <string name="reset_settings">恢复默认设置</string>
     <string name="reset_settings_message">恢复默认设置，但节点和分组数据将保留。要完全清除数据，请在系统设置中直接清除应用数据。</string>
+
+    <string name="layout">布局</string>
+    <string name="layout_single_column">单列</string>
+    <string name="layout_double_column">双列</string>
+    <string name="sort_and_layout">排序与布局</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
 </resources>

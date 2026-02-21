@@ -263,6 +263,9 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var appTrafficStatistics by configurationStore.boolean(Key.APP_TRAFFIC_STATISTICS)
     var profileTrafficStatistics by configurationStore.boolean(Key.PROFILE_TRAFFIC_STATISTICS) { true }
 
+    var confirmProfileDelete by configurationStore.boolean(Key.CONFIRM_PROFILE_DELETE) { true }
+    var groupLayoutMode by configurationStore.stringToInt(Key.GROUP_LAYOUT_MODE) { 0 }
+
     // Auto-switch timeout settings
     var enableAutoSwitchTimeout by configurationStore.boolean(Key.ENABLE_AUTO_SWITCH_TIMEOUT) { false }
     var autoSwitchTimeoutDuration by configurationStore.stringToInt(Key.AUTO_SWITCH_TIMEOUT_DURATION) { 10 }
