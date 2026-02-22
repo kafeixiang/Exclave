@@ -132,6 +132,9 @@ object Key {
     const val APP_TRAFFIC_STATISTICS = "appTrafficStatistics"
     const val PROFILE_TRAFFIC_STATISTICS = "profileTrafficStatistics"
 
+    const val CONFIRM_PROFILE_DELETE = "confirmProfileDelete"
+    const val GROUP_LAYOUT_MODE = "groupLayoutMode"
+
     const val PROFILE_DIRTY = "profileDirty"
     const val PROFILE_ID = "profileId"
     const val PROFILE_NAME = "profileName"

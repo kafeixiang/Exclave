@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?><!-- Based on: https://github.com/android/platform_frameworks_base/blob/505e3ab/core/res/res/layout/simple_list_item_2.xml -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
+    android:layout_margin="2dp"
     android:clickable="true"
     android:focusable="true"
     app:cardElevation="2dp">
@@ -27,7 +27,6 @@
             tools:visibility="visible" />
 
         <LinearLayout
-
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:nextFocusRight="@+id/edit"
@@ -51,8 +50,14 @@
 
                     <TextView
                         android:id="@+id/profile_name"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        android:breakStrategy="simple"
+                        android:hyphenationFrequency="none"
+                        android:lineBreakStyle="loose"
+                        android:lineBreakWordStyle="phrase"
                         android:textAppearance="?android:attr/textAppearanceSmall"
                         android:textColor="?android:attr/textColorPrimary"
                         android:textStyle="bold"
@@ -69,6 +74,18 @@
                     android:focusable="true"
                     android:padding="12dp"
                     app:srcCompat="@drawable/ic_image_edit" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/double_column_menu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/edit"
+                    android:focusable="true"
+                    android:padding="12dp"
+                    android:visibility="gone"
+                    app:srcCompat="@drawable/ic_baseline_more_vert_24" />
 
                 <LinearLayout
                     android:id="@+id/share"
@@ -109,6 +126,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/middle_line"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -139,6 +157,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/bottom_line"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"

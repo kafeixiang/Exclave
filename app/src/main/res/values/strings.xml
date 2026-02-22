@@ -667,4 +667,11 @@
     <string name="create_shortcut">Create shortcut</string>
     <string name="discard_icmp">Discard ICMP</string>
     <string name="discard_icmp_sum">Discard ICMP and ICMPv6</string>
+
+    <string name="layout">Layout</string>
+    <string name="layout_single_column">Single column</string>
+    <string name="layout_double_column">Double column</string>
+    <string name="sort_and_layout">Sort and Layout</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>

@@ -321,7 +321,7 @@
     <string name="subscription_used">已用 %s</string>
     <string name="subscription_traffic">已用 %s / 剩余 %s</string>
     <string name="subscription_import">导入订阅</string>
-    <string name="subscription_import_message">确认要导入订阅 %s？如果来源不可信，您的 IP 和行为将被泄露。</string>
+    <string name="subscription_import_message">确认要导入订阅 %s？如果来源不可信，您的 IP 和 behavior 将被泄露。</string>
     <string name="profile_import">导入配置</string>
     <string name="profile_import_message">确认要导入配置 %s？</string>
     <string name="no_proxies_found_in_subscription">未在此订阅内找到服务器配置</string>
@@ -626,4 +626,11 @@
     <string name="discard_icmp_sum">丢弃 ICMP 和 ICMPv6</string>
     <string name="force_resolve">强制解析</string>
     <string name="force_resolve_sum">更新时解析所有域名到 IP 地址. 如果可能, 主机与服务器名称指示值将被自动覆盖</string>
+
+    <string name="layout">布局</string>
+    <string name="layout_single_column">单列</string>
+    <string name="layout_double_column">双列</string>
+    <string name="sort_and_layout">排序与布局</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
 </resources>
