@@ -110,7 +110,10 @@
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/cag_route">
+    <io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory
+        android:icon="@drawable/ic_maps_directions"
+        android:key="category_route"
+        app:title="@string/cag_route">
         <SwitchPreference
             app:icon="@drawable/ic_image_looks_6"
             app:key="enableVPNInterfaceIPv6Address"
@@ -209,9 +212,12 @@
             app:key="routeMode"
             app:title="@string/route_mode"
             app:useSimpleSummaryProvider="true" />
-    </PreferenceCategory>
+    </io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory>
 
-    <PreferenceCategory app:title="@string/protocol_settings">
+    <io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory
+        android:icon="@drawable/ic_baseline_texture_24"
+        android:key="category_protocol"
+        app:title="@string/protocol_settings">
         <io.nekohasekai.sagernet.widget.LinkPreference
             app:defaultValue="https://www.google.com/generate_204"
             app:icon="@drawable/ic_baseline_cast_connected_24"
@@ -287,9 +293,12 @@
             app:icon="@drawable/ic_baseline_cached"
             app:key="interruptReusedConnections"
             app:title="@string/interrupt_reused_connections" />
-    </PreferenceCategory>
+    </io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory>
 
-    <PreferenceCategory app:title="@string/cag_dns">
+    <io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory
+        android:icon="@drawable/ic_action_dns"
+        android:key="category_dns"
+        app:title="@string/cag_dns">
         <io.nekohasekai.sagernet.widget.NonBlackEditTextPreference
             app:defaultValue="tcp://1.1.1.1"
             app:icon="@drawable/ic_action_dns"
@@ -354,9 +363,12 @@
             app:key="enableFakeDns"
             app:summary="@string/fakedns_message"
             app:title="@string/enable_fakedns" />
-    </PreferenceCategory>
+    </io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory>
 
-    <PreferenceCategory app:title="@string/inbound_settings">
+    <io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory
+        android:icon="@drawable/ic_maps_directions_boat"
+        android:key="category_inbound"
+        app:title="@string/inbound_settings">
         <EditTextPreference
             app:icon="@drawable/ic_maps_directions_boat"
             app:key="socksPort"
@@ -405,11 +417,12 @@
             app:key="allowAccess"
             app:summary="@string/allow_access_sum"
             app:title="@string/allow_access" />
-    </PreferenceCategory>
+    </io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory>
 
-    <PreferenceCategory
-        app:title="@string/cag_misc"
-        app:initialExpandedChildrenCount="0">
+    <io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory
+        android:icon="@drawable/ic_baseline_view_list_24"
+        android:key="category_misc"
+        app:title="@string/cag_misc">
         <SwitchPreference
             app:icon="@drawable/ic_social_emoji_symbols"
             app:key="showGroupName"
@@ -469,6 +482,6 @@
             app:dialogMessage="For testing purpose only.\nBreaking changes are expected.\nNo guarantee of existence."
             app:key="experimentalFlags"
             app:title="Experimental flags" />
-    </PreferenceCategory>
+    </io.nekohasekai.sagernet.widget.CollapsiblePreferenceCategory>
 
 </PreferenceScreen>
