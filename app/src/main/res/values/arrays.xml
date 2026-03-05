@@ -437,11 +437,13 @@
 
     <string-array name="subscription_types">
         <item>@string/raw</item>
+        <item>OOCv1</item>
         <item>SIP008</item>
     </string-array>
 
     <string-array name="subscription_types_value">
         <item>0</item>
+        <item>1</item>
         <item>2</item>
     </string-array>
 
@@ -870,4 +872,13 @@
         <item>error</item>
         <item>none</item>
     </string-array>
+
+    <string-array name="auto_switch_timeout_values">
+        <item>5</item>
+        <item>10</item>
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+    </string-array>
+
 </resources>

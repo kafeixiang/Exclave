@@ -2,18 +2,45 @@
 <com.google.android.material.appbar.AppBarLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/appbar"
-    android:background="?attr/colorPrimary"
     android:layout_width="match_parent"
-    android:layout_height="?attr/actionBarSize"
+    android:layout_height="wrap_content"
+    android:background="?attr/colorPrimary"
     android:elevation="4dp">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:theme="?actionBarTheme"
         android:touchscreenBlocksFocus="false"
         app:popupTheme="@style/ThemeOverlay.AppCompat.DayNight"
         app:title="@string/app_name" />
+
+    <LinearLayout
+        android:id="@+id/matsuri_search_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="@android:string/search_go"
+            android:inputType="text"
+            android:singleLine="true" />
+
+        <CheckBox
+            android:id="@+id/showSystemApps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/show_system_apps" />
+
+    </LinearLayout>
+
 </com.google.android.material.appbar.AppBarLayout>

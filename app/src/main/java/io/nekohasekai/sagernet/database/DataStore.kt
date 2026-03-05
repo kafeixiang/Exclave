@@ -168,6 +168,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var enablePcap by configurationStore.boolean(Key.ENABLE_PCAP)
     var allowAppsBypassVpn by configurationStore.boolean(Key.ALLOW_APPS_BYPASS_VPN)
     var acquireWakeLock by configurationStore.boolean(Key.ACQUIRE_WAKE_LOCK)
+    var hideFromRecentApps by configurationStore.boolean(Key.HIDE_FROM_RECENT_APPS)
     var stunServers by configurationStore.string(Key.STUN_SERVERS)
     var fabStyle by configurationStore.stringToInt(Key.FAB_STYLE) { 1 }
     var useIECUnit by configurationStore.boolean(Key.USE_IEC_UNIT)
@@ -233,7 +234,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
         configurationStore.putString(key, "$value")
     }
 
-    var enableVPNInterfaceIPv6Address by configurationStore.boolean(Key.ENABLE_VPN_INTERFACE_IPV6_ADDRESS)
+    var enableVPNInterfaceIPv6Address by configurationStore.boolean(Key.ENABLE_VPN_INTERFACE_IPv6_ADDRESS)
 
     var meteredNetwork by configurationStore.boolean(Key.METERED_NETWORK)
     var proxyApps by configurationStore.boolean(Key.PROXY_APPS)
@@ -262,11 +263,20 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var appTrafficStatistics by configurationStore.boolean(Key.APP_TRAFFIC_STATISTICS)
     var profileTrafficStatistics by configurationStore.boolean(Key.PROFILE_TRAFFIC_STATISTICS) { true }
 
+    var confirmProfileDelete by configurationStore.boolean(Key.CONFIRM_PROFILE_DELETE) { true }
+    var groupLayoutMode by configurationStore.stringToInt(Key.GROUP_LAYOUT_MODE) { 0 }
+
+    // Auto-switch timeout settings
+    var enableAutoSwitchTimeout by configurationStore.boolean(Key.ENABLE_AUTO_SWITCH_TIMEOUT) { false }
+    var autoSwitchTimeoutDuration by configurationStore.stringToInt(Key.AUTO_SWITCH_TIMEOUT_DURATION) { 10 }
+
     // protocol
 
     var shadowsocks2022Implementation by configurationStore.stringToInt(Key.SHADOWSOCKS_2022_IMPLEMENTATION)
     var providerRootCA by configurationStore.stringToInt(Key.PROVIDER_ROOT_CA) { 1 }
     var interruptReusedConnections by configurationStore.boolean(Key.INTERRUPT_REUSED_CONNECTIONS) { true }
+    var matsuriPlugins by configurationStore.string(Key.MATSURI_PLUGINS)
+    var matsuriPluginStorage by profileCacheStore.string(Key.MATSURI_PLUGIN_STORAGE)
 
     // cache
 
@@ -416,7 +426,9 @@ object DataStore : OnPreferenceDataStoreChangeListener {
 
     var subscriptionType by profileCacheStore.stringToInt(Key.SUBSCRIPTION_TYPE)
     var subscriptionLink by profileCacheStore.string(Key.SUBSCRIPTION_LINK)
+    var subscriptionToken by profileCacheStore.string(Key.SUBSCRIPTION_TOKEN)
     var subscriptionDeduplication by profileCacheStore.boolean(Key.SUBSCRIPTION_DEDUPLICATION)
+    var subscriptionForceResolve by profileCacheStore.boolean(Key.SUBSCRIPTION_FORCE_RESOLVE)
     var subscriptionUpdateWhenConnectedOnly by profileCacheStore.boolean(Key.SUBSCRIPTION_UPDATE_WHEN_CONNECTED_ONLY)
     var subscriptionUserAgent by profileCacheStore.string(Key.SUBSCRIPTION_USER_AGENT)
     var subscriptionAutoUpdate by profileCacheStore.boolean(Key.SUBSCRIPTION_AUTO_UPDATE)
@@ -438,6 +450,11 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var experimentalFlagsProperties = Properties().apply {
         load(BufferedReader(StringReader(experimentalFlags)))
     }
+
+    var webdavServer by configurationStore.string(Key.WEBDAV_SERVER)
+    var webdavUsername by configurationStore.string(Key.WEBDAV_USERNAME)
+    var webdavPassword by configurationStore.string(Key.WEBDAV_PASSWORD)
+    var webdavPath by configurationStore.string(Key.WEBDAV_PATH) { "Exclave" }
 
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         when (key) {

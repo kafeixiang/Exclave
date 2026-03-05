@@ -18,6 +18,7 @@
     <string name="group_name">Group name</string>
     <string name="group_update">Update</string>
     <string name="group_subscription_link">Subscription link</string>
+    <string name="subscription_token">Subscription token</string>
     <string name="group_create">Create group</string>
     <string name="group_edit">Edit group</string>
     <string name="group_status_empty">Empty group</string>
@@ -41,6 +42,9 @@
     <string name="group_changed">Updated: \n%s</string>
     <string name="group_deleted">Deleted: \n%s</string>
     <string name="group_duplicate">Duplicate: \n%s</string>
+    <string name="auto_switch_timeout">Auto-switch on Timeout</string>
+    <string name="auto_switch_timeout_summary">Automatically switch to next config if no response</string>
+    <string name="auto_switch_timeout_duration">Timeout Duration (seconds)</string>
     <!-- misc -->
     <string name="service_mode">Service mode</string>
     <string name="service_mode_proxy">Proxy only</string>
@@ -128,6 +132,8 @@
     <string name="metered_summary">Hint system to treat VPN as metered</string>
     <string name="menu_route">Route</string>
     <string name="route_add">Create route</string>
+    <string name="bottom_app_bar_fab_alignment_mode_center">Center</string>
+    <string name="bottom_app_bar_fab_alignment_mode_end">End</string>
     <string name="delete_route_prompt">Are you sure you want to remove this route?</string>
     <string name="route_name">Route name</string>
     <string name="route_proxy">Proxy</string>
@@ -256,6 +262,10 @@
     <string name="deduplication">Deduplication</string>
     <string name="ignore_battery_optimizations">Ignore battery optimizations</string>
     <string name="ignore_battery_optimizations_sum">Remove some restrictions</string>
+    <string name="force_resolve">Force resolve</string>
+    <string name="force_resolve_sum">Force resolve all server addresses in this subscription</string>
+    <string name="ooc_subscription_token_invalid">Invalid subscription token</string>
+    <string name="ooc_missing_protocol">Subscription contains unsupported protocol: %s</string>
     <!-- plugin -->
     <string name="plugin">Plugin</string>
     <string name="plugin_configure">Configure…</string>
@@ -342,6 +352,7 @@
     <string name="group_order_origin">By original order</string>
     <string name="group_order_by_name">Alphabetically</string>
     <string name="group_order_by_delay">By latency</string>
+    <string name="group_order_by_delay_sum">Test all profiles in this group and sort them by latency</string>
     <string name="plugin_exists_but_on_shit_system">Profile %s requires %s plugin, but your proprietary equipment vendor (usually surveillance capital giants and malware maker) tampered with your Android, making the plugin unusable.</string>
     <string name="traffic_uplink">%s | %s/s ↑</string>
     <string name="traffic_downlink">%s | %s/s ↓</string>
@@ -380,6 +391,8 @@
     <string name="ssh_private_key_passphrase">Private key passphrase</string>
     <string name="menu_tools">Tools</string>
     <string name="menu_log">Logs</string>
+    <string name="matsuri_plugins" translatable="false">Matsuri plugins</string>
+    <string name="uninstall_all_plugins">Uninstall All Plugins</string>
     <string name="clear_logcat">Clear Logcat</string>
     <string name="wireguard_local_address">Local address</string>
     <string name="wireguard_public_key">Peer public key</string>
@@ -515,9 +528,11 @@
     <string name="one_per_line">One per line.</string>
     <string name="one_per_line_format">One per line. Format:\n%s</string>
     <string name="edns_client_ip_sum">Please input an IP address. IPv4 uses a subnet of /24 and IPv6 uses a subnet of /96.</string>
-    <string name="bootstrap_dns_sum">If the address of direct DNS is a domain name and "resolve destination" is enabled, use bootstrap DNS to resolve it. Please input a DNS server with IP address or with "+local".</string>
+    <string name="bootstrap_dns_sum">If the address of direct DNS is a domain name and \"resolve destination\" is enabled, use bootstrap DNS to resolve it. Please input a DNS server with IP address or with \"+local\".</string>
     <string name="more">More</string>
     <string name="acquire_wake_lock">Acquire WakeLock</string>
+    <string name="hide_from_recent_apps">Hide from recent tasks</string>
+    <string name="hide_from_recent_apps_summary">Hide the app from recent tasks when running in background</string>
     <string name="log_level">Log level</string>
     <string name="fab_style">Floating action button style</string>
     <string name="wireguard_keepalive_interval">Persistent keepalive (s)</string>
@@ -577,8 +592,8 @@
     <string name="tls_record_fragmentation_and_tcp_segmentation">TLS record fragmentation and TCP segmentation</string>
     <string name="pinned_peer_certificate_public_key_sha256">Pinned certificate public key SHA-256</string>
     <string name="pinned_peer_certificate_sha256">Pinned certificate SHA-256</string>
-    <string name="pinned_peer_certificate_sha256_base64_dialog_message">Use with "skip certificate verification" if the certificate itself is untrusted or invalid. One per line in Base64 encoding.</string>
-    <string name="pinned_peer_certificate_sha256_hex_dialog_message">Use with "skip certificate verification" if the certificate itself is untrusted or invalid. One per line in hex encoding.</string>
+    <string name="pinned_peer_certificate_sha256_base64_dialog_message">Use with \"skip certificate verification\" if the certificate itself is untrusted or invalid. One per line in Base64 encoding.</string>
+    <string name="pinned_peer_certificate_sha256_hex_dialog_message">Use with \"skip certificate verification\" if the certificate itself is untrusted or invalid. One per line in hex encoding.</string>
     <string name="mtls_certificate">mTLS certificate</string>
     <string name="mtls_certificate_private_key">mTLS certificate private key</string>
     <string name="delete_multi_confirm_prompt">Are you sure you want to remove these profiles?</string>
@@ -603,4 +618,40 @@
     <string name="ech">ECH</string>
     <string name="server_name_to_verify">ServerNameToVerify</string>
     <string name="mieru_traffic_pattern">Traffic pattern</string>
+
+    <string name="webdav_settings">WebDAV Settings</string>
+    <string name="webdav_server">Server Address</string>
+    <string name="webdav_username">Username</string>
+    <string name="webdav_password">Password</string>
+    <string name="webdav_path">Backup Path</string>
+    <string name="webdav_test">Test Connection</string>
+    <string name="webdav_test_success">Connection Successful</string>
+    <string name="webdav_test_failed" formatted="false">Connection Failed: %s</string>
+    <string name="webdav_backup_success">Backup to WebDAV successful</string>
+    <string name="webdav_backup_failed">Backup to WebDAV failed: %s</string>
+    <string name="webdav_restore_success">Restore from WebDAV successful</string>
+    <string name="webdav_restore_failed">Restore from WebDAV failed: %s</string>
+    <string name="webdav_server_empty">Please configure WebDAV server first</string>
+    <string name="webdav_auth_error">Authentication failed: Invalid username or password</string>
+    <string name="webdav_permission_denied">Permission denied</string>
+    <string name="webdav_server_not_found">Server not found</string>
+    <string name="webdav_server_error">Server error</string>
+    <string name="webdav_connect_failed">Connection failed with code: %d</string>
+    <string name="webdav_create_dir_failed">Failed to create or access backup directory</string>
+    <string name="backup_in_progress">Backup is already in progress</string>
+    <string name="restore_in_progress">Restore is already in progress</string>
+    <string name="restore_cancelled">Restore operation cancelled</string>
+    <string name="backup_local">Local Backup</string>
+    <string name="backup_webdav">WebDAV Backup</string>
+    <string name="backup_to_webdav">Backup to WebDAV</string>
+    <string name="restore_from_webdav">Restore from WebDAV</string>
+    <string name="reset_settings">Restore default settings</string>
+    <string name="reset_settings_message">Restore default settings, but data such as nodes and groups will be retained. To completely clear data, clear application data directly in the system settings.</string>
+
+    <string name="layout">Layout</string>
+    <string name="layout_single_column">Single column</string>
+    <string name="layout_double_column">Double column</string>
+    <string name="sort_and_layout">Sort and Layout</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>

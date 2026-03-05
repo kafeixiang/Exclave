@@ -43,6 +43,7 @@ object TypeMap : HashMap<String, Int>() {
         this["anytls"] = ProxyEntity.TYPE_ANYTLS
         this["shadowquic"] = ProxyEntity.TYPE_SHADOWQUIC
         this["trusttunnel"] = ProxyEntity.TYPE_TRUSTTUNNEL
+        this["matsuri"] = ProxyEntity.TYPE_MATSURI
     }
 
     val reversed = HashMap<Int, String>()

@@ -33,6 +33,8 @@ import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.fmt.shadowsocks.parseShadowsocksConfig
 import io.nekohasekai.sagernet.fmt.wireguard.parseWireGuardConfig
 import io.nekohasekai.sagernet.ktx.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import libcore.Libcore
 import org.yaml.snakeyaml.DumperOptions
 import org.yaml.snakeyaml.LoaderOptions
@@ -45,7 +47,9 @@ import org.yaml.snakeyaml.nodes.SequenceNode
 import org.yaml.snakeyaml.nodes.Tag
 import org.yaml.snakeyaml.representer.Representer
 import org.yaml.snakeyaml.resolver.Resolver
+import java.net.InetAddress
 import java.util.regex.Pattern
+import java.net.URLDecoder
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 object RawUpdater : GroupUpdater() {
@@ -120,6 +124,33 @@ object RawUpdater : GroupUpdater() {
                     expiryDate = -1L
                 }
             }
+
+            // --- 自动改名逻辑 ---
+            val currentName = proxyGroup.name ?: ""
+            val defaultNamePattern = """^(Subscription|订阅|訂閱)[\s#]*\d*${'$'}""".toRegex(RegexOption.IGNORE_CASE)
+
+            if (defaultNamePattern.containsMatchIn(currentName)) {
+                // 尝试获取 Header
+                val disposition = response.getHeader("Content-Disposition").takeIf { it.isNotEmpty() }
+                    ?: response.getHeader("content-disposition")
+
+                if (!disposition.isNullOrEmpty()) {
+                    val nameRegex = """filename\*?=(?:UTF-8'')?["']?([^"';\n]+)["']?""".toRegex(RegexOption.IGNORE_CASE)
+                    val matchResult = nameRegex.find(disposition)
+                    val remoteName = matchResult?.groupValues?.get(1)?.let {
+                        try { URLDecoder.decode(it, "UTF-8") } catch (_: Exception) { it }
+                    }
+
+                    if (!remoteName.isNullOrBlank()) {
+                        proxyGroup.name = remoteName
+                        // 持久化到数据库
+                        kotlin.runCatching {
+                            SagerDatabase.groupDao.updateGroup(proxyGroup)
+                        }
+                    }
+                }
+            }
+
         }
 
         proxies.forEach { it.applyDefaultValues() }
@@ -131,6 +162,19 @@ object RawUpdater : GroupUpdater() {
         if (subscription.nameFilter1.isNotEmpty()) {
             val pattern = Regex(subscription.nameFilter1)
             proxies = proxies.filter { pattern.containsMatchIn(it.name) }
+        }
+
+        if (subscription.subscriptionForceResolve == true) {
+            for (proxy in proxies) {
+                if (!proxy.serverAddress.isIP()) {
+                    val resolved = withContext(Dispatchers.IO) {
+                        runCatching { InetAddress.getByName(proxy.serverAddress).hostAddress }.getOrNull()
+                    }
+                    if (resolved != null) {
+                        proxy.serverAddress = resolved
+                    }
+                }
+            }
         }
 
         val proxiesMap = LinkedHashMap<String, AbstractBean>()
