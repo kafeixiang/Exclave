@@ -13,6 +13,7 @@
     <string name="group_name">分组名</string>
     <string name="group_update">更新</string>
     <string name="group_subscription_link">订阅链接</string>
+    <string name="subscription_token">订阅令牌</string>
     <string name="group_create">创建分组</string>
     <string name="group_edit">编辑</string>
     <string name="group_status_empty">空</string>
@@ -31,6 +32,9 @@
     <string name="group_added">新增：\n%s</string>
     <string name="group_changed">更新：\n%s</string>
     <string name="group_deleted">删除：\n%s</string>
+    <string name="auto_switch_timeout">超时自动切换</string>
+    <string name="auto_switch_timeout_summary">如果超时，则自动切换到下一个配置</string>
+    <string name="auto_switch_timeout_duration">超时时长 (秒)</string>
     <!-- misc -->
     <string name="service_mode">服务模式</string>
     <string name="service_mode_proxy">仅代理</string>
@@ -490,6 +494,8 @@
     <string name="bootstrap_dns_sum">如果直连 DNS 的地址是一个域名且“解析目标地址”启用，使用 bootstrap DNS 解析此域名。 请输入一个地址为 IP 或者带“+local”的 DNS 服务器。</string>
     <string name="more">更多</string>
     <string name="acquire_wake_lock">获取唤醒锁</string>
+    <string name="hide_from_recent_apps">从最近任务中隐藏</string>
+    <string name="hide_from_recent_apps_summary">应用在后台运行时，在最近任务中隐藏</string>
     <string name="log_level">日志级别</string>
     <string name="fab_style">悬浮操作按钮样式</string>
     <string name="wireguard_keepalive_interval">连接保活间隔（秒）</string>
@@ -553,6 +559,10 @@
     <string name="delete_multi_confirm_prompt">您确定要删除这些服务器配置吗？</string>
     <string name="interrupt_reused_connections">网络变化时打断被复用的连接</string>
     <string name="create_shortcut">创建快捷方式</string>
+    <string name="force_resolve">强制解析</string>
+    <string name="force_resolve_sum">更新时解析所有域名到 IP 地址. 如果可能, 主机与服务器名称指示值将被自动覆盖</string>
+    <string name="ooc_subscription_token_invalid">订阅令牌无效</string>
+    <string name="ooc_missing_protocol">订阅包含不支持的协议：%s</string>
     <string name="mieru_port_range">服务器端口范围</string>
     <string name="cag_grpc">gRPC 设置</string>
     <string name="grpc_service_name_compat">gRPC service name 兼容性</string>
@@ -572,4 +582,40 @@
     <string name="ech">ECH</string>
     <string name="server_name_to_verify">ServerNameToVerify</string>
     <string name="mieru_traffic_pattern">流量模式</string>
+
+    <string name="webdav_settings">WebDAV 设置</string>
+    <string name="webdav_server">服务器地址</string>
+    <string name="webdav_username">用户名</string>
+    <string name="webdav_password">密码</string>
+    <string name="webdav_path">备份路径</string>
+    <string name="webdav_test">测试连接</string>
+    <string name="webdav_test_success">连接成功</string>
+    <string name="webdav_test_failed" formatted="false">连接失败：%s</string>
+    <string name="webdav_backup_success">备份到 WebDAV 成功</string>
+    <string name="webdav_backup_failed">备份到 WebDAV 失败：%s</string>
+    <string name="webdav_restore_success">从 WebDAV 恢复成功</string>
+    <string name="webdav_restore_failed">从 WebDAV 恢复失败：%s</string>
+    <string name="webdav_server_empty">请先配置 WebDAV 服务器</string>
+    <string name="webdav_auth_error">认证失败：用户名或密码错误</string>
+    <string name="webdav_permission_denied">权限被拒绝</string>
+    <string name="webdav_server_not_found">未找到服务器</string>
+    <string name="webdav_server_error">服务器错误</string>
+    <string name="webdav_connect_failed">连接失败，代码：%d</string>
+    <string name="webdav_create_dir_failed">创建或访问备份目录失败</string>
+    <string name="backup_in_progress">备份已在进行中</string>
+    <string name="restore_in_progress">恢复已在进行中</string>
+    <string name="restore_cancelled">恢复操作已取消</string>
+    <string name="backup_local">本地备份</string>
+    <string name="backup_webdav">WebDAV 备份</string>
+    <string name="backup_to_webdav">备份到 WebDAV</string>
+    <string name="restore_from_webdav">从 WebDAV 恢复</string>
+    <string name="reset_settings">恢复默认设置</string>
+    <string name="reset_settings_message">恢复默认设置，但节点和分组数据将保留。要完全清除数据，请在系统设置中直接清除应用数据。</string>
+
+    <string name="layout">布局</string>
+    <string name="layout_single_column">单列</string>
+    <string name="layout_double_column">双列</string>
+    <string name="sort_and_layout">排序与布局</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
 </resources>

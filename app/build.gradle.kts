@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.room.ktx)
     implementation(libs.material)
     implementation(libs.gson)
+    implementation(libs.okhttp)
     implementation(libs.zxing.core)
     implementation(libs.preferencex)
     implementation(libs.preferencex.simplemenu)

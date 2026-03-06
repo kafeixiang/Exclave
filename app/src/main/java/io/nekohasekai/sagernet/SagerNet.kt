@@ -55,8 +55,10 @@ import io.nekohasekai.sagernet.ui.MainActivity
 import io.nekohasekai.sagernet.utils.CrashHandler
 import io.nekohasekai.sagernet.utils.DefaultNetworkListener
 import io.nekohasekai.sagernet.utils.DeviceStorageApp
+import io.nekohasekai.sagernet.utils.JavaUtil
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.nekohasekai.sagernet.utils.Theme
+import io.nekohasekai.sagernet.utils.cleanWebview
 import kotlinx.coroutines.DEBUG_PROPERTY_NAME
 import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_ON
 import libcore.Libcore
@@ -68,6 +70,10 @@ import androidx.work.Configuration as WorkConfiguration
 class SagerNet : Application(),
     UidDumper,
     WorkConfiguration.Provider {
+
+    val process: String = JavaUtil.getProcessName()
+    private val isMainProcess = process == BuildConfig.APPLICATION_ID
+    val isBgProcess = process.endsWith(":bg")
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
@@ -82,21 +88,18 @@ class SagerNet : Application(),
         System.setProperty(DEBUG_PROPERTY_NAME, DEBUG_PROPERTY_VALUE_ON)
         Thread.setDefaultUncaughtExceptionHandler(CrashHandler)
         DataStore.init()
-        updateNotificationChannels()
-        Seq.setContext(this)
 
-        val processName = if (Build.VERSION.SDK_INT >= 28) {
-            getProcessName()
-        } else {
-            @SuppressLint("PrivateApi")
-            try {
-                Class.forName("android.app.ActivityThread").getDeclaredMethod("currentProcessName").invoke(null) as String
-            } catch (_: Exception) {
-                BuildConfig.APPLICATION_ID
+        if (isMainProcess || isBgProcess) {
+            // fix multi process issue in Android 9+
+            JavaUtil.handleWebviewDir(this)
+
+            runOnDefaultDispatcher {
+                cleanWebview()
             }
         }
 
-        val isMainProcess = processName == BuildConfig.APPLICATION_ID
+        updateNotificationChannels()
+        Seq.setContext(this)
 
         if (!isMainProcess) {
             Libcore.setUidDumper(this, Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)

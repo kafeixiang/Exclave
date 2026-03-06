@@ -47,7 +47,11 @@ object Key {
     const val DIRECT_DNS_QUERY_STRATEGY = "directDnsQueryStrategy"
     const val EDNS_CLIENT_IP = "ednsClientIp"
 
-    const val ENABLE_VPN_INTERFACE_IPV6_ADDRESS = "enableVPNInterfaceIPv6Address"
+    const val ENABLE_VPN_INTERFACE_IPv6_ADDRESS = "enableVPNInterfaceIPv6Address"
+
+    // Auto-switch timeout settings
+    const val ENABLE_AUTO_SWITCH_TIMEOUT = "enableAutoSwitchTimeout"
+    const val AUTO_SWITCH_TIMEOUT_DURATION = "autoSwitchTimeoutDuration"
 
     const val PROXY_APPS = "proxyApps"
     const val BYPASS_MODE = "bypassMode"
@@ -101,12 +105,16 @@ object Key {
 
     const val INTERRUPT_REUSED_CONNECTIONS = "interruptReusedConnections0"
 
+    const val MATSURI_PLUGINS = "matsuriPlugins"
+    const val MATSURI_PLUGIN_STORAGE = "matsuriPluginStorage"
+
     const val TUN_IMPLEMENTATION = "tunImplementation"
     const val ENABLE_PCAP = "enablePcap"
     const val MTU = "mtu"
     const val DISCARD_ICMP = "discardICMP"
     const val ALLOW_APPS_BYPASS_VPN = "allowAppsBypassVpn"
     const val ACQUIRE_WAKE_LOCK = "acquireWakeLock"
+    const val HIDE_FROM_RECENT_APPS = "hideFromRecentApps"
     const val STUN_SERVERS = "stunServers"
     const val FAB_STYLE = "fabStyle"
     const val USE_IEC_UNIT = "useIECUnit"
@@ -121,6 +129,9 @@ object Key {
 
     const val APP_TRAFFIC_STATISTICS = "appTrafficStatistics"
     const val PROFILE_TRAFFIC_STATISTICS = "profileTrafficStatistics"
+
+    const val CONFIRM_PROFILE_DELETE = "confirmProfileDelete"
+    const val GROUP_LAYOUT_MODE = "groupLayoutMode"
 
     const val PROFILE_DIRTY = "profileDirty"
     const val PROFILE_ID = "profileId"
@@ -144,7 +155,7 @@ object Key {
     const val SERVER_OBFS = "serverObfs"
     const val SERVER_OBFS_PARAM = "serverObfsParam"
 
-    const val SERVER_USER_ID = "serverUserId"
+    var SERVER_USER_ID = "serverUserId"
     const val SERVER_ALTER_ID = "serverAlterId"
     const val SERVER_SECURITY = "serverSecurity"
     const val SERVER_NETWORK = "serverNetwork"
@@ -283,7 +294,9 @@ object Key {
     const val GROUP_SUBSCRIPTION = "groupSubscription"
     const val SUBSCRIPTION_TYPE = "subscriptionType"
     const val SUBSCRIPTION_LINK = "subscriptionLink"
+    const val SUBSCRIPTION_TOKEN = "subscriptionToken"
     const val SUBSCRIPTION_DEDUPLICATION = "subscriptionDeduplication"
+    const val SUBSCRIPTION_FORCE_RESOLVE = "subscriptionForceResolve"
     const val SUBSCRIPTION_UPDATE = "subscriptionUpdate"
     const val SUBSCRIPTION_UPDATE_WHEN_CONNECTED_ONLY = "subscriptionUpdateWhenConnectedOnly"
     const val SUBSCRIPTION_USER_AGENT = "subscriptionUserAgent"
@@ -302,6 +315,11 @@ object Key {
 
     const val RULES_FIRST_CREATE = "rulesFirstCreate"
     const val DO_NOT_SHOW_RULE_EXPORT_WARNING = "doNotShowRuleExportWarning"
+
+    const val WEBDAV_SERVER = "webdavServer"
+    const val WEBDAV_USERNAME = "webdavUsername"
+    const val WEBDAV_PASSWORD = "webdavPassword"
+    const val WEBDAV_PATH = "webdavPath"
 
 }
 
@@ -329,13 +347,13 @@ object GroupType {
 
 object SubscriptionType {
     const val RAW = 0
-    const val OOCv1 = 1 // removed
+    const val OOCv1 = 1
     const val SIP008 = 2
 }
 
 object ExtraType {
     const val NONE = 0
-    const val OOCv1 = 1 // removed
+    const val OOCv1 = 1
     const val SIP008 = 2
 }
 
