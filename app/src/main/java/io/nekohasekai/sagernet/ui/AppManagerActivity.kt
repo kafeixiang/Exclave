@@ -51,6 +51,7 @@ import io.nekohasekai.sagernet.databinding.LayoutAppsBinding
 import io.nekohasekai.sagernet.databinding.LayoutAppsItemBinding
 import io.nekohasekai.sagernet.ktx.crossFadeFrom
 import io.nekohasekai.sagernet.ktx.dp2px
+import io.nekohasekai.sagernet.ktx.getBooleanProperty
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.utils.PackageCache
@@ -277,6 +278,9 @@ class AppManagerActivity : ThemedActivity() {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?) = true.also { appsAdapter.filter.filter(newText) }
         })
+        if (DataStore.experimentalFlagsProperties.getBooleanProperty("showVPNAppExclusionSettings")) {
+            menu.findItem(R.id.action_system_settings)?.isVisible = true
+        }
         return true
     }
 
@@ -342,6 +346,13 @@ class AppManagerActivity : ThemedActivity() {
                     }
                 }
                 Snackbar.make(binding.list, R.string.action_import_err, Snackbar.LENGTH_LONG).show()
+            }
+            R.id.action_system_settings -> {
+                // val intent = Intent(Settings.ACTION_VPN_APP_EXCLUSION_SETTINGS) // requires compileSdk 37
+                val intent = Intent("android.settings.VPN_APP_EXCLUSION_SETTINGS")
+                if (intent.resolveActivity(packageManager) != null) {
+                    startActivity(intent)
+                }
             }
         }
         return super.onOptionsItemSelected(item)
