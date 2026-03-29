@@ -291,6 +291,9 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     // Auto-switch timeout settings
     var enableAutoSwitchTimeout by configurationStore.boolean(Key.ENABLE_AUTO_SWITCH_TIMEOUT) { false }
     var autoSwitchTimeoutDuration by configurationStore.stringToInt(Key.AUTO_SWITCH_TIMEOUT_DURATION) { 10 }
+    var autoSwitchStrategy by configurationStore.stringToInt(Key.AUTO_SWITCH_STRATEGY) { AutoSwitchStrategy.NEXT }
+    var enableAutoSwitchActive by configurationStore.boolean(Key.ENABLE_AUTO_SWITCH_ACTIVE) { false }
+    var autoSwitchActiveInterval by configurationStore.stringToInt(Key.AUTO_SWITCH_ACTIVE_INTERVAL) { 300 }
 
     // protocol
     var providerRootCA by configurationStore.stringToInt(Key.PROVIDER_ROOT_CA) { 1 }

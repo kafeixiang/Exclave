@@ -181,6 +181,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         searchView?.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(query: String?): Boolean {
+                if (!isAdded) return false
                 query?.let {
                     try {
                         val fragment = (childFragmentManager.findFragmentByTag("f" + selectedGroup.id) as GroupFragment?)
@@ -214,6 +215,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {
+                if (!isAdded) return
                 val fragment = (childFragmentManager.findFragmentByTag("f" + selectedGroup.id) as GroupFragment?)
                 fragment?.adapter?.filter("")
             }
@@ -232,7 +234,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         }.attach()
 
         toolbar.setOnClickListener {
-
+            if (!isAdded) return@setOnClickListener
             val fragment = (childFragmentManager.findFragmentByTag("f" + selectedGroup.id) as GroupFragment?)
 
             if (fragment != null) {
@@ -992,6 +994,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
                 val runFunc = if (now) requireActivity()::runOnUiThread else groupPager::post
                 runFunc {
+                    if (!isAdded) return@runFunc
                     groupList = newGroupList
                     notifyDataSetChanged()
                     if (set) groupPager.setCurrentItem(selectedGroupIndex, false)
@@ -1108,7 +1111,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 outState.putParcelable("proxyGroup", proxyGroup)
             }
             if (::layoutManager.isInitialized) {
-                outState.putInt("scrollPosition", layoutManager.findFirstVisibleItemPosition())
+                outState.putInt("scrollPosition", (layoutManager as LinearLayoutManager).findFirstVisibleItemPosition())
             }
         }
 
