@@ -645,29 +645,45 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         }
 
         val enableAutoSwitchTimeout = findPreference<SwitchPreference>(Key.ENABLE_AUTO_SWITCH_TIMEOUT)!!
-        val autoSwitchStrategy = findPreference<SimpleMenuPreference>(Key.AUTO_SWITCH_STRATEGY)!!
-        val autoSwitchTimeoutDuration = findPreference<SimpleMenuPreference>(Key.AUTO_SWITCH_TIMEOUT_DURATION)!!
+        val autoSwitchStrategy = findPreference<ListPreference>(Key.AUTO_SWITCH_STRATEGY)!!
+        val autoSwitchTimeoutDuration = findPreference<ListPreference>(Key.AUTO_SWITCH_TIMEOUT_DURATION)!!
+        val enableAutoSwitchActive = findPreference<SwitchPreference>(Key.ENABLE_AUTO_SWITCH_ACTIVE)!!
+        val autoSwitchActiveInterval = findPreference<ListPreference>(Key.AUTO_SWITCH_ACTIVE_INTERVAL)!!
 
-        fun updateAutoSwitchTimeoutVisibility() {
-            val enabled = enableAutoSwitchTimeout.isChecked
-            autoSwitchStrategy.isVisible = enabled
-            autoSwitchTimeoutDuration.isVisible = enabled && autoSwitchStrategy.value == "${AutoSwitchStrategy.NEXT}"
+        fun updateAutoSwitchTimeoutVisibility(
+            timeoutEnabled: Boolean = enableAutoSwitchTimeout.isChecked,
+            activeEnabled: Boolean = enableAutoSwitchActive.isChecked
+        ) {
+            autoSwitchStrategy.isVisible = timeoutEnabled || activeEnabled
+            autoSwitchTimeoutDuration.isVisible = timeoutEnabled
+            autoSwitchActiveInterval.isVisible = activeEnabled
         }
 
         enableAutoSwitchTimeout.setOnPreferenceChangeListener { _, newValue ->
-            val enabled = newValue as Boolean
-            autoSwitchStrategy.isVisible = enabled
-            autoSwitchTimeoutDuration.isVisible = enabled && autoSwitchStrategy.value == "${AutoSwitchStrategy.NEXT}"
+            updateAutoSwitchTimeoutVisibility(timeoutEnabled = newValue as Boolean)
             needReload()
             true
         }
-        autoSwitchStrategy.setOnPreferenceChangeListener { _, newValue ->
-            autoSwitchTimeoutDuration.isVisible = enableAutoSwitchTimeout.isChecked && (newValue as String).toInt() == AutoSwitchStrategy.NEXT
+        enableAutoSwitchActive.setOnPreferenceChangeListener { _, newValue ->
+            updateAutoSwitchTimeoutVisibility(activeEnabled = newValue as Boolean)
+            needReload()
+            true
+        }
+        autoSwitchStrategy.setOnPreferenceChangeListener { _, _ ->
+            needReload()
+            true
+        }
+        autoSwitchTimeoutDuration.setOnPreferenceChangeListener { _, _ ->
+            needReload()
+            true
+        }
+        autoSwitchActiveInterval.setOnPreferenceChangeListener { _, _ ->
             needReload()
             true
         }
         updateAutoSwitchTimeoutVisibility()
     }
+
 
 
     override fun onResume() {
