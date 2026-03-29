@@ -35,6 +35,12 @@
     <string name="auto_switch_timeout">超时自动切换</string>
     <string name="auto_switch_timeout_summary">如果超时，则自动切换到下一个配置</string>
     <string name="auto_switch_timeout_duration">超时时长 (秒)</string>
+    <string name="auto_switch_strategy">自动切换策略</string>
+    <string name="auto_switch_strategy_next">切换至下一个</string>
+    <string name="auto_switch_strategy_url_test">URL 测试 (Mihomo 方式)</string>
+    <string name="auto_switch_active">周期性主动切换</string>
+    <string name="auto_switch_active_summary">在后台定期测试节点并切换到最优节点</string>
+    <string name="auto_switch_active_interval">主动测试间隔</string>
     <!-- misc -->
     <string name="service_mode">服务模式</string>
     <string name="service_mode_proxy">仅代理</string>

@@ -1,8 +1,6 @@
 /******************************************************************************
  *                                                                            *
  * Copyright (C) 2021 by nekohasekai <contact-sagernet@sekai.icu>             *
- * Copyright (C) 2021 by Max Lv <max.c.lv@gmail.com>                          *
- * Copyright (C) 2021 by Mygod Studio <contact-shadowsocks-android@mygod.be>  *
  *                                                                            *
  * This program is free software: you can redistribute it and/or modify       *
  * it under the terms of the GNU General Public License as published by       *
@@ -34,6 +32,7 @@ import io.nekohasekai.sagernet.aidl.ISagerNetService
 import io.nekohasekai.sagernet.aidl.ISagerNetServiceCallback
 import io.nekohasekai.sagernet.aidl.TrafficStats
 import io.nekohasekai.sagernet.bg.proto.ProxyInstance
+import io.nekohasekai.sagernet.bg.test.V2RayTestInstance
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.fmt.Alerts
@@ -41,9 +40,12 @@ import io.nekohasekai.sagernet.fmt.TAG_SOCKS
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.plugin.PluginManager
 import io.nekohasekai.sagernet.utils.PackageCache
+import io.nekohasekai.sagernet.AutoSwitchStrategy
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import libexclavecore.AppStats
 import libexclavecore.Libexclavecore
 import libexclavecore.TrafficListener
@@ -136,6 +138,11 @@ class BaseService {
             }
         }
 
+        private val appStats = ArrayList<AppStats>()
+        override fun updateStats(t: AppStats) {
+            appStats.add(t)
+        }
+
         private suspend fun loop() {
             var lastQueryTime = 0L
             val showDirectSpeed = DataStore.showDirectSpeed
@@ -174,11 +181,6 @@ class BaseService {
 
             }
 
-        }
-
-        val appStats = ArrayList<AppStats>()
-        override fun updateStats(t: AppStats) {
-            appStats.add(t)
         }
 
         private suspend fun loopStats() {
@@ -260,7 +262,7 @@ class BaseService {
         override fun unregisterCallback(cb: ISagerNetServiceCallback) {
             stopListeningForBandwidth(cb)   // saves an RPC, and safer
             stopListeningForStats(cb)
-            callbacks.unregister(cb)
+            callbacks.register(cb)
         }
 
         override fun protect(fd: Int) {
@@ -381,89 +383,158 @@ class BaseService {
         }
 
         fun startTimeoutMonitor() {
-            if (!DataStore.enableAutoSwitchTimeout) return
+            if (!DataStore.enableAutoSwitchTimeout && !DataStore.enableAutoSwitchActive) return
 
-            // If there's no selected profile or the current profile's group has <= 1 proxy,
-            // skip starting the timeout monitor and do not enter the loop or run tests.
-            val currentProfile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
-            if (currentProfile == null) {
-                Logs.d("Auto-switch skipped: no selected profile")
-                return
-            }
+            val currentProfile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy) ?: return
             val groupProxies = SagerDatabase.proxyDao.getByGroup(currentProfile.groupId)
-            if (groupProxies.size <= 1) {
-                Logs.d("Auto-switch skipped: only ${groupProxies.size} proxy(ies) in group, nothing to switch to")
-                return
-            }
+            if (groupProxies.size <= 1) return
 
             data.timeoutMonitorJob?.cancel()
             data.timeoutMonitorJob = data.binder.launch {
+                var failureCount = 0
+                var lastActiveTest = System.currentTimeMillis()
+                
                 while (isActive) {
-                    val timeoutSeconds = DataStore.autoSwitchTimeoutDuration.toLong()
-                    delay(timeoutSeconds * 1000)
-
-                    if (!isActive) break
-
-                    // Check again before testing in case the selected profile changed to an un-switchable group
-                    val curProfile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy)
-                    if (curProfile == null) {
-                        Logs.d("Timeout monitor: no selected profile, stopping monitor")
-                        break
+                    val now = System.currentTimeMillis()
+                    val timeoutSeconds = DataStore.autoSwitchTimeoutDuration.toLong().coerceAtLeast(5)
+                    val activeIntervalSeconds = DataStore.autoSwitchActiveInterval.toLong()
+                    
+                    // 1. 周期性主动探测 (Periodic Active Check - Like Mihomo url-test)
+                    if (DataStore.enableAutoSwitchActive && (now - lastActiveTest) >= activeIntervalSeconds * 1000) {
+                        Logs.d("Timeout monitor: Starting periodic active URL test")
+                        try {
+                            autoSwitchProxy(forceTestAll = true)
+                        } catch (e: Exception) {
+                            Logs.d("Active test error: ${e.readableMessage}")
+                        }
+                        lastActiveTest = System.currentTimeMillis()
+                        failureCount = 0 
                     }
-                    val curGroupProxies = SagerDatabase.proxyDao.getByGroup(curProfile.groupId)
-                    if (curGroupProxies.size <= 1) {
-                        Logs.d("Timeout monitor: group has <=1 proxy, stopping monitor")
-                        break
-                    }
 
-                    // Check if connection is still alive
-                    try {
-                        if (data.proxy?.v2rayPoint != null) {
-                            val result = Libsagernetcore.urlTest(
-                                data.proxy!!.v2rayPoint,
-                                TAG_SOCKS,
-                                DataStore.connectionTestURL,
-                                3000
-                            )
-                            if (result > 0) {
-                                // Connection is alive, continue monitoring
-                                continue
+                    // 2. 被动超时检查 (Passive Timeout Check)
+                    if (DataStore.enableAutoSwitchTimeout) {
+                        // 初始等待设定间隔，如果已失败一次则快速重试确认
+                        delay(if (failureCount == 0) timeoutSeconds * 1000 else 2000)
+                        if (!isActive) break
+
+                        var result = -1
+                        try {
+                            if (data.proxy?.v2rayPoint != null) {
+                                // 利用当前运行的进程探测，不启动新进程，极度省电
+                                result = Libexclavecore.urlTest(
+                                    data.proxy!!.v2rayPoint, TAG_SOCKS, DataStore.connectionTestURL, 5000
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Logs.d("Health check error: ${e.readableMessage}")
+                        }
+
+                        if (result > 0) {
+                            failureCount = 0 
+                        } else {
+                            failureCount++
+                            Logs.d("Health check: failure count $failureCount")
+                            if (failureCount >= 2) {
+                                // 连续两次失败才触发切换，防止网络波动误切
+                                try {
+                                    autoSwitchProxy(forceTestAll = false)
+                                } catch (e: Exception) {
+                                    Logs.d("Switch error: ${e.readableMessage}")
+                                }
+                                break 
                             }
                         }
-                    } catch (e: Exception) {
-                        Logs.d("Timeout check error: ${e.readableMessage}")
+                    } else {
+                        delay(2000) // 仅开启主动探测时，降低循环频率
                     }
-
-                    // No response, try to switch to next config
-                    try {
-                        switchToNextProxy()
-                    } catch (e: Exception) {
-                        Logs.d("Error switching proxy: ${e.readableMessage}")
-                    }
-                    break // Stop monitoring after switch
                 }
             }
         }
 
-        fun switchToNextProxy() {
+        suspend fun autoSwitchProxy(forceTestAll: Boolean = false) {
             val currentProfile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy) ?: return
             val groupProxies = SagerDatabase.proxyDao.getByGroup(currentProfile.groupId)
 
-            // If there's 0 or 1 proxy in the group, nothing to switch to.
-            if (groupProxies.size <= 1) {
-                Logs.d("switchToNextProxy: no available alternative proxies in group (count=${groupProxies.size})")
-                return
-            }
+            if (groupProxies.size <= 1) return
 
-            val currentIndex = groupProxies.indexOfFirst { it.id == currentProfile.id }
-            val nextIndex = if (currentIndex >= 0 && currentIndex < groupProxies.size - 1) {
-                currentIndex + 1
+            var targetProxyId: Long = 0L
+
+            if (DataStore.autoSwitchStrategy == AutoSwitchStrategy.URL_TEST) {
+                // 智能测试集：全量探测或精简集（当前+最优5个+随机5个）
+                val testList = if (forceTestAll || groupProxies.size <= 20) {
+                    groupProxies
+                } else {
+                    val current = groupProxies.filter { it.id == currentProfile.id }
+                    val others = groupProxies.filter { it.id != currentProfile.id }
+                    val sortedOthers = others.sortedBy { if (it.ping > 0) it.ping else Int.MAX_VALUE }
+                    val bestOthers = sortedOthers.take(5)
+                    val randomOthers = (sortedOthers - bestOthers.toSet()).shuffled().take(5)
+                    current + bestOthers + randomOthers
+                }
+
+                val semaphore = Semaphore(3) // 限制并发，防止发热
+                val results = coroutineScope {
+                    testList.map { proxy ->
+                        async {
+                            // 如果是当前节点，利用现有进程测试以省电
+                            if (proxy.id == currentProfile.id && data.proxy?.v2rayPoint != null) {
+                                try {
+                                    val delay = Libexclavecore.urlTest(data.proxy!!.v2rayPoint, TAG_SOCKS, DataStore.connectionTestURL, 3000)
+                                    proxy.ping = if (delay > 0) delay else -1
+                                    proxy.status = if (delay > 0) 1 else 3
+                                    SagerDatabase.proxyDao.updateProxy(proxy)
+                                    if (delay > 0) proxy.id to delay.toLong() else null
+                                } catch (e: Exception) { null }
+                            } else {
+                                semaphore.withPermit {
+                                    val testInstance = V2RayTestInstance(proxy, DataStore.connectionTestURL, 3000)
+                                    try {
+                                        val delay = testInstance.doTest()
+                                        proxy.ping = if (delay > 0) delay else -1
+                                        proxy.status = if (delay > 0) 1 else 3
+                                        SagerDatabase.proxyDao.updateProxy(proxy)
+                                        if (delay > 0) proxy.id to delay.toLong() else null
+                                    } catch (e: Exception) {
+                                        proxy.ping = -1
+                                        proxy.status = 3
+                                        SagerDatabase.proxyDao.updateProxy(proxy)
+                                        null
+                                    } finally {
+                                        testInstance.close()
+                                    }
+                                }
+                            }
+                        }
+                    }.awaitAll().filterNotNull()
+                }
+                
+                // 通知 UI 更新延迟显示
+                data.binder.profilePersisted(testList.map { it.id })
+
+                val best = results.minByOrNull { it.second }
+                if (best != null) {
+                    val currentDelayResult = results.find { it.first == currentProfile.id }?.second ?: Long.MAX_VALUE
+                    
+                    // Mihomo 容差逻辑：除非新节点快 150ms 以上，否则不切换
+                    val tolerance = 150L
+                    if (best.first != currentProfile.id && (currentDelayResult == Long.MAX_VALUE || (currentDelayResult - best.second > tolerance))) {
+                        targetProxyId = best.first
+                        Logs.d("autoSwitchProxy: Better node found: ${targetProxyId}, Delay: ${best.second}ms (Previous: ${currentDelayResult}ms)")
+                    } else {
+                        targetProxyId = currentProfile.id
+                    }
+                } else {
+                    targetProxyId = currentProfile.id
+                }
             } else {
-                0
+                // NEXT Strategy
+                val currentIndex = groupProxies.indexOfFirst { it.id == currentProfile.id }
+                val nextIndex = (currentIndex + 1) % groupProxies.size
+                targetProxyId = groupProxies[nextIndex].id
             }
 
-            if (nextIndex < groupProxies.size) {
-                DataStore.selectedProxy = groupProxies[nextIndex].id
+            if (targetProxyId != 0L && targetProxyId != currentProfile.id) {
+                DataStore.selectedProxy = targetProxyId
                 runOnMainDispatcher {
                     stopRunner(true)
                 }
