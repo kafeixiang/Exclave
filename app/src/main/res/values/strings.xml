@@ -44,6 +44,12 @@
     <string name="auto_switch_timeout">Auto-switch on Timeout</string>
     <string name="auto_switch_timeout_summary">Automatically switch to next config if no response</string>
     <string name="auto_switch_timeout_duration">Timeout Duration (seconds)</string>
+    <string name="auto_switch_strategy">Auto-switch Strategy</string>
+    <string name="auto_switch_strategy_next">Switch to Next</string>
+    <string name="auto_switch_strategy_url_test">URL Test (Mihomo Style)</string>
+    <string name="auto_switch_active">Periodic Active Switch</string>
+    <string name="auto_switch_active_summary">Periodically test nodes and switch to the best one in background</string>
+    <string name="auto_switch_active_interval">Active Test Interval</string>
     <!-- misc -->
     <string name="service_mode">Service mode</string>
     <string name="service_mode_proxy">Proxy only</string>
