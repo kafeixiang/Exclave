@@ -52,6 +52,9 @@ object Key {
     // Auto-switch timeout settings
     const val ENABLE_AUTO_SWITCH_TIMEOUT = "enableAutoSwitchTimeout"
     const val AUTO_SWITCH_TIMEOUT_DURATION = "autoSwitchTimeoutDuration"
+    const val AUTO_SWITCH_STRATEGY = "autoSwitchStrategy"
+    const val ENABLE_AUTO_SWITCH_ACTIVE = "enableAutoSwitchActive"
+    const val AUTO_SWITCH_ACTIVE_INTERVAL = "autoSwitchActiveInterval"
 
     const val PROXY_APPS = "proxyApps"
     const val BYPASS_MODE = "bypassMode"
@@ -440,4 +443,9 @@ object TLS_FRAGMENTATION_METHOD {
     const val TLS_RECORD_FRAGMENTATION = 0
     const val TCP_SEGMENTATION = 1
     const val TLS_RECORD_FRAGMENTATION_AND_TCP_SEGMENTATION = 2
+}
+
+object AutoSwitchStrategy {
+    const val NEXT = 0
+    const val URL_TEST = 1
 }
