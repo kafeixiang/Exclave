@@ -1209,9 +1209,14 @@ fun buildV2RayConfig(
                                                     password = bean.hy2Password
                                                 }
                                                 congestion = Hysteria2Object.CongestionObject().apply {
-                                                    down_mbps = bean.hy2DownMbps
-                                                    up_mbps = bean.hy2UpMbps
+                                                    if (bean.hy2DownMbps > 0 || bean.hy2UpMbps > 0) {
+                                                        down_mbps = bean.hy2DownMbps
+                                                        up_mbps = bean.hy2UpMbps
+                                                    } else {
+                                                        type = "bbr"
+                                                    }
                                                 }
+
                                             }
                                         }
                                         "mekya" -> {
@@ -1363,8 +1368,15 @@ fun buildV2RayConfig(
                                             password = bean.auth
                                         }
                                         congestion = Hysteria2Object.CongestionObject().apply {
-                                            down_mbps = bean.downloadMbps
-                                            up_mbps = bean.uploadMbps
+                                            if (bean.downloadMbps > 0 || bean.uploadMbps > 0) {
+                                                down_mbps = bean.downloadMbps
+                                                up_mbps = bean.uploadMbps
+                                            } else {
+                                                type = bean.congestionControl
+                                                if (bean.congestionControl == "bbr") {
+                                                    bbrProfile = bean.bbrProfile
+                                                }
+                                            }
                                         }
                                         if (bean.obfs.isNotEmpty()) {
                                             obfs = Hysteria2Object.OBFSObject().apply {
@@ -1376,6 +1388,9 @@ fun buildV2RayConfig(
                                             hopPorts = bean.serverPorts
                                             if (bean.hopInterval > 0) {
                                                 hopInterval = bean.hopInterval
+                                            } else if (bean.hopIntervalMin > 0 || bean.hopIntervalMax > 0) {
+                                                hopIntervalMin = bean.hopIntervalMin
+                                                hopIntervalMax = bean.hopIntervalMax
                                             }
                                         }
                                     }

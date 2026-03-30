@@ -23,6 +23,7 @@ import android.os.Bundle
 import androidx.preference.EditTextPreference
 import androidx.preference.SwitchPreference
 import com.takisoft.preferencex.PreferenceFragmentCompat
+import com.takisoft.preferencex.SimpleMenuPreference
 import io.nekohasekai.sagernet.Key
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
@@ -50,10 +51,14 @@ class Hysteria2SettingsActivity : ProfileSettingsActivity<Hysteria2Bean>() {
         DataStore.serverDownloadSpeed = downloadMbps
         DataStore.serverPorts = serverPorts
         DataStore.serverHopInterval = hopInterval
+        DataStore.serverHopIntervalMin = hopIntervalMin
+        DataStore.serverHopIntervalMax = hopIntervalMax
         DataStore.serverEchEnabled = echEnabled
         DataStore.serverEchConfig = echConfig
         DataStore.serverMtlsCertificate = mtlsCertificate
         DataStore.serverMtlsCertificatePrivateKey = mtlsCertificatePrivateKey
+        DataStore.serverCongestionController = congestionControl
+        DataStore.serverHysteria2BBRProfile = bbrProfile
     }
 
     override fun Hysteria2Bean.serialize() {
@@ -72,10 +77,14 @@ class Hysteria2SettingsActivity : ProfileSettingsActivity<Hysteria2Bean>() {
         downloadMbps = DataStore.serverDownloadSpeed
         serverPorts = DataStore.serverPorts
         hopInterval = DataStore.serverHopInterval
+        hopIntervalMin = DataStore.serverHopIntervalMin
+        hopIntervalMax = DataStore.serverHopIntervalMax
         echEnabled = DataStore.serverEchEnabled
         echConfig = DataStore.serverEchConfig
         mtlsCertificate = DataStore.serverMtlsCertificate
         mtlsCertificatePrivateKey = DataStore.serverMtlsCertificatePrivateKey
+        congestionControl = DataStore.serverCongestionController
+        bbrProfile = DataStore.serverHysteria2BBRProfile
     }
 
     override fun PreferenceFragmentCompat.createPreferences(
@@ -107,6 +116,69 @@ class Hysteria2SettingsActivity : ProfileSettingsActivity<Hysteria2Bean>() {
         echConfig.isEnabled = echEnabled.isChecked
         echEnabled.setOnPreferenceChangeListener { _, newValue ->
             echConfig.isEnabled = newValue as Boolean
+            true
+        }
+
+        val hopInterval = findPreference<EditTextPreference>(Key.SERVER_HOP_INTERVAL)!!
+        val hopIntervalMin = findPreference<EditTextPreference>(Key.SERVER_HOP_INTERVAL_MIN)!!
+        val hopIntervalMax = findPreference<EditTextPreference>(Key.SERVER_HOP_INTERVAL_MAX)!!
+        hopInterval.isVisible = (hopIntervalMin.text.isEmpty() || hopIntervalMin.text.toIntOrNull() == 0) && (hopIntervalMax.text.isEmpty() || hopIntervalMax.text.toIntOrNull() == 0)
+        hopIntervalMin.isVisible = hopInterval.text.isEmpty() || hopInterval.text.toIntOrNull() == 0
+        hopIntervalMax.isVisible = hopInterval.text.isEmpty() || hopInterval.text.toIntOrNull() == 0
+        hopInterval.setOnPreferenceChangeListener { _, newValue ->
+            newValue as String
+            hopIntervalMin.isVisible = newValue.isEmpty() || newValue.toIntOrNull() == 0
+            hopIntervalMax.isVisible = newValue.isEmpty() || newValue.toIntOrNull() == 0
+            true
+        }
+        hopIntervalMin.setOnPreferenceChangeListener { _, newValue ->
+            newValue as String
+            hopInterval.isVisible = (newValue.isEmpty() || newValue.toIntOrNull() == 0) && (hopIntervalMax.text.isEmpty() || hopIntervalMax.text.toIntOrNull() == 0)
+            true
+        }
+        hopIntervalMax.setOnPreferenceChangeListener { _, newValue ->
+            newValue as String
+            hopInterval.isVisible = (newValue.isEmpty() || newValue.toIntOrNull() == 0) && (hopIntervalMin.text.isEmpty() || hopIntervalMin.text.toIntOrNull() == 0)
+            true
+        }
+
+        val uploadMbps = findPreference<EditTextPreference>(Key.SERVER_UPLOAD_SPEED)!!
+        val downloadMbps = findPreference<EditTextPreference>(Key.SERVER_DOWNLOAD_SPEED)!!
+        val congestionControl = findPreference<SimpleMenuPreference>(Key.SERVER_CONGESTION_CONTROLLER)!!
+        congestionControl.isEnabled = (uploadMbps.text.isEmpty() || uploadMbps.text.toIntOrNull() == 0) && (downloadMbps.text.isEmpty() || downloadMbps.text.toIntOrNull() == 0)
+        congestionControl.summary = if (congestionControl.isEnabled) congestionControl.value else "brutal"
+        val bbrProfile = findPreference<SimpleMenuPreference>(Key.SERVER_HYSTERIA2_BBR_PROFILE)!!
+        bbrProfile.isVisible = congestionControl.isEnabled && congestionControl.value == "bbr"
+        uploadMbps.setOnPreferenceChangeListener { _, newValue ->
+            newValue as String
+            if ((newValue.isEmpty() || newValue.toIntOrNull() == 0) && (downloadMbps.text.isEmpty() || downloadMbps.text.toIntOrNull() == 0)) {
+                congestionControl.isEnabled = true
+                congestionControl.summary = congestionControl.value
+                bbrProfile.isVisible = congestionControl.value == "bbr"
+            } else {
+                congestionControl.isEnabled = false
+                congestionControl.summary = "brutal"
+                bbrProfile.isVisible = false
+            }
+            true
+        }
+        downloadMbps.setOnPreferenceChangeListener { _, newValue ->
+            newValue as String
+            if ((newValue.isEmpty() || newValue.toIntOrNull() == 0) && (uploadMbps.text.isEmpty() || uploadMbps.text.toIntOrNull() == 0)) {
+                congestionControl.isEnabled = true
+                congestionControl.summary = congestionControl.value
+                bbrProfile.isVisible = congestionControl.value == "bbr"
+            } else {
+                congestionControl.isEnabled = false
+                congestionControl.summary = "brutal"
+                bbrProfile.isVisible = false
+            }
+            true
+        }
+        congestionControl.setOnPreferenceChangeListener { _, newValue ->
+            newValue as String
+            congestionControl.summary = newValue
+            bbrProfile.isVisible = newValue == "bbr"
             true
         }
     }
