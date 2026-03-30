@@ -1031,6 +1031,14 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                                 hy2Settings.getLong("hopInterval")?.also {
                                     hysteria2Bean.hopInterval = it.takeIf { it > 0 }
                                 }
+                                if (hysteria2Bean.hopInterval == null) {
+                                    hy2Settings.getLong("hopIntervalMin")?.also {
+                                        hysteria2Bean.hopIntervalMin = it.takeIf { it > 0 }
+                                    }
+                                    hy2Settings.getLong("hopIntervalMax")?.also {
+                                        hysteria2Bean.hopIntervalMax = it.takeIf { it > 0 }
+                                    }
+                                }
                             }
                         }
                         else -> return listOf()
