@@ -142,42 +142,11 @@ class Hysteria2SettingsActivity : ProfileSettingsActivity<Hysteria2Bean>() {
             true
         }
 
-        val uploadMbps = findPreference<EditTextPreference>(Key.SERVER_UPLOAD_SPEED)!!
-        val downloadMbps = findPreference<EditTextPreference>(Key.SERVER_DOWNLOAD_SPEED)!!
         val congestionControl = findPreference<SimpleMenuPreference>(Key.SERVER_CONGESTION_CONTROLLER)!!
-        congestionControl.isEnabled = (uploadMbps.text.isEmpty() || uploadMbps.text.toIntOrNull() == 0) && (downloadMbps.text.isEmpty() || downloadMbps.text.toIntOrNull() == 0)
-        congestionControl.summary = if (congestionControl.isEnabled) congestionControl.value else "brutal"
         val bbrProfile = findPreference<SimpleMenuPreference>(Key.SERVER_HYSTERIA2_BBR_PROFILE)!!
         bbrProfile.isVisible = congestionControl.isEnabled && congestionControl.value == "bbr"
-        uploadMbps.setOnPreferenceChangeListener { _, newValue ->
-            newValue as String
-            if ((newValue.isEmpty() || newValue.toIntOrNull() == 0) && (downloadMbps.text.isEmpty() || downloadMbps.text.toIntOrNull() == 0)) {
-                congestionControl.isEnabled = true
-                congestionControl.summary = congestionControl.value
-                bbrProfile.isVisible = congestionControl.value == "bbr"
-            } else {
-                congestionControl.isEnabled = false
-                congestionControl.summary = "brutal"
-                bbrProfile.isVisible = false
-            }
-            true
-        }
-        downloadMbps.setOnPreferenceChangeListener { _, newValue ->
-            newValue as String
-            if ((newValue.isEmpty() || newValue.toIntOrNull() == 0) && (uploadMbps.text.isEmpty() || uploadMbps.text.toIntOrNull() == 0)) {
-                congestionControl.isEnabled = true
-                congestionControl.summary = congestionControl.value
-                bbrProfile.isVisible = congestionControl.value == "bbr"
-            } else {
-                congestionControl.isEnabled = false
-                congestionControl.summary = "brutal"
-                bbrProfile.isVisible = false
-            }
-            true
-        }
         congestionControl.setOnPreferenceChangeListener { _, newValue ->
             newValue as String
-            congestionControl.summary = newValue
             bbrProfile.isVisible = newValue == "bbr"
             true
         }

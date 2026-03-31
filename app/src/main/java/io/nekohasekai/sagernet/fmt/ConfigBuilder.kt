@@ -1209,14 +1209,13 @@ fun buildV2RayConfig(
                                                     password = bean.hy2Password
                                                 }
                                                 congestion = Hysteria2Object.CongestionObject().apply {
-                                                    if (bean.hy2DownMbps > 0 || bean.hy2UpMbps > 0) {
+                                                    if (bean.hy2DownMbps > 0) {
                                                         down_mbps = bean.hy2DownMbps
+                                                    }
+                                                    if (bean.hy2UpMbps > 0) {
                                                         up_mbps = bean.hy2UpMbps
-                                                    } else {
-                                                        type = "bbr"
                                                     }
                                                 }
-
                                             }
                                         }
                                         "mekya" -> {
@@ -1368,14 +1367,15 @@ fun buildV2RayConfig(
                                             password = bean.auth
                                         }
                                         congestion = Hysteria2Object.CongestionObject().apply {
-                                            if (bean.downloadMbps > 0 || bean.uploadMbps > 0) {
+                                            if (bean.downloadMbps > 0) {
                                                 down_mbps = bean.downloadMbps
+                                            }
+                                            if (bean.uploadMbps > 0) {
                                                 up_mbps = bean.uploadMbps
-                                            } else {
-                                                type = bean.congestionControl
-                                                if (bean.congestionControl == "bbr") {
-                                                    bbrProfile = bean.bbrProfile
-                                                }
+                                            }
+                                            type = bean.congestionControl
+                                            if (bean.congestionControl == "bbr") {
+                                                bbrProfile = bean.bbrProfile
                                             }
                                         }
                                         if (bean.obfs.isNotEmpty()) {
