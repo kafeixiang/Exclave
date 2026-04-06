@@ -71,7 +71,6 @@ object GroupManager {
     }
 
     suspend fun clearGroup(groupId: Long) {
-        DataStore.selectedProxy = 0L
         SagerDatabase.proxyDao.deleteAll(groupId)
         iterator { groupUpdated(groupId) }
     }
