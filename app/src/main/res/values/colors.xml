@@ -24,6 +24,7 @@
         <item>@color/material_grey_500</item>
         <item>@color/material_blue_grey_500</item>
         <item>@color/material_light_black</item>
+        <item>@color/color_verdant_mint</item>
     </integer-array>
 
     <color name="material_amber_100">#FFECB3</color>
@@ -300,4 +301,16 @@
     <color name="ansi_bright_magenta">#A36AC7</color>
     <color name="ansi_bright_cyan">#3971ED</color>
     <color name="ansi_bright_white">#ffffff</color>
+
+    <color name="preference_simple_menu_background">#FAFAFA</color>
+
+    <color name="color_verdant_mint">#00B96B</color>
+    <color name="color_verdant_mint_dark">#00875E</color>
+    <color name="color_verdant_mint_accent">#00D685</color>
+    <color name="color_verdant_mint_100">#B4D7C6</color>
+    <color name="color_verdant_mint_300">#509177</color>
+
+    <!-- 卡片默认细边框：约 12% 黑（低对比分隔线），夜间见 values-night/colors.xml -->
+    <color name="card_stroke">#1F000000</color>
+
 </resources>
