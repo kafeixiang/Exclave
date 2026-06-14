@@ -100,7 +100,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                 }
                 return MaterialAboutList.Builder()
                     .addCard(MaterialAboutCard.Builder()
-                        .outline(false)
+                        .outline(true)
                         .addItem(MaterialAboutTitleItem.Builder()
                             .icon(R.mipmap.ic_launcher)
                             .text(R.string.app_name)
@@ -195,7 +195,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                         }
                         .build())
                     .addCard(MaterialAboutCard.Builder()
-                        .outline(false)
+                        .outline(true)
                         .title(R.string.project)
                         .addItem(MaterialAboutActionItem.Builder()
                             .icon(R.drawable.ic_action_copyleft)
