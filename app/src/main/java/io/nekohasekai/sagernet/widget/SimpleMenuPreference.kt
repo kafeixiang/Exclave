@@ -20,18 +20,19 @@
 package io.nekohasekai.sagernet.widget
 
 import android.content.Context
+import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import androidx.core.content.ContextCompat
 import androidx.core.view.setPadding
 import androidx.preference.DropDownPreference
 import androidx.preference.PreferenceViewHolder
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.ktx.dp2px
+import io.nekohasekai.sagernet.ktx.getColorAttr
 
 open class SimpleMenuPreference
 @JvmOverloads constructor(
@@ -47,6 +48,7 @@ open class SimpleMenuPreference
         val mSpinner = holder.itemView.findViewById<Spinner>(androidx.preference.R.id.spinner)
         mSpinner.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
         mSpinner.setPadding(dp2px(2))
+        mSpinner.setPopupBackgroundResource(R.drawable.bg_spinner_dropdown)
 
         val listener = mSpinner.onItemSelectedListener
         mSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -72,6 +74,28 @@ open class SimpleMenuPreference
 
         private var selectedItemPosition = -1
 
+        private val radius = 12f * context.resources.displayMetrics.density
+        private val selectedColor = context.getColorAttr(R.attr.colorMaterial100)
+
+        private val topDrawable = GradientDrawable().apply {
+            setColor(selectedColor)
+            cornerRadii = floatArrayOf(radius, radius, radius, radius, 0f, 0f, 0f, 0f)
+        }
+
+        private val bottomDrawable = GradientDrawable().apply {
+            setColor(selectedColor)
+            cornerRadii = floatArrayOf(0f, 0f, 0f, 0f, radius, radius, radius, radius)
+        }
+
+        private val middleDrawable = GradientDrawable().apply {
+            setColor(selectedColor)
+        }
+
+        private val singleDrawable = GradientDrawable().apply {
+            setColor(selectedColor)
+            cornerRadii = floatArrayOf(radius, radius, radius, radius, radius, radius, radius, radius)
+        }
+
         fun setSelectedItemPosition(position: Int) {
             selectedItemPosition = position
             notifyDataSetChanged()
@@ -79,15 +103,16 @@ open class SimpleMenuPreference
 
         override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
             val view = super.getDropDownView(position, convertView, parent)
-            view.setBackgroundColor(
-                ContextCompat.getColor(context,
-                if (position == selectedItemPosition) {
-                        R.color.dropdown_color_selected
-                    } else {
-                        R.color.dropdown_color_background
-                    }
-                )
-            )
+            if (position == selectedItemPosition) {
+                view.background = when {
+                    position == 0 && count == 1 -> singleDrawable
+                    position == 0 -> topDrawable
+                    position == count - 1 -> bottomDrawable
+                    else -> middleDrawable
+                }
+            } else {
+                view.background = null
+            }
             return view
         }
 
