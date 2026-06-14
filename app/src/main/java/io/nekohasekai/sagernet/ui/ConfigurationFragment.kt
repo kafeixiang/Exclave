@@ -35,6 +35,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
@@ -47,6 +48,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
@@ -1738,6 +1740,28 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             lateinit var entity: ProxyEntity
 
+            private val card = view as MaterialCardView
+
+            private fun applySelected(selected: Boolean) {
+                val ctx = card.context
+                val primary = ctx.getColorAttr(androidx.appcompat.R.attr.colorPrimary)
+                val surface = ctx.getColorAttr(com.google.android.material.R.attr.colorSurface)
+                card.strokeWidth = ctx.resources.getDimensionPixelSize(
+                    if (selected) R.dimen.card_stroke_width_selected else R.dimen.card_stroke_width
+                )
+                card.strokeColor =
+                    if (selected) primary else ctx.getColour(R.color.card_stroke)
+                card.setCardBackgroundColor(
+                    if (selected) {
+                        ColorUtils.compositeColors(
+                            ColorUtils.setAlphaComponent(primary, 26), surface
+                        )
+                    } else {
+                        surface
+                    }
+                )
+            }
+
             private fun showShareMenu(anchor: View, proxyEntity: ProxyEntity) {
                 val popup = PopupMenu(requireContext(), anchor)
                 popup.menuInflater.inflate(R.menu.profile_share_menu, popup.menu)
@@ -1762,7 +1786,6 @@ class ConfigurationFragment @JvmOverloads constructor(
             val profileStatus: TextView = view.findViewById(R.id.profile_status)
 
             val trafficText: TextView = view.findViewById(R.id.traffic_text)
-            val selectedView: LinearLayout = view.findViewById(R.id.selected_view)
             val editButton: ImageView = view.findViewById(R.id.edit)
             val doubleColumnMenuButton: ImageView = view.findViewById(R.id.double_column_menu)
             val shareLayout: LinearLayout = view.findViewById(R.id.share)
@@ -1792,6 +1815,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                             profileAccess.withLock {
                                 update = DataStore.selectedProxy != id
                                 DataStore.selectedProxy = id
+                                onMainDispatcher {
+                                    applySelected(true)
+                                }
                             }
 
                             if (update) {
@@ -2028,6 +2054,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                         shareLayer.setBackgroundColor(Color.TRANSPARENT)
                         shareButton.setImageResource(R.drawable.ic_social_share)
                         shareButton.setColorFilter(Color.GRAY)
+                    }
+                    shareButton.isVisible = true
+                }
                     }
                     shareButton.isVisible = true
                 }
