@@ -8,11 +8,12 @@
         app:actionViewClass="androidx.appcompat.widget.SearchView"
         app:showAsAction="always"
         tools:ignore="AlwaysShowAction" />
+
     <item
-        android:alphabeticShortcut="n"
+        android:id="@+id/action_add"
         android:icon="@drawable/ic_action_note_add"
         android:title="@string/add_profile"
-        app:showAsAction="always">
+        app:showAsAction="ifRoom">
         <menu>
             <item
                 android:id="@+id/action_scan_qr_code"
@@ -26,11 +27,11 @@
             <item android:title="@string/add_profile_methods_manual_settings">
                 <menu>
                     <item
-                        android:id="@+id/action_new_http"
-                        android:title="@string/action_http" />
-                    <item
                         android:id="@+id/action_new_socks"
                         android:title="@string/action_socks" />
+                    <item
+                        android:id="@+id/action_new_http"
+                        android:title="@string/action_http" />
                     <item
                         android:id="@+id/action_new_ss"
                         android:title="@string/action_shadowsocks" />
@@ -38,20 +39,17 @@
                         android:id="@+id/action_new_ssr"
                         android:title="@string/action_shadowsocksr" />
                     <item
-                        android:id="@+id/action_new_trojan"
-                        android:title="@string/action_trojan" />
-                    <item
                         android:id="@+id/action_new_vmess"
                         android:title="@string/action_vmess" />
                     <item
                         android:id="@+id/action_new_vless"
                         android:title="@string/action_vless" />
                     <item
+                        android:id="@+id/action_new_trojan"
+                        android:title="@string/action_trojan" />
+                    <item
                         android:id="@+id/action_new_hysteria2"
                         android:title="@string/action_hysteria2" />
-                    <item
-                        android:id="@+id/action_new_anytls"
-                        android:title="@string/action_anytls" />
                     <item
                         android:id="@+id/action_new_mieru"
                         android:title="@string/action_mieru" />
@@ -61,6 +59,12 @@
                     <item
                         android:id="@+id/action_new_juicity"
                         android:title="@string/action_juicity" />
+                    <item
+                        android:id="@+id/action_new_anytls"
+                        android:title="@string/action_anytls" />
+                    <item
+                        android:id="@+id/action_new_ssh"
+                        android:title="@string/action_ssh" />
                     <item
                         android:id="@+id/action_new_config"
                         android:title="@string/custom_config" />
@@ -84,20 +88,17 @@
                                 android:id="@+id/action_new_snell"
                                 android:title="@string/action_snell" />
                             <item
-                                android:id="@+id/action_new_ssh"
-                                android:title="@string/action_ssh" />
-                            <item
                                 android:id="@+id/action_new_wg"
                                 android:title="@string/action_wireguard" />
-                            <item
-                                android:id="@+id/action_new_matsuri"
-                                android:title="@string/matsuri_plugins" />
                             <item
                                 android:id="@+id/action_new_naive"
                                 android:title="@string/action_naive" />
                             <item
                                 android:id="@+id/action_new_shadowquic"
                                 android:title="@string/action_shadowquic" />
+                            <item
+                                android:id="@+id/action_new_matsuri"
+                                android:title="@string/matsuri_plugins" />
                         </menu>
                     </item>
                 </menu>
@@ -117,59 +118,68 @@
             </item>
         </menu>
     </item>
+
     <item
-        android:id="@+id/action_clear_traffic_statistics"
-        android:title="@string/clear_traffic_statistics" />
-    <item
-        android:id="@+id/action_remove_duplicate"
-        android:title="@string/deduplication" />
-    <item
-        android:id="@+id/action_connection_test"
-        android:title="@string/connection_test">
+        android:id="@+id/action_misc"
+        android:icon="@drawable/ic_baseline_more_vert_24"
+        android:title=""
+        app:showAsAction="always">
         <menu>
             <item
-                android:id="@+id/action_connection_url_test"
-                android:title="@string/connection_test_url_test" />
+                android:id="@+id/action_update_subscription"
+                android:title="@string/update_subscription" />
             <item
-                android:id="@+id/action_connection_test_clear_results"
-                android:title="@string/connection_test_clear_results" />
+                android:id="@+id/action_clear_traffic_statistics"
+                android:title="@string/clear_traffic_statistics" />
             <item
-                android:id="@+id/action_connection_test_delete_unavailable"
-                android:title="@string/connection_test_delete_unavailable" />
-        </menu>
-    </item>
-    <item
-        android:id="@+id/action_update_subscription"
-        android:title="@string/update_subscription" />
-    <item
-        android:id="@+id/action_order_layout"
-        android:title="@string/sort_and_layout">
-        <menu>
+                android:id="@+id/action_remove_duplicate"
+                android:title="@string/deduplication" />
             <item
-                android:title="@string/group_order"
-                android:enabled="false" />
-            <group android:id="@+id/order_group" android:checkableBehavior="single">
-                <item
-                    android:id="@+id/action_order_origin"
-                    android:title="@string/group_order_origin" />
-                <item
-                    android:id="@+id/action_order_by_name"
-                    android:title="@string/group_order_by_name" />
-                <item
-                    android:id="@+id/action_order_by_delay"
-                    android:title="@string/group_order_by_delay" />
-            </group>
+                android:id="@+id/action_connection_test"
+                android:title="@string/connection_test">
+                <menu>
+                    <item
+                        android:id="@+id/action_connection_url_test"
+                        android:title="@string/connection_test_url_test" />
+                    <item
+                        android:id="@+id/action_connection_test_clear_results"
+                        android:title="@string/connection_test_clear_results" />
+                    <item
+                        android:id="@+id/action_connection_test_delete_unavailable"
+                        android:title="@string/connection_test_delete_unavailable" />
+                </menu>
+            </item>
             <item
-                android:title="@string/layout"
-                android:enabled="false" />
-            <group android:id="@+id/layout_group" android:checkableBehavior="single">
-                <item
-                    android:id="@+id/action_layout_single"
-                    android:title="@string/layout_single_column" />
-                <item
-                    android:id="@+id/action_layout_double"
-                    android:title="@string/layout_double_column" />
-            </group>
+                android:id="@+id/action_order_layout"
+                android:title="@string/sort_and_layout">
+                <menu>
+                    <item
+                        android:title="@string/group_order"
+                        android:enabled="false" />
+                    <group android:id="@+id/order_group" android:checkableBehavior="single">
+                        <item
+                            android:id="@+id/action_order_origin"
+                            android:title="@string/group_order_origin" />
+                        <item
+                            android:id="@+id/action_order_by_name"
+                            android:title="@string/group_order_by_name" />
+                        <item
+                            android:id="@+id/action_order_by_delay"
+                            android:title="@string/group_order_by_delay" />
+                    </group>
+                    <item
+                        android:title="@string/layout"
+                        android:enabled="false" />
+                    <group android:id="@+id/layout_group" android:checkableBehavior="single">
+                        <item
+                            android:id="@+id/action_layout_single"
+                            android:title="@string/layout_single_column" />
+                        <item
+                            android:id="@+id/action_layout_double"
+                            android:title="@string/layout_double_column" />
+                    </group>
+                </menu>
+            </item>
         </menu>
     </item>
 
