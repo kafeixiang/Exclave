@@ -27,6 +27,32 @@
         <item>@color/color_verdant_mint</item>
     </integer-array>
 
+    <integer-array name="cupertino_colors">
+        <item>@color/cupertino_pink</item>
+        <item>@color/cupertino_blue</item>
+        <item>@color/cupertino_orange</item>
+        <item>@color/cupertino_green</item>
+        <item>@color/cupertino_purple</item>
+        <item>@color/cupertino_amber</item>
+        <item>@color/cupertino_mint</item>
+        <item>@color/cupertino_coral</item>
+        <item>@color/cupertino_rose_gold</item>
+        <item>@color/cupertino_pistachio</item>
+        <item>@color/cupertino_sunflower</item>
+        <item>@color/cupertino_violet</item>
+        <item>@color/cupertino_white</item>
+        <item>@color/cupertino_sky</item>
+        <item>@color/cupertino_morandi</item>
+        <item>@color/cupertino_wine</item>
+        <item>@color/cupertino_sage</item>
+        <item>@color/cupertino_wheat</item>
+        <item>@color/cupertino_ice</item>
+        <item>@color/cupertino_emerald</item>
+        <item>@color/cupertino_champagne</item>
+        <item>@color/cupertino_silver</item>
+        <item>@color/cupertino_unicorn</item>
+    </integer-array>
+
     <color name="material_amber_100">#FFECB3</color>
     <color name="material_amber_200">#FFE082</color>
     <color name="material_amber_300">#FFD54F</color>
@@ -310,7 +336,62 @@
     <color name="color_verdant_mint_100">#B4D7C6</color>
     <color name="color_verdant_mint_300">#509177</color>
 
-    <!-- 卡片默认细边框：约 12% 黑（低对比分隔线），夜间见 values-night/colors.xml -->
-    <color name="card_stroke">#1F000000</color>
+    <!-- 苹果风（iOS Style）语义化颜色：支持深浅模式切换 -->
+    <color name="glass_window_tint">#4DFFFFFF</color>
+    <color name="glass_card_bg">#F2FFFFFF</color>
+    <color name="glass_card_stroke">#4D000000</color> <!-- 进一步增强描边：30% 不透明度的黑，确保边缘清晰可见 -->
 
+    <!-- 还原苹果风（iOS Style）：55% 不透明度的高级磨砂感 -->
+    <color name="surface_glass">#59FFFFFF</color>
+    <color name="surface_glass_heavy">#F2FFFFFF</color>
+    <color name="card_stroke">#4DFFFFFF</color> <!-- 玻璃边缘高光 -->
+
+    <!-- Cupertino 23 Themes Colors -->
+    <color name="cupertino_pink">#FF2D55</color>
+    <color name="cupertino_blue">#007AFF</color>
+    <color name="cupertino_orange">#FF9500</color>
+    <color name="cupertino_green">#34C759</color>
+    <color name="cupertino_purple">#AF52DE</color>
+    <color name="cupertino_amber">#FF5E3A</color>
+    <color name="cupertino_mint">#30B0C7</color>
+    <color name="cupertino_coral">#FF6B6B</color>
+    <color name="cupertino_rose_gold">#E5C1CD</color>
+    <color name="cupertino_pistachio">#10B981</color>
+    <color name="cupertino_sunflower">#EAB308</color>
+    <color name="cupertino_violet">#8B5CF6</color>
+    <color name="cupertino_white">#1D1D1F</color>
+    <color name="cupertino_sky">#5AC8FA</color>
+    <color name="cupertino_morandi">#7A96B5</color>
+    <color name="cupertino_wine">#A4133C</color>
+    <color name="cupertino_sage">#8FBC8F</color>
+    <color name="cupertino_wheat">#CA8A04</color>
+    <color name="cupertino_ice">#00C7BE</color>
+    <color name="cupertino_emerald">#059669</color>
+    <color name="cupertino_champagne">#D4AF37</color>
+    <color name="cupertino_silver">#8E8E93</color>
+    <color name="cupertino_unicorn">#818CF8</color>
+
+    <color name="cupertino_pink_dark">#D81B60</color>
+    <color name="cupertino_blue_dark">#0056B3</color>
+    <color name="cupertino_orange_dark">#E67600</color>
+    <color name="cupertino_green_dark">#28A745</color>
+    <color name="cupertino_purple_dark">#8E44AD</color>
+    <color name="cupertino_amber_dark">#D35400</color>
+    <color name="cupertino_mint_dark">#208C9E</color>
+    <color name="cupertino_coral_dark">#E64A19</color>
+    <color name="cupertino_rose_gold_dark">#D48A9C</color>
+    <color name="cupertino_pistachio_dark">#0E9E6D</color>
+    <color name="cupertino_sunflower_dark">#D19B00</color>
+    <color name="cupertino_violet_dark">#6D28D9</color>
+    <color name="cupertino_white_dark">#000000</color>
+    <color name="cupertino_sky_dark">#0099CC</color>
+    <color name="cupertino_morandi_dark">#5D758F</color>
+    <color name="cupertino_wine_dark">#800E2B</color>
+    <color name="cupertino_sage_dark">#6B8E23</color>
+    <color name="cupertino_wheat_dark">#A67C00</color>
+    <color name="cupertino_ice_dark">#00A89D</color>
+    <color name="cupertino_emerald_dark">#047857</color>
+    <color name="cupertino_champagne_dark">#B8860B</color>
+    <color name="cupertino_silver_dark">#707070</color>
+    <color name="cupertino_unicorn_dark">#4F46E5</color>
 </resources>

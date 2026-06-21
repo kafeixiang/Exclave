@@ -21,8 +21,13 @@
 
 package io.nekohasekai.sagernet.ui
 
+import android.graphics.Rect
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.util.TypedValue
 import android.Manifest
 import android.app.ActivityManager
 import android.net.Uri
@@ -67,6 +72,8 @@ import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.noties.markwon.Markwon
 import libexclavecore.Libexclavecore
+import jp.wasabeef.blurry.Blurry
+import android.widget.ImageView
 
 class MainActivity : ThemedActivity(),
     SagerConnection.Callback,
@@ -88,22 +95,7 @@ class MainActivity : ThemedActivity(),
         super.onCreate(savedInstanceState)
 
         binding = LayoutMainBinding.inflate(layoutInflater)
-        when (DataStore.fabStyle) {
-            FabStyle.SagerNet -> {
-                binding.stats.fabAlignmentMode = FAB_ALIGNMENT_MODE_END
-                binding.stats.fabCradleMargin = 0F
-                binding.stats.fabCradleRoundedCornerRadius = 0F
-                binding.stats.cradleVerticalOffset = dp2px(8).toFloat()
-            }
-            FabStyle.Shadowsocks -> {
-                binding.stats.fabAlignmentMode = FAB_ALIGNMENT_MODE_CENTER
-                binding.stats.fabCradleMargin = dp2px(5).toFloat()
-                binding.stats.fabCradleRoundedCornerRadius = dp2px(6).toFloat()
-                binding.stats.cradleVerticalOffset = 0F
-            }
-        }
 
-        binding.fab.initProgress(binding.fabProgress)
         if (themeResId !in intArrayOf(
                 R.style.Theme_SagerNet_Black, R.style.Theme_SagerNet_LightBlack
             )
@@ -115,6 +107,8 @@ class MainActivity : ThemedActivity(),
             binding.drawerLayout.removeView(binding.navView)
         }
         navigation.setNavigationItemSelectedListener(this)
+        
+        // ... (skipping some lines for brevity in multi_replace if possible, but I'll replace the block)
         if (resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
             ViewCompat.setOnApplyWindowInsetsListener(navigation) { v, insets ->
                 val bars = insets.getInsets(
@@ -147,14 +141,62 @@ class MainActivity : ThemedActivity(),
             displayFragmentWithId(R.id.nav_configuration)
         }
 
-        binding.fab.setOnClickListener {
-            if (state.canStop) SagerNet.stopService() else connect.launch(
-                null
-            )
+        binding.cupertinoDock.fab.setOnClickListener {
+            if (state.canStop) SagerNet.stopService() else connect.launch(null)
         }
-        binding.stats.setOnClickListener { if (state == BaseService.State.Connected) binding.stats.testConnection() }
+        
+        binding.cupertinoDock.speedLayout.setOnClickListener {
+            if (state == BaseService.State.Connected) {
+                runOnDefaultDispatcher {
+                    onMainDispatcher { binding.cupertinoDock.speedLayout.isEnabled = false }
+                    try {
+                        val elapsed = urlTest()
+                        onMainDispatcher {
+                            snackbar("连接延迟: ${elapsed}ms").show()
+                        }
+                    } catch (e: Exception) {
+                        onMainDispatcher {
+                            snackbar("测试失败: ${e.message}").show()
+                        }
+                    } finally {
+                        onMainDispatcher { binding.cupertinoDock.speedLayout.isEnabled = true }
+                    }
+                }
+            } else {
+                snackbar("未连接，无法执行测速").show()
+            }
+        }
 
         setContentView(binding.root)
+
+        // 全局磨砂背景初始化：使用高质量渐变背景，营造高级感
+        val bgImage = findViewById<ImageView>(R.id.global_bg_image)
+        if (bgImage != null) {
+            bgImage.setImageResource(R.drawable.bg_mesh_gradient)
+            bgImage.alpha = if (io.nekohasekai.sagernet.utils.Theme.usingNightMode()) 0f else 0.5f
+        }
+        
+        // 初始化 Cupertino 主题色和背景光
+        updateCupertinoTheme()
+
+        binding.drawerLayout.addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.SimpleDrawerListener() {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    if (slideOffset > 0.01f) {
+                        // 增大模糊半径，配合 98% 白色的侧边栏背景，达到“磨砂白”效果
+                        val radius = slideOffset * 40f 
+                        val blurEffect = RenderEffect.createBlurEffect(
+                            radius,
+                            radius,
+                            Shader.TileMode.DECAL
+                        )
+                        binding.coordinator.setRenderEffect(blurEffect)
+                    } else {
+                        binding.coordinator.setRenderEffect(null)
+                    }
+                }
+            }
+        })
 
         changeState(BaseService.State.Idle)
         connection.connect(this, this)
@@ -172,7 +214,7 @@ class MainActivity : ThemedActivity(),
             if (DataStore.configurationStore.getBoolean(getLicenseKeyName(only)) != true) {
                 DataStore.configurationStore.putBoolean(getLicenseKeyName(only), true)
                 DataStore.configurationStore.remove(getLicenseKeyName(!only))
-                AlertDialog.Builder(this@MainActivity).apply {
+                MaterialAlertDialogBuilder(this@MainActivity).apply {
                     setTitle(R.string.license)
                     setView(
                         TextView(this@MainActivity).apply {
@@ -192,7 +234,7 @@ class MainActivity : ThemedActivity(),
                     setOnCancelListener { _ ->
                         requestPermissions()
                     }
-                }.show()
+                }.create().apply { applyGlassBlur() }.show()
             } else {
                 requestPermissions()
             }
@@ -292,7 +334,7 @@ class MainActivity : ThemedActivity(),
                     }
                 }
                 .setNegativeButton(android.R.string.cancel, null)
-                .show()
+                .create().apply { applyGlassBlur() }.show()
 
         }
 
@@ -322,7 +364,7 @@ class MainActivity : ThemedActivity(),
                     }
                 }
                 .setNegativeButton(android.R.string.cancel, null)
-                .show()
+                .create().apply { applyGlassBlur() }.show()
         }
 
     }
@@ -351,7 +393,7 @@ class MainActivity : ThemedActivity(),
                 getString(
                     R.string.profile_requiring_plugin, profileName, getString(pluginEntity.nameId)
                 )
-            ).show()
+            ).create().apply { applyGlassBlur() }.show()
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
@@ -363,9 +405,19 @@ class MainActivity : ThemedActivity(),
 
 
     fun displayFragment(fragment: ToolbarFragment) {
-        if (fragment !is LogcatFragment) {
-            binding.fab.show()
+        // Ensure dock is visible when switching fragments
+        binding.cupertinoDock.animate().translationY(0f).setDuration(225).start()
+        
+        // 全局苹果风：进入主要页面应用模糊，但夜间模式需保持纯黑
+        val bgImage = findViewById<ImageView>(R.id.global_bg_image)
+        if (bgImage != null) {
+            val isNight = io.nekohasekai.sagernet.utils.Theme.usingNightMode()
+            bgImage.alpha = if (isNight) 0f else 0.5f
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                bgImage.setRenderEffect(RenderEffect.createBlurEffect(75f, 75f, Shader.TileMode.CLAMP))
+            }
         }
+
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_holder, fragment)
             .commitAllowingStateLoss()
@@ -408,6 +460,30 @@ class MainActivity : ThemedActivity(),
 
     var state = BaseService.State.Idle
 
+    private fun updateCupertinoTheme() {
+        val typedValue = TypedValue()
+        theme.resolveAttribute(androidx.appcompat.R.attr.colorAccent, typedValue, true)
+        val colorAccent = typedValue.data
+        binding.cupertinoDock.setAccentColor(colorAccent)
+        
+        val isNight = io.nekohasekai.sagernet.utils.Theme.usingNightMode()
+        
+        // 设置背景光颜色与极大的模糊效果
+        binding.ambientGlow.backgroundTintList = ColorStateList.valueOf(colorAccent)
+        binding.ambientGlow.alpha = if (isNight) 0f else 0.1f
+        binding.ambientGlow.visibility = if (isNight) View.GONE else View.VISIBLE
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            binding.ambientGlow.setRenderEffect(
+                RenderEffect.createBlurEffect(160f, 160f, Shader.TileMode.DECAL)
+            )
+        }
+        
+        if (isNight) {
+            window.navigationBarColor = android.graphics.Color.BLACK
+        }
+    }
+
     private fun changeState(
         state: BaseService.State,
         msg: String? = null,
@@ -419,8 +495,7 @@ class MainActivity : ThemedActivity(),
             statsUpdated(emptyList())
         }
 
-        binding.fab.changeState(state, this.state, animate)
-        binding.stats.changeState(state)
+        binding.cupertinoDock.changeState(state)
         if (msg != null) snackbar(msg).show()
         this.state = state
 
@@ -438,7 +513,7 @@ class MainActivity : ThemedActivity(),
 
     override fun snackbarInternal(text: CharSequence): Snackbar {
         return Snackbar.make(binding.coordinator, text, Snackbar.LENGTH_LONG).apply {
-            anchorView = binding.fab
+            anchorView = binding.cupertinoDock.fab
         }
     }
 
@@ -559,7 +634,7 @@ class MainActivity : ThemedActivity(),
     override fun trafficUpdated(profileId: Long, stats: TrafficStats, isCurrent: Boolean) {
         if (profileId == 0L) return
 
-        if (isCurrent) binding.stats.updateTraffic(
+        if (isCurrent) binding.cupertinoDock.updateTraffic(
             stats.txRateProxy, stats.rxRateProxy
         )
 
