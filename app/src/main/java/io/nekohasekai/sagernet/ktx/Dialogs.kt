@@ -20,6 +20,8 @@
 package io.nekohasekai.sagernet.ktx
 
 import android.content.Context
+import android.os.Build
+import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -30,6 +32,30 @@ fun Context.alert(text: String): AlertDialog {
         .setMessage(text)
         .setPositiveButton(android.R.string.ok, null)
         .create()
+        .apply {
+            applyGlassBlur()
+        }
 }
 
 fun Fragment.alert(text: String) = requireContext().alert(text)
+
+fun AlertDialog.applyGlassBlur() {
+    window?.let { window ->
+        // 使用我们新做的泛白背景
+        window.setBackgroundDrawableResource(R.drawable.bg_dialog_window_whitish)
+
+        // 【关键修改点】移除后方的灰色遮罩，让背景透亮
+        window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        window.setDimAmount(0f)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            window.setElevation(0f)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+            // 极大半径（60+），让背景完全化开，形成奶油般的泛白质感
+            window.attributes.blurBehindRadius = 80
+        }
+    }
+}

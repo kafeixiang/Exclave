@@ -25,6 +25,10 @@
         <item name="tabIndicatorColor">@color/white</item>
         <item name="tabRippleColor">@color/white</item>
         <item name="whiteOrTextPrimary">@color/white</item>
+        <item name="surfaceGlassColor">@color/surface_glass</item>
+        <item name="glassCardBackground">@color/glass_card_bg</item>
+        <item name="glassWindowTint">@color/glass_window_tint</item>
+        <item name="glassCardStroke">@color/glass_card_stroke</item>
 
         <item name="windowActionModeOverlay">true</item>
 
@@ -43,7 +47,7 @@
         </item>
 
         <item name="materialAlertDialogTheme">
-            @style/ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet
+            @style/ThemeOverlay.SagerNet.AlertDialog
         </item>
 
         <item name="materialCardViewStyle">@style/Widget.SagerNet.CardView</item>
@@ -52,10 +56,19 @@
         <item name="actionOverflowMenuStyle">@style/Widget.SagerNet.PopupMenu.Overflow</item>
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.SagerNet.BottomSheetDialog</item>
         <item name="materialButtonStyle">@style/Widget.SagerNet.Button</item>
+        <item name="mal_card_style">@style/mal_CardStyle</item>
 
+        <item name="colorSurface">@color/surface_glass</item>
     </style>
 
     <style name="Theme.SagerNet.Dialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
+        <item name="android:windowBlurBehindRadius" tools:targetApi="s">60dp</item>
+        <item name="colorSurface">@color/surface_glass</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.2</item>
+        <item name="android:windowIsFloating">true</item>
         <item name="actionBarStyle">@style/Widget.MaterialComponents.ActionBar.Solid</item>
         <item name="actionModeCloseDrawable">@drawable/ic_navigation_close</item>
         <item name="colorButtonNormal">?colorAccent</item>
@@ -80,37 +93,12 @@
         <item name="tabIndicatorColor">@color/white</item>
         <item name="tabRippleColor">@color/white</item>
         <item name="whiteOrTextPrimary">@color/white</item>
+        <item name="surfaceGlassColor">@color/surface_glass</item>
+        <item name="glassCardBackground">@color/glass_card_bg</item>
+        <item name="glassWindowTint">@color/glass_window_tint</item>
+        <item name="glassCardStroke">@color/glass_card_stroke</item>
 
-        <item name="windowActionModeOverlay">true</item>
-
-        <!-- Remove ActionBar but keep styles and themes -->
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-
-        <item name="chipStyle">@style/Widget.MaterialComponents.Chip.Choice.SagerNet</item>
-
-        <item name="itemShapeAppearance">
-            @style/ShapeAppearance.MaterialComponents.MediumComponent
-        </item>
-
-        <item name="alertDialogTheme">
-            @style/ThemeOverlay.SagerNet.AlertDialog
-        </item>
-
-        <item name="materialAlertDialogTheme">
-            @style/ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet
-        </item>
-
-        <item name="materialCardViewStyle">@style/Widget.SagerNet.CardView</item>
-        <item name="textInputStyle">@style/Widget.SagerNet.TextInputLayout</item>
-        <item name="popupMenuStyle">@style/Widget.SagerNet.PopupMenu</item>
-        <item name="actionOverflowMenuStyle">@style/Widget.SagerNet.PopupMenu.Overflow</item>
-        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.SagerNet.BottomSheetDialog</item>
-        <item name="materialButtonStyle">@style/Widget.SagerNet.Button</item>
-
-        <item name="android:dialogCornerRadius">@dimen/dialog_corner_radius</item>
-
-        <item name="windowFixedHeightMajor" type="dimen">95%</item>
+        <item name="android:dialogCornerRadius" tools:targetApi="p">@dimen/dialog_corner_radius</item>
 
     </style>
 
@@ -153,8 +141,11 @@
         <item name="cardElevation">0dp</item>
         <item name="cardCornerRadius">@dimen/card_corner_radius</item>
         <item name="strokeColor">@color/card_stroke</item>
-        <item name="strokeWidth">@dimen/card_stroke_width</item>
-        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="strokeWidth">1.5dp</item>
+        <item name="cardBackgroundColor">@color/surface_glass</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Dialog</item>
+        <item name="cardPreventCornerOverlap">true</item>
+        <item name="cardUseCompatPadding">false</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.SagerNet.Dialog" parent="">
@@ -168,6 +159,7 @@
     </style>
     <style name="Widget.SagerNet.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Input</item>
+        <item name="boxBackgroundColor">@color/surface_glass</item>
     </style>
 
     <style name="PopupMenuAnimation">
@@ -193,9 +185,12 @@
     </style>
     <style name="Widget.SagerNet.BottomSheet" parent="Widget.MaterialComponents.BottomSheet.Modal">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.BottomSheet</item>
+        <item name="backgroundTint">@color/surface_glass</item>
     </style>
     <style name="ThemeOverlay.SagerNet.BottomSheetDialog" parent="ThemeOverlay.MaterialComponents.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/Widget.SagerNet.BottomSheet</item>
+        <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
+        <item name="android:windowBlurBehindRadius" tools:targetApi="s">35dp</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.SagerNet.Button" parent="">
@@ -212,15 +207,46 @@
     </style>
 
     <style name="ThemeOverlay.SagerNet.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet">
-        <item name="android:windowBackground">@drawable/bg_dialog</item>
+        <!-- 核心：使用泛白叠加层作为窗口背景，支持深浅模式 -->
+        <item name="android:windowBackground">@drawable/bg_dialog_window_whitish</item>
+        <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
+        <item name="android:windowBlurBehindRadius" tools:targetApi="s">80dp</item>
+        <item name="colorSurface">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:backgroundDimAmount">0.0</item> <!-- 完全透亮，去掉灰色遮罩 -->
+        <item name="android:windowElevation" tools:targetApi="o">0dp</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Dialog</item>
     </style>
 
+    <style name="mal_CardStyle" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">28dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardMaxElevation">0dp</item>
+        <!-- 降低到 55% 不透明度，让背景色彩自然透过来 -->
+        <item name="cardBackgroundColor">#8CFFFFFF</item>
+        <!-- 增加半透明白色描边，模拟玻璃边缘的高光 -->
+        <item name="strokeColor">#4DFFFFFF</item>
+        <item name="strokeWidth">1.5dp</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Dialog</item>
+        <item name="cardPreventCornerOverlap">true</item>
+        <item name="cardUseCompatPadding">false</item>
+    </style>
 
-    <style name="Theme.SagerNet.Black">
+    <style name="ThemeOverlay.SagerNet.PopupMenu" parent="ThemeOverlay.AppCompat.DayNight">
+        <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
+        <item name="android:windowBlurBehindRadius" tools:targetApi="s">35dp</item>
+        <item name="popupMenuStyle">@style/Widget.SagerNet.PopupMenu</item>
+    </style>
+
+    <style name="Theme.SagerNet.Black" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_light_black</item>
         <item name="colorPrimaryDark">@color/black</item>
         <item name="colorAccent">@color/white</item>
-        <item name="colorMaterial100">@color/fab_color_progress</item>
+        <item name="surfaceGlassColor">#99121212</item>
+        <item name="glassCardBackground">#E61A1A1A</item>
+        <item name="glassWindowTint">#80000000</item>
+        <item name="glassCardStroke">#33FFFFFF</item>
+        <item name="colorMaterial100">@color/material_grey_700</item>
         <item name="colorMaterial300">@color/material_light_black</item>
 
         <item name="android:textColorLink">?attr/accentOrTextSecondary</item>
@@ -235,10 +261,14 @@
     </style>
 
 
-    <style name="Theme.SagerNet.LightBlack">
+    <style name="Theme.SagerNet.LightBlack" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/white</item>
         <item name="colorPrimaryDark">@color/material_light_white</item>
         <item name="colorAccent">@color/black</item>
+        <item name="surfaceGlassColor">#CCFFFFFF</item>
+        <item name="glassCardBackground">#F2FFFFFF</item>
+        <item name="glassWindowTint">#4DFFFFFF</item>
+        <item name="glassCardStroke">#1A000000</item>
         <item name="colorMaterial300">@color/white</item>
 
         <item name="actionBarTheme">@style/ThemeOverlay.AppCompat.ActionBar</item>
@@ -263,7 +293,7 @@
         <item name="primaryOrTextPrimary">?android:textColorPrimary</item>
     </style>
 
-    <style name="Theme.SagerNet.Amber">
+    <style name="Theme.SagerNet.Amber" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_amber_500</item>
         <item name="colorPrimaryDark">@color/material_amber_700</item>
         <item name="colorAccent">@color/material_amber_accent_200</item>
@@ -271,7 +301,7 @@
         <item name="colorMaterial300">@color/material_amber_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Blue">
+    <style name="Theme.SagerNet.Blue" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_blue_500</item>
         <item name="colorPrimaryDark">@color/material_blue_700</item>
         <item name="colorAccent">@color/material_blue_accent_200</item>
@@ -279,7 +309,7 @@
         <item name="colorMaterial300">@color/material_blue_300</item>
     </style>
 
-    <style name="Theme.SagerNet.BlueGrey">
+    <style name="Theme.SagerNet.BlueGrey" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_blue_grey_500</item>
         <item name="colorPrimaryDark">@color/material_blue_grey_700</item>
         <item name="colorAccent">@color/material_blue_grey_200</item>
@@ -287,7 +317,7 @@
         <item name="colorMaterial300">@color/material_blue_grey_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Brown">
+    <style name="Theme.SagerNet.Brown" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_brown_500</item>
         <item name="colorPrimaryDark">@color/material_brown_700</item>
         <item name="colorAccent">@color/material_brown_200</item>
@@ -295,7 +325,7 @@
         <item name="colorMaterial300">@color/material_brown_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Cyan">
+    <style name="Theme.SagerNet.Cyan" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_cyan_500</item>
         <item name="colorPrimaryDark">@color/material_cyan_700</item>
         <item name="colorAccent">@color/material_cyan_accent_200</item>
@@ -303,7 +333,7 @@
         <item name="colorMaterial300">@color/material_cyan_300</item>
     </style>
 
-    <style name="Theme.SagerNet.DeepOrange">
+    <style name="Theme.SagerNet.DeepOrange" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_deep_orange_500</item>
         <item name="colorPrimaryDark">@color/material_deep_orange_700</item>
         <item name="colorAccent">@color/material_deep_orange_accent_200</item>
@@ -311,7 +341,7 @@
         <item name="colorMaterial300">@color/material_deep_orange_300</item>
     </style>
 
-    <style name="Theme.SagerNet.DeepPurple">
+    <style name="Theme.SagerNet.DeepPurple" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_deep_purple_500</item>
         <item name="colorPrimaryDark">@color/material_deep_purple_700</item>
         <item name="colorAccent">@color/material_deep_purple_accent_200</item>
@@ -319,7 +349,7 @@
         <item name="colorMaterial300">@color/material_deep_purple_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Green">
+    <style name="Theme.SagerNet.Green" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_green_500</item>
         <item name="colorPrimaryDark">@color/material_green_700</item>
         <item name="colorAccent">@color/material_green_accent_200</item>
@@ -327,7 +357,7 @@
         <item name="colorMaterial300">@color/material_green_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Grey">
+    <style name="Theme.SagerNet.Grey" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_grey_500</item>
         <item name="colorPrimaryDark">@color/material_grey_700</item>
         <item name="colorAccent">@color/material_grey_700</item>
@@ -335,7 +365,7 @@
         <item name="colorMaterial300">@color/material_grey_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Indigo">
+    <style name="Theme.SagerNet.Indigo" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_indigo_500</item>
         <item name="colorPrimaryDark">@color/material_indigo_700</item>
         <item name="colorAccent">@color/material_indigo_accent_200</item>
@@ -343,7 +373,7 @@
         <item name="colorMaterial300">@color/material_indigo_300</item>
     </style>
 
-    <style name="Theme.SagerNet.LightBlue">
+    <style name="Theme.SagerNet.LightBlue" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_light_blue_500</item>
         <item name="colorPrimaryDark">@color/material_light_blue_700</item>
         <item name="colorAccent">@color/material_light_blue_accent_200</item>
@@ -351,7 +381,7 @@
         <item name="colorMaterial300">@color/material_light_blue_300</item>
     </style>
 
-    <style name="Theme.SagerNet.LightGreen">
+    <style name="Theme.SagerNet.LightGreen" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_light_green_500</item>
         <item name="colorPrimaryDark">@color/material_light_green_700</item>
         <item name="colorAccent">@color/material_light_green_accent_200</item>
@@ -359,7 +389,7 @@
         <item name="colorMaterial300">@color/material_light_green_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Lime">
+    <style name="Theme.SagerNet.Lime" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_lime_500</item>
         <item name="colorPrimaryDark">@color/material_lime_700</item>
         <item name="colorAccent">@color/material_lime_accent_200</item>
@@ -367,7 +397,7 @@
         <item name="colorMaterial300">@color/material_lime_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Orange">
+    <style name="Theme.SagerNet.Orange" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_orange_500</item>
         <item name="colorPrimaryDark">@color/material_orange_700</item>
         <item name="colorAccent">@color/material_orange_accent_200</item>
@@ -375,7 +405,7 @@
         <item name="colorMaterial300">@color/material_orange_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Purple">
+    <style name="Theme.SagerNet.Purple" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_purple_500</item>
         <item name="colorPrimaryDark">@color/material_purple_700</item>
         <item name="colorAccent">@color/material_purple_accent_200</item>
@@ -383,7 +413,7 @@
         <item name="colorMaterial300">@color/material_purple_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Red">
+    <style name="Theme.SagerNet.Red" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_red_500</item>
         <item name="colorPrimaryDark">@color/material_red_700</item>
         <item name="colorAccent">@color/material_red_accent_200</item>
@@ -391,7 +421,7 @@
         <item name="colorMaterial300">@color/material_red_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Teal">
+    <style name="Theme.SagerNet.Teal" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_teal_500</item>
         <item name="colorPrimaryDark">@color/material_teal_700</item>
         <item name="colorAccent">@color/material_teal_accent_200</item>
@@ -399,7 +429,7 @@
         <item name="colorMaterial300">@color/material_teal_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Yellow">
+    <style name="Theme.SagerNet.Yellow" parent="Theme.SagerNet">
         <item name="colorPrimary">@color/material_yellow_500</item>
         <item name="colorPrimaryDark">@color/material_yellow_700</item>
         <item name="colorAccent">@color/material_yellow_accent_200</item>
@@ -424,7 +454,7 @@
         <item name="colorMaterial300">@color/color_verdant_mint_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Black">
+    <style name="Theme.SagerNet.Dialog.Black" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_light_black</item>
         <item name="colorPrimaryDark">@color/black</item>
         <item name="colorAccent">@color/white</item>
@@ -443,7 +473,7 @@
     </style>
 
 
-    <style name="Theme.SagerNet.Dialog.LightBlack">
+    <style name="Theme.SagerNet.Dialog.LightBlack" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/white</item>
         <item name="colorPrimaryDark">@color/material_light_white</item>
         <item name="colorAccent">@color/black</item>
@@ -471,7 +501,7 @@
         <item name="primaryOrTextPrimary">?android:textColorPrimary</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Amber">
+    <style name="Theme.SagerNet.Dialog.Amber" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_amber_500</item>
         <item name="colorPrimaryDark">@color/material_amber_700</item>
         <item name="colorAccent">@color/material_amber_accent_200</item>
@@ -479,7 +509,7 @@
         <item name="colorMaterial300">@color/material_amber_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Blue">
+    <style name="Theme.SagerNet.Dialog.Blue" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_blue_500</item>
         <item name="colorPrimaryDark">@color/material_blue_700</item>
         <item name="colorAccent">@color/material_blue_accent_200</item>
@@ -487,7 +517,7 @@
         <item name="colorMaterial300">@color/material_blue_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.BlueGrey">
+    <style name="Theme.SagerNet.Dialog.BlueGrey" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_blue_grey_500</item>
         <item name="colorPrimaryDark">@color/material_blue_grey_700</item>
         <item name="colorAccent">@color/material_blue_grey_200</item>
@@ -495,7 +525,7 @@
         <item name="colorMaterial300">@color/material_blue_grey_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Brown">
+    <style name="Theme.SagerNet.Dialog.Brown" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_brown_500</item>
         <item name="colorPrimaryDark">@color/material_brown_700</item>
         <item name="colorAccent">@color/material_brown_200</item>
@@ -503,7 +533,7 @@
         <item name="colorMaterial300">@color/material_brown_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Cyan">
+    <style name="Theme.SagerNet.Dialog.Cyan" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_cyan_500</item>
         <item name="colorPrimaryDark">@color/material_cyan_700</item>
         <item name="colorAccent">@color/material_cyan_accent_200</item>
@@ -511,7 +541,7 @@
         <item name="colorMaterial300">@color/material_cyan_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.DeepOrange">
+    <style name="Theme.SagerNet.Dialog.DeepOrange" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_deep_orange_500</item>
         <item name="colorPrimaryDark">@color/material_deep_orange_700</item>
         <item name="colorAccent">@color/material_deep_orange_accent_200</item>
@@ -519,7 +549,7 @@
         <item name="colorMaterial300">@color/material_deep_orange_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.DeepPurple">
+    <style name="Theme.SagerNet.Dialog.DeepPurple" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_deep_purple_500</item>
         <item name="colorPrimaryDark">@color/material_deep_purple_700</item>
         <item name="colorAccent">@color/material_deep_purple_accent_200</item>
@@ -527,7 +557,7 @@
         <item name="colorMaterial300">@color/material_deep_purple_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Green">
+    <style name="Theme.SagerNet.Dialog.Green" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_green_500</item>
         <item name="colorPrimaryDark">@color/material_green_700</item>
         <item name="colorAccent">@color/material_green_accent_200</item>
@@ -535,7 +565,7 @@
         <item name="colorMaterial300">@color/material_green_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Grey">
+    <style name="Theme.SagerNet.Dialog.Grey" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_grey_500</item>
         <item name="colorPrimaryDark">@color/material_grey_700</item>
         <item name="colorAccent">@color/material_grey_200</item>
@@ -543,7 +573,7 @@
         <item name="colorMaterial300">@color/material_grey_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Indigo">
+    <style name="Theme.SagerNet.Dialog.Indigo" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_indigo_500</item>
         <item name="colorPrimaryDark">@color/material_indigo_700</item>
         <item name="colorAccent">@color/material_indigo_accent_200</item>
@@ -551,7 +581,7 @@
         <item name="colorMaterial300">@color/material_indigo_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.LightBlue">
+    <style name="Theme.SagerNet.Dialog.LightBlue" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_light_blue_500</item>
         <item name="colorPrimaryDark">@color/material_light_blue_700</item>
         <item name="colorAccent">@color/material_light_blue_accent_200</item>
@@ -559,7 +589,7 @@
         <item name="colorMaterial300">@color/material_light_blue_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.LightGreen">
+    <style name="Theme.SagerNet.Dialog.LightGreen" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_light_green_500</item>
         <item name="colorPrimaryDark">@color/material_light_green_700</item>
         <item name="colorAccent">@color/material_light_green_accent_200</item>
@@ -567,7 +597,7 @@
         <item name="colorMaterial300">@color/material_light_green_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Lime">
+    <style name="Theme.SagerNet.Dialog.Lime" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_lime_500</item>
         <item name="colorPrimaryDark">@color/material_lime_700</item>
         <item name="colorAccent">@color/material_lime_accent_200</item>
@@ -575,7 +605,7 @@
         <item name="colorMaterial300">@color/material_lime_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Orange">
+    <style name="Theme.SagerNet.Dialog.Orange" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_orange_500</item>
         <item name="colorPrimaryDark">@color/material_orange_700</item>
         <item name="colorAccent">@color/material_orange_accent_200</item>
@@ -583,7 +613,7 @@
         <item name="colorMaterial300">@color/material_orange_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Purple">
+    <style name="Theme.SagerNet.Dialog.Purple" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_purple_500</item>
         <item name="colorPrimaryDark">@color/material_purple_700</item>
         <item name="colorAccent">@color/material_purple_accent_200</item>
@@ -591,7 +621,7 @@
         <item name="colorMaterial300">@color/material_purple_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Red">
+    <style name="Theme.SagerNet.Dialog.Red" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_red_500</item>
         <item name="colorPrimaryDark">@color/material_red_700</item>
         <item name="colorAccent">@color/material_red_accent_200</item>
@@ -599,7 +629,7 @@
         <item name="colorMaterial300">@color/material_red_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Teal">
+    <style name="Theme.SagerNet.Dialog.Teal" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_teal_500</item>
         <item name="colorPrimaryDark">@color/material_teal_700</item>
         <item name="colorAccent">@color/material_teal_accent_200</item>
@@ -607,7 +637,7 @@
         <item name="colorMaterial300">@color/material_teal_300</item>
     </style>
 
-    <style name="Theme.SagerNet.Dialog.Yellow">
+    <style name="Theme.SagerNet.Dialog.Yellow" parent="Theme.SagerNet.Dialog">
         <item name="colorPrimary">@color/material_yellow_500</item>
         <item name="colorPrimaryDark">@color/material_yellow_700</item>
         <item name="colorAccent">@color/material_yellow_accent_200</item>
@@ -625,6 +655,262 @@
         <item name="android:windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+
+        <!-- Fix STUN crash: Ensure attributes are present in Start theme -->
+        <item name="glassCardStroke">@color/glass_card_stroke</item>
+    </style>
+
+    <!-- Cupertino Base Theme -->
+    <style name="Theme.SagerNet.Cupertino" parent="Theme.SagerNet">
+        <item name="android:windowBackground">@color/surface_glass_heavy</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <item name="materialCardViewStyle">@style/Widget.SagerNet.CardView.Cupertino</item>
+    </style>
+
+    <style name="Theme.SagerNet.Dialog.Cupertino" parent="Theme.SagerNet.Dialog">
+        <item name="android:windowBlurBehindRadius" tools:targetApi="s">35dp</item>
+    </style>
+
+    <style name="Widget.SagerNet.CardView.Cupertino" parent="Widget.SagerNet.CardView">
+        <item name="cardCornerRadius">24dp</item>
+        <item name="cardBackgroundColor">@color/surface_glass</item>
+        <item name="strokeColor">@color/card_stroke</item>
+        <item name="strokeWidth">0.5dp</item>
+    </style>
+
+    <!-- Cupertino 23 Themes -->
+    <style name="Theme.SagerNet.Cupertino.Pink" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_pink</item>
+        <item name="colorPrimaryDark">@color/cupertino_pink_dark</item>
+        <item name="colorAccent">@color/cupertino_pink</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Blue" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_blue</item>
+        <item name="colorPrimaryDark">@color/cupertino_blue_dark</item>
+        <item name="colorAccent">@color/cupertino_blue</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Orange" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_orange</item>
+        <item name="colorPrimaryDark">@color/cupertino_orange_dark</item>
+        <item name="colorAccent">@color/cupertino_orange</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Green" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_green</item>
+        <item name="colorPrimaryDark">@color/cupertino_green_dark</item>
+        <item name="colorAccent">@color/cupertino_green</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Purple" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_purple</item>
+        <item name="colorPrimaryDark">@color/cupertino_purple_dark</item>
+        <item name="colorAccent">@color/cupertino_purple</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Amber" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_amber</item>
+        <item name="colorPrimaryDark">@color/cupertino_amber_dark</item>
+        <item name="colorAccent">@color/cupertino_amber</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Mint" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_mint</item>
+        <item name="colorPrimaryDark">@color/cupertino_mint_dark</item>
+        <item name="colorAccent">@color/cupertino_mint</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Coral" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_coral</item>
+        <item name="colorPrimaryDark">@color/cupertino_coral_dark</item>
+        <item name="colorAccent">@color/cupertino_coral</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.RoseGold" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_rose_gold</item>
+        <item name="colorPrimaryDark">@color/cupertino_rose_gold_dark</item>
+        <item name="colorAccent">@color/cupertino_rose_gold</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Pistachio" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_pistachio</item>
+        <item name="colorPrimaryDark">@color/cupertino_pistachio_dark</item>
+        <item name="colorAccent">@color/cupertino_pistachio</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Sunflower" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_sunflower</item>
+        <item name="colorPrimaryDark">@color/cupertino_sunflower_dark</item>
+        <item name="colorAccent">@color/cupertino_sunflower</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Violet" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_violet</item>
+        <item name="colorPrimaryDark">@color/cupertino_violet_dark</item>
+        <item name="colorAccent">@color/cupertino_violet</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.White" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_white</item>
+        <item name="colorPrimaryDark">@color/cupertino_white_dark</item>
+        <item name="colorAccent">@color/cupertino_white</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Sky" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_sky</item>
+        <item name="colorPrimaryDark">@color/cupertino_sky_dark</item>
+        <item name="colorAccent">@color/cupertino_sky</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Morandi" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_morandi</item>
+        <item name="colorPrimaryDark">@color/cupertino_morandi_dark</item>
+        <item name="colorAccent">@color/cupertino_morandi</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Wine" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_wine</item>
+        <item name="colorPrimaryDark">@color/cupertino_wine_dark</item>
+        <item name="colorAccent">@color/cupertino_wine</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Sage" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_sage</item>
+        <item name="colorPrimaryDark">@color/cupertino_sage_dark</item>
+        <item name="colorAccent">@color/cupertino_sage</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Wheat" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_wheat</item>
+        <item name="colorPrimaryDark">@color/cupertino_wheat_dark</item>
+        <item name="colorAccent">@color/cupertino_wheat</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Ice" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_ice</item>
+        <item name="colorPrimaryDark">@color/cupertino_ice_dark</item>
+        <item name="colorAccent">@color/cupertino_ice</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Emerald" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_emerald</item>
+        <item name="colorPrimaryDark">@color/cupertino_emerald_dark</item>
+        <item name="colorAccent">@color/cupertino_emerald</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Champagne" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_champagne</item>
+        <item name="colorPrimaryDark">@color/cupertino_champagne_dark</item>
+        <item name="colorAccent">@color/cupertino_champagne</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Silver" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_silver</item>
+        <item name="colorPrimaryDark">@color/cupertino_silver_dark</item>
+        <item name="colorAccent">@color/cupertino_silver</item>
+    </style>
+    <style name="Theme.SagerNet.Cupertino.Unicorn" parent="Theme.SagerNet.Cupertino">
+        <item name="colorPrimary">@color/cupertino_unicorn</item>
+        <item name="colorPrimaryDark">@color/cupertino_unicorn_dark</item>
+        <item name="colorAccent">@color/cupertino_unicorn</item>
+    </style>
+
+    <!-- Dialog Themes -->
+    <style name="Theme.SagerNet.Dialog.Cupertino.Pink" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_pink</item>
+        <item name="colorPrimaryDark">@color/cupertino_pink_dark</item>
+        <item name="colorAccent">@color/cupertino_pink</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Blue" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_blue</item>
+        <item name="colorPrimaryDark">@color/cupertino_blue_dark</item>
+        <item name="colorAccent">@color/cupertino_blue</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Orange" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_orange</item>
+        <item name="colorPrimaryDark">@color/cupertino_orange_dark</item>
+        <item name="colorAccent">@color/cupertino_orange</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Green" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_green</item>
+        <item name="colorPrimaryDark">@color/cupertino_green_dark</item>
+        <item name="colorAccent">@color/cupertino_green</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Purple" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_purple</item>
+        <item name="colorPrimaryDark">@color/cupertino_purple_dark</item>
+        <item name="colorAccent">@color/cupertino_purple</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Amber" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_amber</item>
+        <item name="colorPrimaryDark">@color/cupertino_amber_dark</item>
+        <item name="colorAccent">@color/cupertino_amber</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Mint" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_mint</item>
+        <item name="colorPrimaryDark">@color/cupertino_mint_dark</item>
+        <item name="colorAccent">@color/cupertino_mint</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Coral" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_coral</item>
+        <item name="colorPrimaryDark">@color/cupertino_coral_dark</item>
+        <item name="colorAccent">@color/cupertino_coral</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.RoseGold" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_rose_gold</item>
+        <item name="colorPrimaryDark">@color/cupertino_rose_gold_dark</item>
+        <item name="colorAccent">@color/cupertino_rose_gold</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Pistachio" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_pistachio</item>
+        <item name="colorPrimaryDark">@color/cupertino_pistachio_dark</item>
+        <item name="colorAccent">@color/cupertino_pistachio</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Sunflower" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_sunflower</item>
+        <item name="colorPrimaryDark">@color/cupertino_sunflower_dark</item>
+        <item name="colorAccent">@color/cupertino_sunflower</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Violet" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_violet</item>
+        <item name="colorPrimaryDark">@color/cupertino_violet_dark</item>
+        <item name="colorAccent">@color/cupertino_violet</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.White" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_white</item>
+        <item name="colorPrimaryDark">@color/cupertino_white_dark</item>
+        <item name="colorAccent">@color/cupertino_white</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Sky" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_sky</item>
+        <item name="colorPrimaryDark">@color/cupertino_sky_dark</item>
+        <item name="colorAccent">@color/cupertino_sky</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Morandi" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_morandi</item>
+        <item name="colorPrimaryDark">@color/cupertino_morandi_dark</item>
+        <item name="colorAccent">@color/cupertino_morandi</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Wine" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_wine</item>
+        <item name="colorPrimaryDark">@color/cupertino_wine_dark</item>
+        <item name="colorAccent">@color/cupertino_wine</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Sage" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_sage</item>
+        <item name="colorPrimaryDark">@color/cupertino_sage_dark</item>
+        <item name="colorAccent">@color/cupertino_sage</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Wheat" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_wheat</item>
+        <item name="colorPrimaryDark">@color/cupertino_wheat_dark</item>
+        <item name="colorAccent">@color/cupertino_wheat</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Ice" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_ice</item>
+        <item name="colorPrimaryDark">@color/cupertino_ice_dark</item>
+        <item name="colorAccent">@color/cupertino_ice</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Emerald" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_emerald</item>
+        <item name="colorPrimaryDark">@color/cupertino_emerald_dark</item>
+        <item name="colorAccent">@color/cupertino_emerald</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Champagne" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_champagne</item>
+        <item name="colorPrimaryDark">@color/cupertino_champagne_dark</item>
+        <item name="colorAccent">@color/cupertino_champagne</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Silver" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_silver</item>
+        <item name="colorPrimaryDark">@color/cupertino_silver_dark</item>
+        <item name="colorAccent">@color/cupertino_silver</item>
+    </style>
+    <style name="Theme.SagerNet.Dialog.Cupertino.Unicorn" parent="Theme.SagerNet.Dialog.Cupertino">
+        <item name="colorPrimary">@color/cupertino_unicorn</item>
+        <item name="colorPrimaryDark">@color/cupertino_unicorn_dark</item>
+        <item name="colorAccent">@color/cupertino_unicorn</item>
     </style>
 
 </resources>

@@ -71,6 +71,7 @@ class ActiveFragment : Fragment(R.layout.layout_traffic_list) {
         binding = LayoutTrafficListBinding.bind(view)
         adapter = ActiveAdapter()
         binding.trafficList.layoutManager = FixedLinearLayoutManager(binding.trafficList)
+        binding.trafficList.applyGlassBlur()
         binding.trafficList.adapter = adapter
         (parentFragment as TrafficFragment).listeners.add(::emitStats)
         emitStats(emptyList())
