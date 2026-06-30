@@ -2,7 +2,11 @@ package io.nekohasekai.sagernet.ui
 
 import android.os.Bundle
 import android.text.InputType
+import android.view.View
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import com.google.android.material.snackbar.Snackbar
@@ -66,6 +70,23 @@ class WebDAVSettingsActivity : ThemedActivity() {
         override fun onDestroy() {
             isFragmentAlive = false
             super.onDestroy()
+        }
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+
+            // 处理底部导航栏高度，避免设置项被遮挡
+            ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+                val bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+                )
+                v.updatePadding(
+                    left = bars.left,
+                    right = bars.right,
+                    bottom = bars.bottom
+                )
+                insets
+            }
         }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
