@@ -54,6 +54,7 @@
         <item name="textInputStyle">@style/Widget.SagerNet.TextInputLayout</item>
         <item name="popupMenuStyle">@style/Widget.SagerNet.PopupMenu</item>
         <item name="actionOverflowMenuStyle">@style/Widget.SagerNet.PopupMenu.Overflow</item>
+        <item name="actionBarPopupTheme">@style/ThemeOverlay.SagerNet.PopupMenu</item>
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.SagerNet.BottomSheetDialog</item>
         <item name="materialButtonStyle">@style/Widget.SagerNet.Button</item>
         <item name="mal_card_style">@style/mal_CardStyle</item>
@@ -170,10 +171,13 @@
     <style name="Widget.SagerNet.PopupMenu" parent="Widget.MaterialComponents.PopupMenu">
         <item name="android:popupBackground">@drawable/bg_popup_menu</item>
         <item name="android:popupAnimationStyle">@style/PopupMenuAnimation</item>
+        <item name="android:popupElevation">0dp</item>
     </style>
+
     <style name="Widget.SagerNet.PopupMenu.Overflow" parent="Widget.MaterialComponents.PopupMenu.Overflow">
         <item name="android:popupBackground">@drawable/bg_popup_menu</item>
         <item name="android:popupAnimationStyle">@style/PopupMenuAnimation</item>
+        <item name="android:popupElevation">0dp</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.SagerNet.BottomSheet" parent="">
@@ -232,10 +236,25 @@
         <item name="cardUseCompatPadding">false</item>
     </style>
 
+    <style name="ThemeOverlay.SagerNet.Toolbar" parent="ThemeOverlay.MaterialComponents.ActionBar">
+        <item name="colorControlNormal">?attr/colorAccent</item>
+        <item name="android:colorControlNormal">?attr/colorAccent</item>
+        <!-- 苹果风高光：点击图标时的通透效果 -->
+        <item name="android:colorControlHighlight">#4DFFFFFF</item>
+        <item name="actionMenuTextColor">?attr/colorAccent</item>
+        <item name="android:actionMenuTextColor">?attr/colorAccent</item>
+        <!-- 移除任何阴影 -->
+        <item name="elevation">0dp</item>
+    </style>
+
     <style name="ThemeOverlay.SagerNet.PopupMenu" parent="ThemeOverlay.AppCompat.DayNight">
         <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
-        <item name="android:windowBlurBehindRadius" tools:targetApi="s">35dp</item>
+        <item name="android:windowBlurBehindRadius" tools:targetApi="s">60dp</item>
         <item name="popupMenuStyle">@style/Widget.SagerNet.PopupMenu</item>
+        <!-- 苹果风：标准文字颜色，确保在强模糊背景下清晰 -->
+        <item name="android:textColorPrimary">?attr/colorOnSurface</item>
+        <item name="android:textColorSecondary">?attr/colorOnSurface</item>
+        <item name="android:colorControlNormal">?attr/colorAccent</item>
     </style>
 
     <style name="Theme.SagerNet.Black" parent="Theme.SagerNet">
