@@ -54,6 +54,7 @@
         <item name="textInputStyle">@style/Widget.SagerNet.TextInputLayout</item>
         <item name="popupMenuStyle">@style/Widget.SagerNet.PopupMenu</item>
         <item name="actionOverflowMenuStyle">@style/Widget.SagerNet.PopupMenu.Overflow</item>
+        <item name="actionBarPopupTheme">@style/ThemeOverlay.SagerNet.PopupMenu</item>
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.SagerNet.BottomSheetDialog</item>
         <item name="materialButtonStyle">@style/Widget.SagerNet.Button</item>
         <item name="mal_card_style">@style/mal_CardStyle</item>
@@ -170,10 +171,13 @@
     <style name="Widget.SagerNet.PopupMenu" parent="Widget.MaterialComponents.PopupMenu">
         <item name="android:popupBackground">@drawable/bg_popup_menu</item>
         <item name="android:popupAnimationStyle">@style/PopupMenuAnimation</item>
+        <item name="android:popupElevation">0dp</item>
     </style>
+
     <style name="Widget.SagerNet.PopupMenu.Overflow" parent="Widget.MaterialComponents.PopupMenu.Overflow">
         <item name="android:popupBackground">@drawable/bg_popup_menu</item>
         <item name="android:popupAnimationStyle">@style/PopupMenuAnimation</item>
+        <item name="android:popupElevation">0dp</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.SagerNet.BottomSheet" parent="">
