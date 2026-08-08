@@ -15,4 +15,6 @@
     <attr name="glassWindowTint" format="color" />
     <attr name="glassCardStroke" format="color" />
     <attr name="mal_card_style" format="reference" />
+
+    <item name="tag_custom_style" type="id" />
 </resources>
