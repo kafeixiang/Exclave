@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardBackgroundColor="@color/surface_glass"
+    app:cardCornerRadius="@dimen/card_corner_radius"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/card_stroke"
+    app:strokeWidth="@dimen/card_stroke_width">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dashboard_quick_tools"
+            android:textAppearance="?attr/textAppearanceSubtitle1"
+            android:textStyle="bold" />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:columnCount="3">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_import_sub"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:paddingVertical="12dp"
+                app:icon="@drawable/ic_av_playlist_add"
+                app:iconGravity="top"
+                app:iconPadding="4dp"
+                app:iconSize="24dp"
+                app:iconTint="?attr/colorAccent"
+                android:text="@string/dashboard_import_sub"
+                android:textColor="?attr/colorAccent"
+                android:textSize="11sp"
+                android:textAllCaps="false"
+                app:backgroundTint="@color/glass_window_tint"
+                app:cornerRadius="16dp"
+                android:layout_margin="2dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_refresh_dns"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:paddingVertical="12dp"
+                app:icon="@drawable/ic_action_dns"
+                app:iconGravity="top"
+                app:iconPadding="4dp"
+                app:iconSize="24dp"
+                app:iconTint="?attr/colorAccent"
+                android:text="@string/dashboard_refresh_dns"
+                android:textColor="?attr/colorAccent"
+                android:textSize="11sp"
+                android:textAllCaps="false"
+                app:backgroundTint="@color/glass_window_tint"
+                app:cornerRadius="16dp"
+                android:layout_margin="2dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_share_config"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnWeight="1"
+                android:paddingVertical="12dp"
+                app:icon="@drawable/ic_social_share"
+                app:iconGravity="top"
+                app:iconPadding="4dp"
+                app:iconSize="24dp"
+                app:iconTint="?attr/colorAccent"
+                android:text="@string/dashboard_share_config"
+                android:textColor="?attr/colorAccent"
+                android:textSize="11sp"
+                android:textAllCaps="false"
+                app:backgroundTint="@color/glass_window_tint"
+                app:cornerRadius="16dp"
+                android:layout_margin="2dp" />
+
+        </GridLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
