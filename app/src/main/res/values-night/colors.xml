@@ -5,13 +5,13 @@
     <color name="dropdown_color_background">#3A3A3A</color>
     <color name="dropdown_color_selected">#4F4F4F</color>
 
-    <!-- 苹果风（iOS Style）深色语义化：解决夜间模式看不清的问题 -->
-    <color name="glass_window_tint">#80000000</color> <!-- 深色半透明遮罩 -->
-    <color name="glass_card_bg">#E61A1A1A</color> <!-- 深灰色卡片背景 -->
-    <color name="glass_card_stroke">#33FFFFFF</color> <!-- 白色极细描边 -->
+    <!-- 苹果风（iOS Style）深色语义化：确保高光边缘可见 -->
+    <color name="glass_window_tint">#1A000000</color>
+    <color name="glass_card_bg">#BF1A1A1A</color>
+    <color name="glass_card_stroke">#4DFFFFFF</color> <!-- 深色模式下的白色边缘高光 -->
 
-    <!-- Glassmorphism Surface Colors - Pure whitish for advanced frosted look -->
-    <color name="surface_glass">#BF000000</color>
-    <color name="surface_glass_heavy">#FF000000</color>
-    <color name="card_stroke">#33FFFFFF</color>
+    <!-- Glassmorphism Surface Colors -->
+    <color name="surface_glass">#99000000</color>
+    <color name="surface_glass_heavy">#E6000000</color>
+    <color name="card_stroke">#66FFFFFF</color> <!-- 深色模式下的明亮边缘 -->
 </resources>

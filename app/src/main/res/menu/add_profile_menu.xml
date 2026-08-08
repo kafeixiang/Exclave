@@ -3,6 +3,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_full_test"
+        android:icon="@drawable/ic_baseline_bolt_24"
+        android:title="@string/full_test"
+        android:visible="false"
+        app:iconTint="?attr/colorAccent"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/action_search"
         android:title="@android:string/search_go"
         app:actionViewClass="androidx.appcompat.widget.SearchView"
