@@ -44,6 +44,7 @@ fun RecyclerView.applyGlassBlur() {
 
 private fun applyFrostedStyle(view: View) {
     if (view is com.google.android.material.card.MaterialCardView) {
+        if (view.getTag(R.id.tag_custom_style) == true) return
         // 强制应用半透明背景、精致描边和圆角，并去掉阴影以保持玻璃通透感
         view.setCardBackgroundColor(androidx.core.content.ContextCompat.getColor(view.context, R.color.surface_glass))
         view.strokeColor = androidx.core.content.ContextCompat.getColor(view.context, R.color.card_stroke)

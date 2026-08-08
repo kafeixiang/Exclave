@@ -3,6 +3,9 @@
     <string name="app_name" translatable="false">Exclave</string>
     <string name="project">Project</string>
     <string name="github">Source code</string>
+    <string name="dashboard_google">Google</string>
+    <string name="dashboard_youtube">YouTube</string>
+    <string name="dashboard_github">GitHub</string>
     <string name="app_version">Version</string>
     <string name="version_x">Version (%s)</string>
     <string name="logcat">Export debug information</string>
@@ -48,6 +51,22 @@
     <string name="auto_switch_timeout">Auto-switch on Timeout</string>
     <string name="auto_switch_timeout_summary">Automatically switch to next config if no response</string>
     <string name="auto_switch_timeout_duration">Timeout Duration (seconds)</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="dashboard_status">Status</string>
+    <string name="dashboard_speed">Speed</string>
+    <string name="dashboard_traffic">Traffic</string>
+    <string name="dashboard_geoip">GeoIP</string>
+    <string name="dashboard_latency">Latency</string>
+    <string name="dashboard_traffic_total">/ %s</string>
+    <string name="dashboard_quick_tools">Quick Tools</string>
+    <string name="dashboard_test_all">Test All</string>
+    <string name="dashboard_import_sub">Import Sub</string>
+    <string name="dashboard_refresh_dns">Refresh DNS</string>
+    <string name="dashboard_share_config">Share Config</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="upload">Upload</string>
+    <string name="download">Download</string>
     <string name="auto_switch_strategy">Auto-switch Strategy</string>
     <string name="auto_switch_strategy_next">Switch to Next</string>
     <string name="auto_switch_strategy_url_test">URL Test (Mihomo Style)</string>
@@ -329,13 +348,13 @@
     <string name="subscription_user_agent">User agent</string>
     <string name="confirm">Confirm</string>
     <string name="missing_plugin">Missing plugin</string>
-    <string name="profile_requiring_plugin">Profile %s requires %s plugin, but it was not found.</string>
+    <string name="profile_requiring_plugin">Profile %1$s requires %2$s plugin, but it was not found.</string>
     <string name="update_subscription_warning">Proxy is not connected, are you sure you want to continue updating?</string>
     <string name="service_subscription">Subscription Update Service</string>
     <string name="subscription_update">Subscription update</string>
     <string name="subscription_update_message">Updating %s …</string>
     <string name="subscription_used">%s used</string>
-    <string name="subscription_traffic">%s used / %s remaining</string>
+    <string name="subscription_traffic">%1$s used / %2$s remaining</string>
     <string name="subscription_import">Import subscription</string>
     <string name="subscription_import_message">Are you sure you want to import subscription %s? If the source is not trustworthy, your IP and behavior will be leaked.</string>
     <string name="profile_import">Import profile</string>
@@ -360,9 +379,9 @@
     <string name="group_order_by_name">Alphabetically</string>
     <string name="group_order_by_delay">By latency</string>
     <string name="group_order_by_delay_sum">Test all profiles in this group and sort them by latency</string>
-    <string name="plugin_exists_but_on_shit_system">Profile %s requires %s plugin, but your proprietary equipment vendor (usually surveillance capital giants and malware maker) tampered with your Android, making the plugin unusable.</string>
-    <string name="traffic_uplink">%s | %s/s ↑</string>
-    <string name="traffic_downlink">%s | %s/s ↓</string>
+    <string name="plugin_exists_but_on_shit_system">Profile %1$s requires %2$s plugin, but your proprietary equipment vendor (usually surveillance capital giants and malware maker) tampered with your Android, making the plugin unusable.</string>
+    <string name="traffic_uplink">%1$s | %2$s/s ↑</string>
+    <string name="traffic_downlink">%1$s | %2$s/s ↓</string>
     <string name="traffic_uplink_total" translatable="false">%s ↑</string>
     <string name="traffic_downlink_total" translatable="false">%s ↓</string>
     <string name="traffic_active">Active</string>
