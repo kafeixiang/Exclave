@@ -8,17 +8,48 @@
     android:background="@android:color/transparent"
     tools:context=".ui.ConfigurationFragment">
 
-    <include
-        layout="@layout/layout_appbar"
+    <!-- Apple-Style Frosted Header -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/header_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="8dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="0dp"
+        app:cardMaxElevation="0dp"
+        app:cardPreventCornerOverlap="false"
+        app:cardUseCompatPadding="false"
+        app:strokeWidth="0dp">
+
+        <!-- 内部背景层，确保圆角完美裁剪 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:background="@drawable/bg_glass_header" />
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:background="@android:color/transparent"
+            app:contentInsetStartWithNavigation="0dp"
+            app:titleCentered="false"
+            app:title="@string/app_name"
+            app:titleTextAppearance="@style/AppearanceFoundation.Title"
+            app:theme="@style/ThemeOverlay.SagerNet.Toolbar"
+            app:popupTheme="@style/ThemeOverlay.SagerNet.PopupMenu" />
+
+    </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/group_tab"
         android:layout_width="match_parent"
         android:layout_height="32dp"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/bg_segmented_control"
         android:elevation="0dp"

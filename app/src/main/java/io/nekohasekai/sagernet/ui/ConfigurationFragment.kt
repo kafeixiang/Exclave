@@ -121,7 +121,15 @@ class ConfigurationFragment @JvmOverloads constructor(
     lateinit var tabLayout: TabLayout
     lateinit var groupPager: ViewPager2
     var searchView: SearchView? = null
-    val selectedGroup get() = if (tabLayout.isGone && adapter.groupList.size > 0) adapter.groupList[0] else (if (adapter.groupList.size > 0 && tabLayout.selectedTabPosition > -1) adapter.groupList[tabLayout.selectedTabPosition] else ProxyGroup())
+    val selectedGroup
+        get() = if (adapter.groupList.size > 0) {
+            val position = groupPager.currentItem
+            if (position > 0 && position <= adapter.groupList.size) {
+                adapter.groupList[position - 1]
+            } else {
+                adapter.groupList[0]
+            }
+        } else ProxyGroup()
     val alwaysShowAddress by lazy { DataStore.alwaysShowAddress }
 
     fun switchAllGroupFragmentsLayout() {
@@ -136,8 +144,8 @@ class ConfigurationFragment @JvmOverloads constructor(
         override fun onPageScrolled(
             position: Int, positionOffset: Float, positionOffsetPixels: Int
         ) {
-            if (adapter.groupList.size > position) {
-                DataStore.selectedGroup = adapter.groupList[position].id
+            if (position > 0 && adapter.groupList.size > position - 1) {
+                DataStore.selectedGroup = adapter.groupList[position - 1].id
             }
         }
     }
@@ -214,12 +222,16 @@ class ConfigurationFragment @JvmOverloads constructor(
             override fun onTabSelected(tab: TabLayout.Tab) {
                 searchView?.onActionViewCollapsed()
                 searchView?.clearFocus()
+                updateToolbarForPosition(tab.position)
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab) {
                 if (!isAdded) return
-                val fragment = (childFragmentManager.findFragmentByTag("f" + selectedGroup.id) as GroupFragment?)
-                fragment?.adapter?.filter("")
+                if (tab.position > 0) {
+                    val group = adapter.groupList[tab.position - 1]
+                    val fragment = (childFragmentManager.findFragmentByTag("f" + group.id) as GroupFragment?)
+                    fragment?.adapter?.filter("")
+                }
             }
 
             override fun onTabReselected(tab: TabLayout.Tab) {}
@@ -227,8 +239,10 @@ class ConfigurationFragment @JvmOverloads constructor(
         })
 
         TabLayoutMediator(tabLayout, groupPager) { tab, position ->
-            if (adapter.groupList.size > position) {
-                tab.text = adapter.groupList[position].displayName()
+            if (position == 0) {
+                tab.text = getString(R.string.nav_dashboard)
+            } else if (adapter.groupList.size > position - 1) {
+                tab.text = adapter.groupList[position - 1].displayName()
             }
             tab.view.setOnLongClickListener { // clear toast
                 true
@@ -290,6 +304,41 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
 
         (requireActivity() as? MainActivity)?.onBackPressedCallback?.isEnabled = false
+        updateHeaderStyle()
+        updateToolbarForPosition(groupPager.currentItem)
+    }
+
+    private fun updateHeaderStyle() {
+        val typedValue = android.util.TypedValue()
+        context?.theme?.resolveAttribute(androidx.appcompat.R.attr.colorAccent, typedValue, true)
+        val accentColor = typedValue.data
+        
+        val header = view?.findViewById<MaterialCardView>(R.id.header_container)
+        header?.apply {
+            cardElevation = 0f
+            maxCardElevation = 0f
+            clipToOutline = true
+            outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
+            setCardBackgroundColor(android.graphics.Color.TRANSPARENT)
+        }
+        
+        // 标题与图标使用主题色，在磨砂背景上产生透亮感
+        toolbar.setTitleTextColor(accentColor)
+    }
+
+    private fun updateToolbarForPosition(position: Int) {
+        val isDashboard = position == 0
+        toolbar.menu.findItem(R.id.action_full_test)?.isVisible = isDashboard
+        // 仪表盘也应当支持搜索和添加功能
+        toolbar.menu.findItem(R.id.action_add)?.isVisible = true
+        toolbar.menu.findItem(R.id.action_search)?.isVisible = true
+        toolbar.menu.findItem(R.id.action_misc)?.isVisible = !isDashboard
+        
+        if (isDashboard) {
+            toolbar.setTitle(R.string.app_name)
+        } else {
+            toolbar.setTitle(if (select) titleRes else R.string.menu_configuration)
+        }
     }
 
     override fun onDestroy() {
@@ -431,6 +480,10 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.action_full_test -> {
+                urlTest()
+                return true
+            }
             R.id.action_scan_qr_code -> {
                 startActivity(Intent(context, ScannerActivity::class.java))
             }
@@ -957,6 +1010,14 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
     }
 
+    fun stateChanged(state: BaseService.State, profileName: String?) {
+        adapter.dashboardFragment?.stateChanged(state, profileName)
+    }
+
+    fun trafficUpdated(stats: TrafficStats) {
+        adapter.dashboardFragment?.trafficUpdated(stats)
+    }
+
     inner class GroupPagerAdapter : FragmentStateAdapter(this),
         ProfileManager.Listener,
         GroupManager.Listener {
@@ -964,6 +1025,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         var selectedGroupIndex = 0
         var groupList: ArrayList<ProxyGroup> = ArrayList()
         var groupFragments: HashMap<Long, GroupFragment> = HashMap()
+        var dashboardFragment: DashboardFragment? = null
 
         fun reload(now: Boolean = false) {
 
@@ -1006,8 +1068,8 @@ class ConfigurationFragment @JvmOverloads constructor(
                     if (!isAdded) return@runFunc
                     groupList = newGroupList
                     notifyDataSetChanged()
-                    if (set) groupPager.setCurrentItem(selectedGroupIndex, false)
-                    val hideTab = groupList.size < 2
+                    if (set) groupPager.setCurrentItem(selectedGroupIndex + 1, false)
+                    val hideTab = (groupList.size + 1) < 2
                     tabLayout.isGone = hideTab
                     toolbar.elevation = if (hideTab) 0F else dp2px(4).toFloat()
                     if (!select) {
@@ -1022,24 +1084,30 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
 
         override fun getItemCount(): Int {
-            return groupList.size
+            return groupList.size + 1
         }
 
         override fun createFragment(position: Int): Fragment {
+            if (position == 0) {
+                return DashboardFragment().also { dashboardFragment = it }
+            }
+            val groupPosition = position - 1
             return GroupFragment().apply {
-                proxyGroup = groupList[position]
+                proxyGroup = groupList[groupPosition]
                 groupFragments[proxyGroup.id] = this
-                if (position == selectedGroupIndex) {
+                if (groupPosition == selectedGroupIndex) {
                     selected = true
                 }
             }
         }
 
         override fun getItemId(position: Int): Long {
-            return groupList[position].id
+            if (position == 0) return -1L
+            return groupList[position - 1].id
         }
 
         override fun containsItem(itemId: Long): Boolean {
+            if (itemId == -1L) return true
             return groupList.any { it.id == itemId }
         }
 
@@ -1689,10 +1757,10 @@ class ConfigurationFragment @JvmOverloads constructor(
                     notifyDataSetChanged()
 
                     if (selectedProfileIndex != -1 && !scrolled) {
-                        layoutManager.scrollToPositionWithOffset(selectedProfileIndex, 0)
+                        (layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(selectedProfileIndex, 0)
                         scrolled = true
                     } else if (newProfiles.isNotEmpty() && !scrolled) {
-                        layoutManager.scrollToPositionWithOffset(0, 0)
+                        (layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(0, 0)
                         scrolled = true
                     }
 
@@ -1718,13 +1786,15 @@ class ConfigurationFragment @JvmOverloads constructor(
                 card.strokeWidth = ctx.resources.getDimensionPixelSize(
                     if (selected) R.dimen.card_stroke_width_selected else R.dimen.card_stroke_width
                 )
+                // 还原苹果风：选中状态使用半透明的主题色边框，避免过于突兀，保持玻璃精致感
                 card.strokeColor =
-                    if (selected) accent else ctx.getColour(R.color.card_stroke)
-                card.cardElevation = 0f // 彻底去掉阴影，确保玻璃通透感
+                    if (selected) ColorUtils.setAlphaComponent(accent, 180) else ctx.getColour(R.color.card_stroke)
+                card.cardElevation = 0f
                 card.setCardBackgroundColor(
                     if (selected) {
+                        // 稍微加深选中背景色，增强对比度
                         ColorUtils.compositeColors(
-                            ColorUtils.setAlphaComponent(accent, 32), surface
+                            ColorUtils.setAlphaComponent(accent, 48), surface
                         )
                     } else {
                         surface
@@ -1868,8 +1938,10 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
 
                 profileAddress.text = address
-                (trafficText.parent as View).isGone = (!showTraffic || proxyEntity.status <= 0) && address.isEmpty()
-
+                // 还原苹果风：不再彻底移除中间行，而是保留布局空间或根据内容动态调整，配合 XML 的 minHeight 确保条目高度统一
+                val middleLineVisible = showTraffic || address.isNotEmpty()
+                (trafficText.parent as View).isVisible = middleLineVisible
+                
                 if (proxyEntity.status <= 0) {
                     if (showTraffic) {
                         profileStatus.text = trafficText.text

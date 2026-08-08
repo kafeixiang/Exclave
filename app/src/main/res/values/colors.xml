@@ -337,14 +337,14 @@
     <color name="color_verdant_mint_300">#509177</color>
 
     <!-- 苹果风（iOS Style）语义化颜色：支持深浅模式切换 -->
-    <color name="glass_window_tint">#4DFFFFFF</color>
-    <color name="glass_card_bg">#F2FFFFFF</color>
-    <color name="glass_card_stroke">#4D000000</color> <!-- 进一步增强描边：30% 不透明度的黑，确保边缘清晰可见 -->
+    <color name="glass_window_tint">#0DFFFFFF</color> <!-- 极其通透 -->
+    <color name="glass_card_bg">#B3FFFFFF</color> <!-- 70% 白色，让模糊效果更通透 -->
+    <color name="glass_card_stroke">#E6FFFFFF</color> <!-- 亮白色描边，模拟边缘反光 -->
 
-    <!-- 还原苹果风（iOS Style）：55% 不透明度的高级磨砂感 -->
-    <color name="surface_glass">#59FFFFFF</color>
-    <color name="surface_glass_heavy">#F2FFFFFF</color>
-    <color name="card_stroke">#4DFFFFFF</color> <!-- 玻璃边缘高光 -->
+    <!-- 还原苹果风（iOS Style）：高度通透的磨砂质感 -->
+    <color name="surface_glass">#80FFFFFF</color> <!-- 50% 不透明度白色 -->
+    <color name="surface_glass_heavy">#B3FFFFFF</color> <!-- 70% 不透明度白色 -->
+    <color name="card_stroke">#F2FFFFFF</color> <!-- 极其明亮的边缘高光 -->
 
     <!-- Cupertino 23 Themes Colors -->
     <color name="cupertino_pink">#FF2D55</color>
