@@ -86,11 +86,11 @@
         },
         {
             "uniqueId": "androidx.constraintlayout:constraintlayout",
-            "artifactVersion": "2.2.1"
+            "artifactVersion": "2.2.2"
         },
         {
             "uniqueId": "androidx.constraintlayout:constraintlayout-core",
-            "artifactVersion": "1.1.1"
+            "artifactVersion": "1.1.2"
         },
         {
             "uniqueId": "androidx.coordinatorlayout:coordinatorlayout",
@@ -270,7 +270,7 @@
         },
         {
             "uniqueId": "androidx.startup:startup-runtime",
-            "artifactVersion": "1.1.1"
+            "artifactVersion": "1.2.0"
         },
         {
             "uniqueId": "androidx.swiperefreshlayout:swiperefreshlayout",
@@ -417,6 +417,14 @@
             "artifactVersion": "2.0.1"
         },
         {
+            "uniqueId": "com.squareup.okhttp3:okhttp",
+            "artifactVersion": "5.5.0"
+        },
+        {
+            "uniqueId": "com.squareup.okio:okio",
+            "artifactVersion": "3.18.1"
+        },
+        {
             "uniqueId": "com.sshtools:jini-lib",
             "artifactVersion": "0.6.14"
         },
@@ -431,6 +439,10 @@
         {
             "uniqueId": "javax.inject:javax.inject",
             "artifactVersion": "1"
+        },
+        {
+            "uniqueId": "jp.wasabeef:blurry",
+            "artifactVersion": "4.0.1"
         },
         {
             "uniqueId": "org.bouncycastle:bcpkix-jdk18on",
