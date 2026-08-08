@@ -519,9 +519,12 @@ class MainActivity : ThemedActivity(),
 
     override fun stateChanged(state: BaseService.State, profileName: String?, msg: String?) {
         changeState(state, msg, true)
-
-        (supportFragmentManager.findFragmentById(R.id.fragment_holder) as? ConfigurationFragment)
-            ?.refreshAllSelections()
+        val fragment = supportFragmentManager.findFragmentById(R.id.fragment_holder)
+        (fragment as? DashboardFragment)?.stateChanged(state, profileName)
+        (fragment as? ConfigurationFragment)?.apply {
+            stateChanged(state, profileName)
+            refreshAllSelections()
+        }
     }
 
     override fun statsUpdated(stats: List<AppStats>) {
@@ -637,9 +640,12 @@ class MainActivity : ThemedActivity(),
     override fun trafficUpdated(profileId: Long, stats: TrafficStats, isCurrent: Boolean) {
         if (profileId == 0L) return
 
-        if (isCurrent) binding.cupertinoDock.updateTraffic(
-            stats.txRateProxy, stats.rxRateProxy
-        )
+        if (isCurrent) {
+            binding.cupertinoDock.updateTraffic(stats.txRateProxy, stats.rxRateProxy)
+            val fragment = supportFragmentManager.findFragmentById(R.id.fragment_holder)
+            (fragment as? DashboardFragment)?.trafficUpdated(stats)
+            (fragment as? ConfigurationFragment)?.trafficUpdated(stats)
+        }
 
         runOnDefaultDispatcher {
             ProfileManager.postTrafficUpdated(profileId, stats)
