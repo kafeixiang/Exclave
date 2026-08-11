@@ -29,6 +29,9 @@
                         android:id="@+id/action_new_ss"
                         android:title="@string/action_shadowsocks" />
                     <item
+                        android:id="@+id/action_new_ssr"
+                        android:title="@string/action_shadowsocksr" />
+                    <item
                         android:id="@+id/action_new_trojan"
                         android:title="@string/action_trojan" />
                     <item
@@ -92,9 +95,6 @@
                             <item
                                 android:id="@+id/action_new_shadowquic"
                                 android:title="@string/action_shadowquic" />
-                            <item
-                                android:id="@+id/action_new_ssr"
-                                android:title="@string/action_shadowsocksr" />
                         </menu>
                     </item>
                 </menu>
