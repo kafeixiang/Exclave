@@ -1394,22 +1394,10 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
 
             private fun getItemAt(index: Int) = getItem(configurationIdList[index])
-
-            private fun hasMiddleRow(p: ProxyEntity): Boolean {
-                val showTraffic = p.rx + p.tx != 0L
-                var address = p.displayAddress()
-                if (p.requireBean().name.isBlank() || !DataStore.alwaysShowAddress) {
-                    address = ""
-                }
-                return !((!showTraffic || p.status <= 0) && address.isBlank())
-            }
-
-            fun neighbourHasMiddleRow(position: Int): Boolean {
-                if (position == RecyclerView.NO_POSITION) return false
-                val np = if (position % 2 == 0) position + 1 else position - 1
-                if (np < 0 || np >= itemCount) return false
-                val profile = getItemAt(np) ?: return false
-                return hasMiddleRow(profile)
+            private fun hasTraffic(p: ProxyEntity): Boolean {
+                val rx = p.rx + (p.stats?.rxTotal ?: 0L)
+                val tx = p.tx + (p.stats?.txTotal ?: 0L)
+                return rx + tx != 0L
             }
 
             override fun onCreateViewHolder(
@@ -1778,28 +1766,29 @@ class ConfigurationFragment @JvmOverloads constructor(
                 val isDoubleColumn = DataStore.groupLayoutMode == 1
                 if (isDoubleColumn) {
                     middleLine.orientation = LinearLayout.VERTICAL
-                    bottomLine.orientation = LinearLayout.VERTICAL
+                    bottomLine.orientation = LinearLayout.HORIZONTAL
 
-                    profileAddress.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                    trafficText.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    profileAddress.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0.0f)
+                    trafficText.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0.0f).apply {
                         marginStart = 0
                     }
 
-                    profileType.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                    profileStatus.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                        marginStart = 0
+                    profileType.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
+                    profileStatus.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0.0f).apply {
+                        marginStart = dp2px(8)
                     }
                 } else {
+                    // 彻底还原单列模式：恢复 XML 中的默认布局参数
                     middleLine.orientation = LinearLayout.HORIZONTAL
                     bottomLine.orientation = LinearLayout.HORIZONTAL
 
                     profileAddress.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
-                    trafficText.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    trafficText.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0.0f).apply {
                         marginStart = dp2px(8)
                     }
 
                     profileType.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
-                    profileStatus.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    profileStatus.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0.0f).apply {
                         marginStart = dp2px(8)
                     }
                 }
@@ -1833,9 +1822,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
 
                 profileAddress.text = address
-                val hasMiddle = !((!showTraffic || proxyEntity.status <= 0) && address.isEmpty())
-                val neighbourHasMiddle = isDoubleColumn && adapter.neighbourHasMiddleRow(bindingAdapterPosition)
-                (trafficText.parent as View).isVisible = hasMiddle || neighbourHasMiddle
+                (trafficText.parent as View).isGone = (!showTraffic || proxyEntity.status <= 0) && address.isEmpty()
 
                 if (proxyEntity.status <= 0) {
                     if (showTraffic) {
@@ -2006,9 +1993,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                     tx += stats.txTotal
                 }
 
-                val showTraffic = rx + tx != 0L
-                trafficText.isVisible = showTraffic
-                if (showTraffic) {
+                val selfHasTraffic = rx + tx != 0L
+                trafficText.isVisible = selfHasTraffic
+                if (selfHasTraffic) {
                     trafficText.text = view.context.getString(
                         R.string.traffic,
                         FormatFileSizeCompat.formatFileSize(view.context, tx, DataStore.useIECUnit),
@@ -2020,11 +2007,12 @@ class ConfigurationFragment @JvmOverloads constructor(
                 if (proxyEntity.requireBean().name.isEmpty() || !parent.alwaysShowAddress) {
                     address = ""
                 }
+                val selfHasAddress = address.isNotEmpty()
 
-                (trafficText.parent as View).isGone = (!showTraffic || proxyEntity.status <= 0) && address.isEmpty()
+                (trafficText.parent as View).isGone = !selfHasTraffic && !selfHasAddress
 
                 if (proxyEntity.status <= 0) {
-                    if (showTraffic) {
+                    if (selfHasTraffic) {
                         profileStatus.text = trafficText.text
                         profileStatus.setTextColor(requireContext().getColorAttr(android.R.attr.textColorSecondary))
                         trafficText.text = ""
