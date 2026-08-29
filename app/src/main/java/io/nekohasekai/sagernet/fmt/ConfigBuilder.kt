@@ -1790,8 +1790,11 @@ fun buildV2RayConfig(
                                     reuse = bean.reuse
                                     if (version == SnellBean.VERSION_4) {
                                         obfsMode = bean.obfsMode
-                                        if (bean.obfsMode != SnellBean.OBFS_NONE && bean.obfsHost.isNotEmpty()) {
+                                        if ((bean.obfsMode == SnellBean.OBFS_HTTP || bean.obfsMode == SnellBean.OBFS_TLS) && bean.obfsHost.isNotEmpty()) {
                                             obfsHost = bean.obfsHost
+                                        }
+                                        if (bean.obfsMode == SnellBean.OBFS_HTTP && bean.obfsURI.isNotEmpty()) {
+                                            obfsURI = bean.obfsURI
                                         }
                                     }
                                     if (version == SnellBean.VERSION_6) {

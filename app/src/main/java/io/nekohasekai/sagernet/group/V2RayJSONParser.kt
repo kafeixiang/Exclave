@@ -1750,6 +1750,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                         "http" -> {
                             snellBean.obfsMode = SnellBean.OBFS_HTTP
                             snellBean.obfsHost = settings.getString("obfsHost")
+                            snellBean.obfsURI = settings.getString("obfsURI")
                         }
                         "tls" -> {
                             snellBean.obfsMode = SnellBean.OBFS_TLS
