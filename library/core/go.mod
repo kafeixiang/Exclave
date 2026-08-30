@@ -1,8 +1,8 @@
 module libexclavecore
 
-go 1.26.0
+go 1.26.3
 
-require github.com/exclavenetwork/libexclavecore v0.0.0-20260830150043-ed1b761e76a4
+require github.com/exclavenetwork/libexclavecore v0.0.0-20260830153031-d20bdc659d06
 
 require (
 	filippo.io/age v1.3.2 // indirect
@@ -71,9 +71,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260825221802-da73d73af1c5 // indirect
 	google.golang.org/grpc v1.83.2 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
-	gvisor.dev/gvisor v0.0.0-20250503011706-39ed1f5ac29c // indirect
+	gvisor.dev/gvisor v0.0.0-20260615183942-8d2360fd4d5e // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 )
-
-// workaround https://github.com/google/gvisor/commit/868dfbce4fd59f03145e2bc5ac0b585917c371fa
-replace gvisor.dev/gvisor => gvisor.dev/gvisor v0.0.0-20250429202743-3a608a52255d
