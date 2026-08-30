@@ -11,11 +11,11 @@ activity-ktx = { module = "androidx.activity:activity-ktx", version = "1.13.0" }
 #noinspection SimilarGradleDependency
 fragment-ktx = { module = "androidx.fragment:fragment-ktx", version = "1.9.0" }
 #noinspection SimilarGradleDependency
-camera-view = { module = "androidx.camera:camera-view", version = "1.6.1" }
+camera-view = { module = "androidx.camera:camera-view", version = "1.6.2" }
 #noinspection SimilarGradleDependency
-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version = "1.6.1" }
+camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version = "1.6.2" }
 #noinspection SimilarGradleDependency
-camera-camera2 = { module = "androidx.camera:camera-camera2", version = "1.6.1" }
+camera-camera2 = { module = "androidx.camera:camera-camera2", version = "1.6.2" }
 swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version = "1.2.0" }
 #noinspection SimilarGradleDependency
 appcompat = { module = "androidx.appcompat:appcompat", version = "1.8.0" }
@@ -78,5 +78,5 @@ material-minSdk21 = { module = "com.google.android.material:material", version =
 
 [plugins]
 ksp = { id = "com.google.devtools.ksp", version = "2.3.11" }
-aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version = "15.1.1" }
+aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version = "15.2.0" }
 protobuf = { id = "com.google.protobuf", version = "0.10.0" }

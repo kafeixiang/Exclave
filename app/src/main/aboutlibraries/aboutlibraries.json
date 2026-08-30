@@ -34,7 +34,7 @@
         },
         {
             "uniqueId": "androidx.camera.featurecombinationquery:featurecombinationquery",
-            "artifactVersion": "1.6.1"
+            "artifactVersion": "1.6.2"
         },
         {
             "uniqueId": "androidx.camera.viewfinder:viewfinder-core",
@@ -42,27 +42,27 @@
         },
         {
             "uniqueId": "androidx.camera:camera-camera2",
-            "artifactVersion": "1.6.1"
+            "artifactVersion": "1.6.2"
         },
         {
             "uniqueId": "androidx.camera:camera-camera2-pipe",
-            "artifactVersion": "1.6.1"
+            "artifactVersion": "1.6.2"
         },
         {
             "uniqueId": "androidx.camera:camera-core",
-            "artifactVersion": "1.6.1"
+            "artifactVersion": "1.6.2"
         },
         {
             "uniqueId": "androidx.camera:camera-lifecycle",
-            "artifactVersion": "1.6.1"
+            "artifactVersion": "1.6.2"
         },
         {
             "uniqueId": "androidx.camera:camera-video",
-            "artifactVersion": "1.6.1"
+            "artifactVersion": "1.6.2"
         },
         {
             "uniqueId": "androidx.camera:camera-view",
-            "artifactVersion": "1.6.1"
+            "artifactVersion": "1.6.2"
         },
         {
             "uniqueId": "androidx.cardview:cardview",
