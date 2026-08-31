@@ -622,7 +622,7 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
             return listOf(Hysteria2Bean().apply {
                 serverAddress = proxy.getString("server") ?: return listOf()
                 val port = proxy.getInt("port")?.takeIf { it > 0 }
-                val ports = proxy.getString("ports")?.toIntRanges()
+                val ports = proxy.getString("ports")?.takeIf { it.isNotEmpty() }?.toIntRanges()
                 if (port == null && ports == null) return listOf()
                 serverPorts = ports?.joinToString(",") {
                     if (it.third) it.first.toString() else "${it.first}-${it.second}"
@@ -760,9 +760,12 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
             return listOf(MieruBean().apply {
                 serverAddress = proxy.getString("server") ?: return listOf()
                 serverPort = proxy.getInt("port")
-                portRange = proxy.getStringArray("port-range")?.joinToString("\n")
+                portRange = proxy.getString("port-range")
                 if (serverPort == null && portRange == null) {
                     return listOf()
+                }
+                if (!portRange.isNullOrEmpty()) {
+                    serverPort = 0
                 }
                 username = proxy.getString("username")
                 password = proxy.getString("password")
