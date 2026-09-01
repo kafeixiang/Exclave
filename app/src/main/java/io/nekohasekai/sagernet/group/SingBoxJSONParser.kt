@@ -300,8 +300,9 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                 }
                 "vmess" -> {
                     v2rayBean as VMessBean
-                    outbound.getString("uuid")?.also {
-                        v2rayBean.uuid = uuidOrGenerate(it)
+                    outbound.getString("uuid").orEmpty().also {
+                        // see https://github.com/SagerNet/sing-vmess/blob/31ec11e8790c48a4bf11711806a61e929ee6b89d/client.go#L37-L40
+                        v2rayBean.uuid = parseUUID(it)?.toHexDashString() ?: uuid5(it)
                     }
                     outbound.getString("security")?.also {
                         if (it !in supportedVmessMethod) return listOf()
@@ -321,8 +322,9 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                 }
                 "vless" -> {
                     v2rayBean as VLESSBean
-                    outbound.getString("uuid")?.also {
-                        v2rayBean.uuid = uuidOrGenerate(it)
+                    outbound.getString("uuid").orEmpty().also {
+                        // see https://github.com/SagerNet/sing-vmess/blob/31ec11e8790c48a4bf11711806a61e929ee6b89d/vless/client.go#L28-L31
+                        v2rayBean.uuid = parseUUID(it)?.toHexDashString() ?: uuid5(it)
                     }
                     v2rayBean.packetEncoding = when (outbound.getString("packet_encoding")) {
                         "packetaddr" -> "packet"
@@ -504,8 +506,8 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                 outbound.getInt("server_port")?.also {
                     serverPort = it
                 } ?: return listOf()
-                outbound.getString("uuid")?.also {
-                    uuid = it
+                outbound.getString("uuid").orEmpty().also {
+                    uuid = parseUUID(it)?.toHexDashString() ?: return listOf()
                 }
                 outbound.getString("password")?.also {
                     password = it

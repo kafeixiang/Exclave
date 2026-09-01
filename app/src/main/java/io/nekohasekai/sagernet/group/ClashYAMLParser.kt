@@ -53,6 +53,7 @@ import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.ktx.*
 import kotlin.io.encoding.Base64
 import libexclavecore.Libexclavecore
+import kotlin.uuid.Uuid
 
 fun parseClashProxies(proxies: List<Map<String, Any?>>): List<AbstractBean> {
     val beans = mutableListOf<AbstractBean>()
@@ -245,8 +246,11 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                 if (bean.security == "tls") {
                     bean.sni = proxy.getString("servername")
                 }
-                proxy.getString("uuid")?.also {
-                    bean.uuid = uuidOrGenerate(it)
+                // https://github.com/MetaCubeX/mihomo/blob/68ec4fae652318bb1474bdfca3918191b167806d/transport/vless/vless.go#L60
+                // https://github.com/MetaCubeX/mihomo/blob/68ec4fae652318bb1474bdfca3918191b167806d/transport/vmess/vmess.go#L87
+                // https://github.com/MetaCubeX/mihomo/blob/68ec4fae652318bb1474bdfca3918191b167806d/common/utils/uuid.go#L46-L52
+                proxy.getString("uuid").orEmpty().also {
+                    bean.uuid = parseUUID(it)?.toHexDashString() ?: uuid5(it)
                 }
             }
             if (bean.security == "tls") {
@@ -709,7 +713,10 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                 return listOf(Tuic5Bean().apply {
                     serverAddress = proxy.getString("ip") ?: proxy.getString("server") ?: return listOf()
                     serverPort = proxy.getInt("port")?.takeIf { it > 0 } ?: return listOf()
-                    uuid = proxy.getString("uuid")
+                    // https://github.com/MetaCubeX/mihomo/blob/68ec4fae652318bb1474bdfca3918191b167806d/adapter/outbound/tuic.go#L289
+                    proxy.getString("uuid").orEmpty().also {
+                        uuid = parseUUID(it)?.toHexDashString() ?: Uuid.NIL.toHexDashString()
+                    }
                     password = proxy.getString("password")
                     udpRelayMode = when (val mode = proxy.getString("udp-relay-mode")) {
                         in supportedTuic5RelayMode -> mode

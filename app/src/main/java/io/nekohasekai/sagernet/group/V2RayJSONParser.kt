@@ -49,6 +49,7 @@ import io.nekohasekai.sagernet.fmt.v2ray.VLESSBean
 import io.nekohasekai.sagernet.fmt.v2ray.VMessBean
 import io.nekohasekai.sagernet.fmt.v2ray.legacyVlessFlow
 import io.nekohasekai.sagernet.fmt.v2ray.nonRawTransportName
+import io.nekohasekai.sagernet.fmt.v2ray.parseRayUUID
 import io.nekohasekai.sagernet.fmt.v2ray.supportedKcpQuicHeaderType
 import io.nekohasekai.sagernet.fmt.v2ray.supportedQuicSecurity
 import io.nekohasekai.sagernet.fmt.v2ray.supportedVlessFlow
@@ -57,7 +58,9 @@ import io.nekohasekai.sagernet.fmt.v2ray.supportedXhttpMode
 import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.ktx.*
 import libexclavecore.Libexclavecore
+import java.io.ByteArrayOutputStream
 import kotlin.io.encoding.Base64
+import kotlin.uuid.Uuid
 
 fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
     // v2ray JSONv4 config, Xray config and JSONv4 config of Exclave's v2ray fork only
@@ -694,7 +697,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                                 v2rayBean.serverPort = it
                             } ?: return listOf()
                             settings.getString("id")?.also {
-                                v2rayBean.uuid = uuidOrGenerate(it)
+                                v2rayBean.uuid = parseRayUUID(it) ?: return listOf()
                             }
                             settings.getString("security")?.lowercase()?.also {
                                 if (it !in supportedVmessMethod) return listOf()
@@ -720,7 +723,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                             } ?: return listOf()
                             vnext.getArray("users")?.get(0)?.also { user ->
                                 user.getString("id")?.also {
-                                    v2rayBean.uuid = uuidOrGenerate(it)
+                                    v2rayBean.uuid = parseRayUUID(it) ?: return listOf()
                                 }
                                 user.getString("security")?.lowercase()?.also {
                                     if (it !in supportedVmessMethod) return listOf()
@@ -761,7 +764,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                                 v2rayBean.serverPort = it
                             } ?: return listOf()
                             settings.getString("id")?.also {
-                                v2rayBean.uuid = uuidOrGenerate(it)
+                                v2rayBean.uuid = parseRayUUID(it) ?: return listOf()
                             }
                             settings.getString("flow")?.also {
                                 when (it) {
@@ -798,7 +801,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                             } ?: return listOf()
                             vnext.getArray("users")?.get(0)?.also { user ->
                                 user.getString("id")?.also {
-                                    v2rayBean.uuid = uuidOrGenerate(it)
+                                    v2rayBean.uuid = parseRayUUID(it) ?: return listOf()
                                 }
                                 user.getString("flow")?.also {
                                     when (it) {
@@ -1270,7 +1273,11 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                     tuic5Bean.serverPort = it
                 } ?: return listOf()
                 settings.getString("uuid")?.also {
-                    tuic5Bean.uuid = it
+                    try {
+                        Uuid.parseHexDashOrNull(it)
+                    } catch (_: Exception) {
+                        return listOf()
+                    }
                 }
                 settings.getString("password")?.also {
                     tuic5Bean.password = it
@@ -1593,6 +1600,11 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                     juicityBean.serverPort = it
                 } ?: return listOf()
                 settings.getString("uuid")?.also {
+                    try {
+                        Uuid.parseHexDashOrNull(it)
+                    } catch (_: Exception) {
+                        return listOf()
+                    }
                     juicityBean.uuid = it
                 }
                 settings.getString("password")?.also {

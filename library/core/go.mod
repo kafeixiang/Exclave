@@ -2,7 +2,7 @@ module libexclavecore
 
 go 1.26.0
 
-require github.com/exclavenetwork/libexclavecore v0.0.0-20260901042237-71728be25996
+require github.com/exclavenetwork/libexclavecore v0.0.0-20260901141744-801b59a22f87
 
 require (
 	filippo.io/age v1.3.2 // indirect
@@ -16,7 +16,7 @@ require (
 	github.com/dgryski/go-camellia v0.0.0-20191119043421-69a8a13fb23d // indirect
 	github.com/dgryski/go-metro v0.0.0-20250106013310-edb8663e5e33 // indirect
 	github.com/enfein/mieru/v3 v3.36.0 // indirect
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260830144231-518b923d1f30 // indirect
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260901141241-37e81eb126a8 // indirect
 	github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065 // indirect
 	github.com/exclavenetwork/hysteria/core/v2 v2.12.2-1 // indirect
 	github.com/exclavenetwork/hysteria/extras/v2 v2.12.2-1 // indirect

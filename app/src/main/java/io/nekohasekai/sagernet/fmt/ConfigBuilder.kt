@@ -120,7 +120,6 @@ import io.nekohasekai.sagernet.ktx.mkPort
 import io.nekohasekai.sagernet.ktx.parseJson
 import io.nekohasekai.sagernet.ktx.toHysteriaPort
 import io.nekohasekai.sagernet.ktx.unescapeLineFeed
-import io.nekohasekai.sagernet.ktx.uuidOrGenerate
 import io.nekohasekai.sagernet.utils.PackageCache
 import kotlin.io.encoding.Base64
 import libexclavecore.Libexclavecore
@@ -668,7 +667,7 @@ fun buildV2RayConfig(
                                                     port = bean.serverPort
                                                     users = listOf(VMessOutboundConfigurationObject.ServerObject.UserObject()
                                                         .apply {
-                                                            id = uuidOrGenerate(bean.uuid)
+                                                            id = bean.uuid
                                                             if (bean.alterId > 0) {
                                                                 alterId = bean.alterId
                                                             }
@@ -706,7 +705,7 @@ fun buildV2RayConfig(
                                                     port = bean.serverPort
                                                     users = listOf(VLESSOutboundConfigurationObject.ServerObject.UserObject()
                                                         .apply {
-                                                            id = uuidOrGenerate(bean.uuid)
+                                                            id = bean.uuid
                                                             encryption = bean.encryption
                                                             if (bean.flow.isNotEmpty()) {
                                                                 flow = bean.flow
