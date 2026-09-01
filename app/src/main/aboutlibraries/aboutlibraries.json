@@ -270,7 +270,7 @@
         },
         {
             "uniqueId": "androidx.startup:startup-runtime",
-            "artifactVersion": "1.1.1"
+            "artifactVersion": "1.2.0"
         },
         {
             "uniqueId": "androidx.swiperefreshlayout:swiperefreshlayout",
@@ -415,6 +415,14 @@
         {
             "uniqueId": "com.simplecityapps:recyclerview-fastscroll",
             "artifactVersion": "2.0.1"
+        },
+        {
+            "uniqueId": "com.squareup.okhttp3:okhttp",
+            "artifactVersion": "5.5.0"
+        },
+        {
+            "uniqueId": "com.squareup.okio:okio",
+            "artifactVersion": "3.18.1"
         },
         {
             "uniqueId": "com.sshtools:jini-lib",
