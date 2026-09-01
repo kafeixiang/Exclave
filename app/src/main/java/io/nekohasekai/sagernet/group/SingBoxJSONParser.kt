@@ -47,9 +47,11 @@ import io.nekohasekai.sagernet.fmt.v2ray.VMessBean
 import io.nekohasekai.sagernet.fmt.v2ray.supportedVmessMethod
 import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.ktx.*
+import java.io.StringReader
 import kotlin.io.encoding.Base64
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
+import org.bouncycastle.openssl.PEMParser
 
 fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
     when (val type = outbound.getString("type", ignoreCase = false)) {
@@ -1231,24 +1233,14 @@ private fun JsonObject.getByteArrayArray(key: String): Array<ByteArray>? {
     return ret.toTypedArray()
 }
 
-// this is not strict, but enough
 private fun parseECHConfigPem(pem: String): String? {
-    if (pem.split("-----BEGIN ECH CONFIGS-----").size - 1 != 1) {
-        return null
-    }
-    if (pem.split("-----END ECH CONFIGS-----").size - 1 != 1) {
-        return null
-    }
-    return try {
-         Base64.encode(Base64.decode(pem
-            .substringAfter("-----BEGIN ECH CONFIGS-----")
-            .substringBefore("-----END ECH CONFIGS-----")
-            .replace("\r", "")
-            .replace("\n", "")
-             .replace("\t", "")
-             .replace(" ", "")
-        ))
+    try {
+        val obj = PEMParser(StringReader(pem)).readPemObject()
+        if (obj.type != "ECH CONFIGS") {
+            return null
+        }
+        return Base64.encode(obj.content)
     } catch (_: Exception) {
-        null
+        return null
     }
 }

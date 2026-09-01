@@ -71,8 +71,8 @@ github.com/exclavenetwork/hysteria/core/v2 v2.12.2-1 h1:zglF+7VgjHVO6guUPO+AHuZd
 github.com/exclavenetwork/hysteria/core/v2 v2.12.2-1/go.mod h1:R5Uz48F3GDpNQaQOL8CWr6HONzkQUnecFZyMoAxXPk4=
 github.com/exclavenetwork/hysteria/extras/v2 v2.12.2-1 h1:FL3ItGsQFE/037i1f86I9Bd5gPGN1R7PS9c3qvPN+rM=
 github.com/exclavenetwork/hysteria/extras/v2 v2.12.2-1/go.mod h1:IKo1/vSm5na6Sd/4PCoB3j49rlC04i0j1v+OTCMDwrk=
-github.com/exclavenetwork/libexclavecore v0.0.0-20260830153737-441ffc310c4b h1:hYKcD2GnIFVws9ZDJfpFm/j+AApxumYRNmkIkNd0/ZQ=
-github.com/exclavenetwork/libexclavecore v0.0.0-20260830153737-441ffc310c4b/go.mod h1:tRfnIxglFCBa3sIOCTbdZ/6X/g9p3RMUyyGARazLBRQ=
+github.com/exclavenetwork/libexclavecore v0.0.0-20260901042237-71728be25996 h1:Gs2O/sgk1Xq3tH59jixlgJT3B1dID+zX0/AD+QAGpMo=
+github.com/exclavenetwork/libexclavecore v0.0.0-20260901042237-71728be25996/go.mod h1:tRfnIxglFCBa3sIOCTbdZ/6X/g9p3RMUyyGARazLBRQ=
 github.com/exclavenetwork/sing-juicity v0.3.0-beta.2 h1:4x8X8vQsK8w6I0tegJoWLjQMqEnaRehmd6s4wqVCOWo=
 github.com/exclavenetwork/sing-juicity v0.3.0-beta.2/go.mod h1:nvOG91JHNrsYkNAtPG9zG3/flKpNm1EFW5k8IIfBaLk=
 github.com/exclavenetwork/sing-shadowquic v0.0.0-20260828154517-83f88a9ce329 h1:og9mvkdpljwOBs1XTJ0FabQdXAwQtbVDBEHKDrOvh3g=

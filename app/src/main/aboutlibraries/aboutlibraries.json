@@ -433,6 +433,18 @@
             "artifactVersion": "1"
         },
         {
+            "uniqueId": "org.bouncycastle:bcpkix-jdk18on",
+            "artifactVersion": "1.85"
+        },
+        {
+            "uniqueId": "org.bouncycastle:bcprov-jdk18on",
+            "artifactVersion": "1.85"
+        },
+        {
+            "uniqueId": "org.bouncycastle:bcutil-jdk18on",
+            "artifactVersion": "1.85"
+        },
+        {
             "uniqueId": "org.checkerframework:checker-qual",
             "artifactVersion": "3.43.0"
         },
