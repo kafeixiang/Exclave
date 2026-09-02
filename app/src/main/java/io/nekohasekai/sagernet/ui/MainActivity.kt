@@ -73,7 +73,6 @@ import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.noties.markwon.Markwon
 import libexclavecore.Libexclavecore
-import jp.wasabeef.blurry.Blurry
 import android.widget.ImageView
 
 class MainActivity : ThemedActivity(),
@@ -180,20 +179,27 @@ class MainActivity : ThemedActivity(),
         // 初始化 Cupertino 主题色和背景光
         updateCupertinoTheme()
 
+        var lastBlurRadius = -1f
         binding.drawerLayout.addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.SimpleDrawerListener() {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     if (slideOffset > 0.01f) {
-                        // 增大模糊半径，配合 98% 白色的侧边栏背景，达到“磨砂白”效果
-                        val radius = slideOffset * 40f 
-                        val blurEffect = RenderEffect.createBlurEffect(
-                            radius,
-                            radius,
-                            Shader.TileMode.DECAL
-                        )
-                        binding.coordinator.setRenderEffect(blurEffect)
+                        // 节流处理 RenderEffect 模糊更新，提升侧滑 120Hz 帧率
+                        val radius = slideOffset * 40f
+                        if (kotlin.math.abs(radius - lastBlurRadius) >= 2f) {
+                            lastBlurRadius = radius
+                            val blurEffect = RenderEffect.createBlurEffect(
+                                radius,
+                                radius,
+                                Shader.TileMode.DECAL
+                            )
+                            binding.coordinator.setRenderEffect(blurEffect)
+                        }
                     } else {
-                        binding.coordinator.setRenderEffect(null)
+                        if (lastBlurRadius != 0f) {
+                            lastBlurRadius = 0f
+                            binding.coordinator.setRenderEffect(null)
+                        }
                     }
                 }
             }
