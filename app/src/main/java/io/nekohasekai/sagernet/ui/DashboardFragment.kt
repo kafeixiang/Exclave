@@ -5,8 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -60,6 +63,15 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         recyclerView?.layoutManager = LinearLayoutManager(context)
         recyclerView?.applyGlassBlur()
 
+        recyclerView?.let { rv ->
+            ViewCompat.setOnApplyWindowInsetsListener(rv) { v, insets ->
+                val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                val baseBottomPx = v.resources.getDimensionPixelSize(R.dimen.main_list_padding_bottom)
+                v.updatePadding(bottom = baseBottomPx + bars.bottom)
+                insets
+            }
+        }
+
         adapter = DashboardAdapter()
         recyclerView?.adapter = adapter
 
@@ -108,8 +120,26 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
 
+            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+                super.onSelectedChanged(viewHolder, actionState)
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG && viewHolder != null) {
+                    viewHolder.itemView.animate()
+                        .scaleX(1.03f)
+                        .scaleY(1.03f)
+                        .translationZ(12f)
+                        .setDuration(150)
+                        .start()
+                }
+            }
+
             override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
                 super.clearView(recyclerView, viewHolder)
+                viewHolder.itemView.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .translationZ(0f)
+                    .setDuration(150)
+                    .start()
                 // 保存排序结果
                 DataStore.dashboardOrder = adapter.items.joinToString(",") { it.id }
             }
@@ -149,8 +179,8 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         }
     }
 
-    private fun testLatency() {
-        val targets = listOf("www.google.com", "www.youtube.com", "github.com")
+    private fun testLatency(targetHost: String? = null) {
+        val targets = if (targetHost != null) listOf(targetHost) else listOf("www.google.com", "www.youtube.com", "github.com")
         targets.forEach { host ->
             latencyMap[host] = -2 // 测试中
             adapter.updateItem(ItemType.LATENCY)
@@ -333,8 +363,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
         inner class LatencyViewHolder(val binding: ItemDashboardLatencyBinding) : RecyclerView.ViewHolder(binding.root) {
             fun bind() {
-                val testAction = View.OnClickListener { testLatency() }
-                binding.latencyCardTitle.setOnClickListener(testAction)
+                binding.latencyCardTitle.setOnClickListener { testLatency() }
                 
                 setupItem(binding.latencyGoogle, "www.google.com")
                 setupItem(binding.latencyYoutube, "www.youtube.com")
@@ -357,7 +386,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         textView.setTextColor(ContextCompat.getColor(itemView.context, R.color.material_red_500))
                     }
                 }
-                textView.setOnClickListener { testLatency() }
+                textView.setOnClickListener { testLatency(host) }
             }
         }
 
