@@ -103,12 +103,12 @@ import io.nekohasekai.sagernet.fmt.v2ray.V2RayConfig.WebSocketObject
 import io.nekohasekai.sagernet.fmt.v2ray.V2RayConfig.WireGuardOutboundConfigurationObject
 import io.nekohasekai.sagernet.fmt.v2ray.VLESSBean
 import io.nekohasekai.sagernet.fmt.v2ray.VMessBean
+import io.nekohasekai.sagernet.fmt.v2ray.getXrayRange
 import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.ktx.app
 import io.nekohasekai.sagernet.ktx.getArray
 import io.nekohasekai.sagernet.ktx.getBoolean
 import io.nekohasekai.sagernet.ktx.getBooleanProperty
-import io.nekohasekai.sagernet.ktx.getInt
 import io.nekohasekai.sagernet.ktx.getObject
 import io.nekohasekai.sagernet.ktx.getString
 import io.nekohasekai.sagernet.ktx.getStringArray
@@ -1060,19 +1060,13 @@ fun buildV2RayConfig(
                                                     try {
                                                         parseJson(bean.splithttpExtra).asJsonObject?.also { extra ->
                                                             // fuck RPRX `extra`
-                                                            extra.getInt("scMaxEachPostBytes", ignoreCase = true)?.also {
-                                                                scMaxEachPostBytes = it.toString()
-                                                            } ?: extra.getString("scMaxEachPostBytes", ignoreCase = true)?.also {
+                                                            extra.getXrayRange("scMaxEachPostBytes")?.also {
                                                                 scMaxEachPostBytes = it
                                                             }
-                                                            extra.getInt("scMinPostsIntervalMs", ignoreCase = true)?.also {
-                                                                scMinPostsIntervalMs = it.toString()
-                                                            } ?: extra.getString("scMinPostsIntervalMs", ignoreCase = true)?.also {
+                                                            extra.getXrayRange("scMinPostsIntervalMs")?.also {
                                                                 scMinPostsIntervalMs = it
                                                             }
-                                                            extra.getInt("xPaddingBytes", ignoreCase = true)?.also {
-                                                                xPaddingBytes = it.toString()
-                                                            } ?: extra.getString("xPaddingBytes", ignoreCase = true)?.also {
+                                                            extra.getXrayRange("xPaddingBytes")?.also {
                                                                 xPaddingBytes = it
                                                             }
                                                             extra.getBoolean("noGRPCHeader", ignoreCase = true)?.also {
@@ -1088,29 +1082,19 @@ fun buildV2RayConfig(
                                                             }
                                                             extra.getObject("xmux", ignoreCase = true)?.also { xmuxSettings ->
                                                                 xmux = SplitHTTPObject.XmuxObject().apply {
-                                                                    xmuxSettings.getInt("maxConcurrency", ignoreCase = true)?.also {
-                                                                        maxConcurrency = it.toString()
-                                                                    } ?: xmuxSettings.getString("maxConcurrency", ignoreCase = true)?.also {
+                                                                    xmuxSettings.getXrayRange("maxConcurrency")?.also {
                                                                         maxConcurrency = it
                                                                     }
-                                                                    xmuxSettings.getInt("maxConnections", ignoreCase = true)?.also {
-                                                                        maxConnections = it.toString()
-                                                                    } ?: xmuxSettings.getString("maxConnections", ignoreCase = true)?.also {
+                                                                    xmuxSettings.getXrayRange("maxConnections")?.also {
                                                                         maxConnections = it
                                                                     }
-                                                                    xmuxSettings.getInt("cMaxReuseTimes", ignoreCase = true)?.also {
-                                                                        cMaxReuseTimes = it.toString()
-                                                                    } ?: xmuxSettings.getString("cMaxReuseTimes", ignoreCase = true)?.also {
+                                                                    xmuxSettings.getXrayRange("cMaxReuseTimes")?.also {
                                                                         cMaxReuseTimes = it
                                                                     }
-                                                                    xmuxSettings.getInt("hMaxRequestTimes", ignoreCase = true)?.also {
-                                                                        hMaxRequestTimes = it.toString()
-                                                                    } ?: xmuxSettings.getString("hMaxRequestTimes", ignoreCase = true)?.also {
+                                                                    xmuxSettings.getXrayRange("hMaxRequestTimes")?.also {
                                                                         hMaxRequestTimes = it
                                                                     }
-                                                                    xmuxSettings.getInt("hMaxReusableSecs", ignoreCase = true)?.also {
-                                                                        hMaxReusableSecs = it.toString()
-                                                                    } ?: xmuxSettings.getString("hMaxReusableSecs", ignoreCase = true)?.also {
+                                                                    xmuxSettings.getXrayRange("hMaxReusableSecs")?.also {
                                                                         hMaxReusableSecs = it
                                                                     }
                                                                 }
@@ -1157,9 +1141,7 @@ fun buildV2RayConfig(
                                                             extra.getString("uplinkDataKey", ignoreCase = true)?.also {
                                                                 uplinkDataKey = it
                                                             }
-                                                            extra.getInt("uplinkChunkSize", ignoreCase = true)?.also {
-                                                                uplinkChunkSize = it.toString()
-                                                            } ?: extra.getString("uplinkChunkSize", ignoreCase = true)?.also {
+                                                            extra.getXrayRange("uplinkChunkSize")?.also {
                                                                 uplinkChunkSize = it
                                                             }
                                                         }
