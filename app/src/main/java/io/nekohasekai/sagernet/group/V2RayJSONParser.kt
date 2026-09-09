@@ -58,7 +58,6 @@ import io.nekohasekai.sagernet.fmt.v2ray.supportedXhttpMode
 import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.ktx.*
 import libexclavecore.Libexclavecore
-import java.io.ByteArrayOutputStream
 import kotlin.io.encoding.Base64
 import kotlin.uuid.Uuid
 
@@ -637,18 +636,6 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                                 // ban Xray UDP finalmask
                                 finalmask.getArray("udp")?.takeIf { it.isNotEmpty() }?.also {
                                     return listOf()
-                                }
-                                // ban Xray QUIC port hopping
-                                finalmask.getObject("quicParams")?.also { quicParams ->
-                                    quicParams.getObject("udphop")?.also { udphop ->
-                                        udphop.getInt("ports")?.also {
-                                            return listOf()
-                                        } ?: udphop.getString("ports")?.takeIf { it.isNotEmpty() }?.also {
-                                            it.split(",").joinToString(",") { it.trim() }
-                                                .takeIf { it.isValidHysteriaPort(disallowFromGreaterThanTo = true) }
-                                                ?.also { return listOf() }
-                                        }
-                                    }
                                 }
                             }
                         }
@@ -1913,25 +1900,25 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                                 hysteriaSettings.getObject("udphop")?.also { udphop ->
                                     udphop.getInt("port")?.also {
                                         if (it > 0) hysteria2Bean.serverPorts = it.toString()
-                                    } ?: udphop.getString("port")?.takeIf { it.isNotEmpty() }?.also {
+                                    } ?: udphop.getString("port")?.takeIf { it.isNotEmpty() }?.also { portRange ->
                                         // invalid port is ignored
-                                        hysteria2Bean.serverPorts = (it.split(",").joinToString(",") { it.trim() })
+                                        hysteria2Bean.serverPorts = (portRange.split(",").joinToString(",") { it.trim() })
                                             .takeIf { it.isValidHysteriaPort(disallowFromGreaterThanTo = true) }
                                     }
                                     udphop.getLong("interval")?.also {
                                         hysteria2Bean.hopInterval = it.takeIf { it > 0 }
                                     } ?: udphop.getString("interval")?.also {
-                                        val intervalLong = it.toLongOrNull()
-                                        if (intervalLong != null && intervalLong > 0) {
-                                            hysteria2Bean.hopInterval = intervalLong
+                                        val interval = it.toLongOrNull()
+                                        if (interval != null && interval > 0) {
+                                            hysteria2Bean.hopInterval = interval
                                         } else {
-                                            val intervalStringList = it.split("-")
-                                            if (intervalStringList.size == 2) {
-                                                val intervalLong0 = intervalStringList[0].toLongOrNull()
-                                                val intervalLong1 = intervalStringList[1].toLongOrNull()
-                                                if (intervalLong0 != null && intervalLong0 > 0 && intervalLong1 != null && intervalLong1 > 0) {
-                                                    hysteria2Bean.hopIntervalMin = minOf(intervalLong0, intervalLong1)
-                                                    hysteria2Bean.hopIntervalMax = maxOf(intervalLong0, intervalLong1)
+                                            val list = it.split("-")
+                                            if (list.size == 2) {
+                                                val from = list[0].toLongOrNull()
+                                                val to = list[1].toLongOrNull()
+                                                if (from != null && from > 0 && to != null && to > 0) {
+                                                    hysteria2Bean.hopIntervalMin = minOf(from, to)
+                                                    hysteria2Bean.hopIntervalMax = maxOf(from, to)
                                                 }
                                             }
                                         }
@@ -1943,73 +1930,122 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                     }
                 }
                 streamSettings.getObject("finalmask")?.also { finalmask ->
-                    finalmask.getArray("udp")?.takeIf { it.isNotEmpty() }?.also { udpMasks ->
-                        if (udpMasks.size != 1) return listOf()
-                        val udpmask = udpMasks[0]
-                        when (udpmask.getString("type")) {
-                            "" -> {}
-                            "salamander" -> {
-                                hysteria2Bean.obfsType = "salamander"
-                                udpmask.getObject("settings")?.also { settings ->
-                                    settings.getString("password")?.also {
-                                        hysteria2Bean.obfsPassword = it
-                                    }
-                                }
-                            }
-                            "gecko" -> {
-                                hysteria2Bean.obfsType = "gecko"
-                                udpmask.getObject("settings")?.also { settings ->
-                                    settings.getString("password")?.also {
-                                        hysteria2Bean.obfsPassword = it
-                                    }
-                                    settings.getInt("packetSize")?.also {
-                                        hysteria2Bean.geckoMinPacketSize = it.takeIf { it > 0 }
-                                        hysteria2Bean.geckoMaxPacketSize = it.takeIf { it > 0 }
-                                    } ?: settings.getString("packetSize")?.also {
-                                        val packetSizeInt = it.toIntOrNull()
-                                        if (packetSizeInt != null && packetSizeInt > 0) {
-                                            hysteria2Bean.geckoMinPacketSize = packetSizeInt
-                                            hysteria2Bean.geckoMaxPacketSize = packetSizeInt
-                                        } else {
-                                            val packetSizeStringList = it.split("-")
-                                            if (packetSizeStringList.size == 2) {
-                                                val packetSizeInt0 = packetSizeStringList[0].toIntOrNull()
-                                                val packetSizeInt1 = packetSizeStringList[1].toIntOrNull()
-                                                if (packetSizeInt0 != null && packetSizeInt0 > 0 && packetSizeInt1 != null && packetSizeInt1 > 0) {
-                                                    hysteria2Bean.geckoMinPacketSize = minOf(packetSizeInt0, packetSizeInt1)
-                                                    hysteria2Bean.geckoMaxPacketSize = maxOf(packetSizeInt0, packetSizeInt1)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            else -> return listOf()
-                        }
-                    }
                     finalmask.getObject("quicParams")?.also { quicParams ->
                         quicParams.getObject("udphop")?.also { udphop ->
                             udphop.getInt("ports")?.also {
                                 if (it > 0) hysteria2Bean.serverPorts = it.toString()
-                            } ?: udphop.getString("ports")?.takeIf { it.isNotEmpty() }?.also {
+                            } ?: udphop.getString("ports")?.takeIf { it.isNotEmpty() }?.also { portRange ->
                                 // invalid port is ignored
-                                hysteria2Bean.serverPorts = (it.split(",").joinToString(",") { it.trim() })
+                                hysteria2Bean.serverPorts = (portRange.split(",").joinToString(",") { it.trim() })
                                     .takeIf { it.isValidHysteriaPort(disallowFromGreaterThanTo = true) }
                             }
                             udphop.getLong("interval")?.also {
                                 hysteria2Bean.hopInterval = it.takeIf { it > 0 }
                             } ?: udphop.getString("interval")?.also {
-                                val intervalLong = it.toLongOrNull()
-                                if (intervalLong != null && intervalLong > 0) {
-                                    hysteria2Bean.hopInterval = intervalLong
+                                val interval = it.toLongOrNull()
+                                if (interval != null && interval > 0) {
+                                    hysteria2Bean.hopInterval = interval
                                 } else {
-                                    val intervalStringList = it.split("-")
-                                    if (intervalStringList.size == 2) {
-                                        val intervalLong0 = intervalStringList[0].toLongOrNull()
-                                        val intervalLong1 = intervalStringList[1].toLongOrNull()
-                                        if (intervalLong0 != null && intervalLong0 > 0 && intervalLong1 != null && intervalLong1 > 0) {
-                                            hysteria2Bean.hopIntervalMin = minOf(intervalLong0, intervalLong1)
-                                            hysteria2Bean.hopIntervalMax = maxOf(intervalLong0, intervalLong1)
+                                    val list = it.split("-")
+                                    if (list.size == 2) {
+                                        val from = list[0].toLongOrNull()
+                                        val to = list[1].toLongOrNull()
+                                        if (from != null && from > 0 && to != null && to > 0) {
+                                            hysteria2Bean.hopIntervalMin = minOf(from, to)
+                                            hysteria2Bean.hopIntervalMax = maxOf(from, to)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    finalmask.getArray("udp")?.takeIf { it.isNotEmpty() }?.also { udpMasks ->
+                        var obfsMask: JsonObject? = null
+                        var hopMask: JsonObject? = null
+                        when (udpMasks.size) {
+                            1 -> {
+                                when (udpMasks[0].getString("type")) {
+                                    "salamander" -> obfsMask = udpMasks[0]
+                                    "udphop" -> hopMask = udpMasks[0]
+                                    else -> return listOf()
+                                }
+                            }
+                            2 -> {
+                                when (udpMasks[0].getString("type")) {
+                                    "salamander" -> obfsMask = udpMasks[0]
+                                    else -> return listOf()
+                                }
+                                when (udpMasks[1].getString("type")) {
+                                    "udphop" -> hopMask = udpMasks[1]
+                                    else -> return listOf()
+                                }
+                            }
+                            else -> return listOf()
+                        }
+                        obfsMask?.getObject("settings")?.also { settings ->
+                            settings.getString("password")?.also {
+                                hysteria2Bean.obfsPassword = it
+                            }
+                            settings.getInt("packetSize")?.also {
+                                if (it > 0) {
+                                    hysteria2Bean.obfsType = "gecko"
+                                    hysteria2Bean.geckoMinPacketSize = it
+                                    hysteria2Bean.geckoMaxPacketSize = it
+                                } else {
+                                    hysteria2Bean.obfsType = "salamander"
+                                }
+                            } ?: settings.getString("packetSize")?.also {
+                                val packetSize = it.toIntOrNull()
+                                if (packetSize != null) {
+                                    if (packetSize > 0) {
+                                        hysteria2Bean.obfsType = "gecko"
+                                        hysteria2Bean.geckoMinPacketSize = packetSize
+                                        hysteria2Bean.geckoMaxPacketSize = packetSize
+                                    } else {
+                                        hysteria2Bean.obfsType = "salamander"
+                                    }
+                                } else {
+                                    val list = it.split("-")
+                                    if (list.size == 2) {
+                                        val from = list[0].toIntOrNull()
+                                        val to = list[1].toIntOrNull()
+                                        if (from != null && to != null) {
+                                            if (to > 0) {
+                                                hysteria2Bean.obfsType = "gecko"
+                                                hysteria2Bean.geckoMinPacketSize = minOf(from, to)
+                                                hysteria2Bean.geckoMaxPacketSize = maxOf(from, to)
+                                            } else {
+                                                hysteria2Bean.obfsType = "salamander"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        hopMask?.getObject("settings")?.also { settings ->
+                            // settings.getString("mode") // ignored for now
+                            // settings.getString("remoteIPs") // ignored for now
+                            settings.getInt("remotePorts")?.also {
+                                if (it > 0) hysteria2Bean.serverPorts = it.toString()
+                            } ?: settings.getString("remotePorts")?.takeIf { it.isNotEmpty() }?.also { portRange ->
+                                // invalid port is ignored
+                                hysteria2Bean.serverPorts = (portRange.split(",").joinToString(",") { it.trim() })
+                                    .takeIf { it.isValidHysteriaPort(disallowFromGreaterThanTo = true) }
+                            }
+                            settings.getLong("interval")?.also {
+                                hysteria2Bean.hopInterval = it.takeIf { it > 0 }
+                            } ?: settings.getString("interval")?.also {
+                                val interval = it.toLongOrNull()
+                                if (interval != null && interval > 0) {
+                                    hysteria2Bean.hopInterval = interval
+                                } else {
+                                    val list = it.split("-")
+                                    if (list.size == 2) {
+                                        val from = list[0].toLongOrNull()
+                                        val to = list[1].toLongOrNull()
+                                        if (from != null && from > 0 && to != null && to > 0) {
+                                            hysteria2Bean.hopIntervalMin = minOf(from, to)
+                                            hysteria2Bean.hopIntervalMax = maxOf(from, to)
                                         }
                                     }
                                 }
