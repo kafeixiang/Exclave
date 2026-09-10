@@ -1,6 +1,7 @@
 package io.nekohasekai.sagernet.widget
 
 import android.content.Context
+import android.graphics.Shader
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -63,7 +64,7 @@ class CupertinoDock @JvmOverloads constructor(
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             blurContainer.setRenderEffect(
                 android.graphics.RenderEffect.createBlurEffect(
-                    120f, 120f, android.graphics.Shader.TileMode.DECAL
+                    30f, 30f, Shader.TileMode.DECAL
                 )
             )
         }

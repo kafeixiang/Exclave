@@ -476,7 +476,7 @@ class MainActivity : ThemedActivity(),
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             binding.ambientGlow.setRenderEffect(
-                RenderEffect.createBlurEffect(160f, 160f, Shader.TileMode.DECAL)
+                RenderEffect.createBlurEffect(40f, 40f, Shader.TileMode.DECAL)
             )
         }
         

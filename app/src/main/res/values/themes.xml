@@ -666,7 +666,7 @@
 
     <!-- Cupertino Base Theme -->
     <style name="Theme.SagerNet.Cupertino" parent="Theme.SagerNet">
-        <item name="android:windowBackground">@color/surface_glass_heavy</item>
+        <item name="android:windowBackground">@color/cupertino_window_bg</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
         <item name="materialCardViewStyle">@style/Widget.SagerNet.CardView.Cupertino</item>

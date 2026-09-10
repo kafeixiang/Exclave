@@ -344,6 +344,7 @@
     <!-- 还原苹果风（iOS Style）：高度通透的磨砂质感 -->
     <color name="surface_glass">#80FFFFFF</color> <!-- 50% 不透明度白色 -->
     <color name="surface_glass_heavy">#B3FFFFFF</color> <!-- 70% 不透明度白色 -->
+    <color name="cupertino_window_bg">#F2F2F7</color> <!-- 完全不透明背景，防止窗口半透明导致渲染闪屏和拖影 -->
     <color name="card_stroke">#F2FFFFFF</color> <!-- 极其明亮的边缘高光 -->
 
     <!-- Cupertino 23 Themes Colors -->
