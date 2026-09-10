@@ -304,26 +304,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
 
         (requireActivity() as? MainActivity)?.onBackPressedCallback?.isEnabled = false
-        updateHeaderStyle()
         updateToolbarForPosition(groupPager.currentItem)
-    }
-
-    private fun updateHeaderStyle() {
-        val typedValue = android.util.TypedValue()
-        context?.theme?.resolveAttribute(androidx.appcompat.R.attr.colorAccent, typedValue, true)
-        val accentColor = typedValue.data
-        
-        val header = view?.findViewById<MaterialCardView>(R.id.header_container)
-        header?.apply {
-            cardElevation = 0f
-            maxCardElevation = 0f
-            clipToOutline = true
-            outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
-            setCardBackgroundColor(android.graphics.Color.TRANSPARENT)
-        }
-        
-        // 标题与图标使用主题色，在磨砂背景上产生透亮感
-        toolbar.setTitleTextColor(accentColor)
     }
 
     private fun updateToolbarForPosition(position: Int) {
