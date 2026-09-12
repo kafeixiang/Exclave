@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 第一层：全局遮罩，使用主题属性动态切换 -->
+    <!-- 第一层：全局遮罩设为 100% 完全透明，确保弹窗外部能看清底部页面文字 -->
     <item>
-        <color android:color="?attr/glassWindowTint" />
+        <color android:color="@android:color/transparent" />
     </item>
-    <!-- 第二层：中间的圆角卡片 -->
+    <!-- 第二层：中间保持原样苹果风圆角卡片 -->
     <item
         android:insetLeft="22dp"
         android:insetRight="22dp"

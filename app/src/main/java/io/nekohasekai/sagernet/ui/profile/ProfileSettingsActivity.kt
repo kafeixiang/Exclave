@@ -281,13 +281,16 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
 
-            // 【关键修改点】监听并去掉 Preference 弹窗外部的灰色遮罩
+            // 监听并确保 Preference 弹窗外部 100% 完全透明，无遮罩
             parentFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
                 override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
                     if (f is DialogFragment) {
                         f.dialog?.window?.let { window ->
                             window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
                             window.setDimAmount(0f)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                window.clearFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+                            }
                         }
                     }
                 }

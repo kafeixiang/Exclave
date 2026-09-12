@@ -211,13 +211,12 @@
     </style>
 
     <style name="ThemeOverlay.SagerNet.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet">
-        <!-- 核心：使用泛白叠加层作为窗口背景，支持深浅模式 -->
+        <!-- 核心：使用苹果风卡片，弹窗外部 100% 完全透明 -->
         <item name="android:windowBackground">@drawable/bg_dialog_window_whitish</item>
-        <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
-        <item name="android:windowBlurBehindRadius" tools:targetApi="s">80dp</item>
+        <item name="android:windowBlurBehindEnabled" tools:targetApi="s">false</item>
         <item name="colorSurface">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">false</item>
-        <item name="android:backgroundDimAmount">0.0</item> <!-- 完全透亮，去掉灰色遮罩 -->
+        <item name="android:backgroundDimAmount">0.0</item> <!-- 弹窗外部 100% 透明，完全无遮罩 -->
         <item name="android:windowElevation" tools:targetApi="o">0dp</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Dialog</item>
     </style>
