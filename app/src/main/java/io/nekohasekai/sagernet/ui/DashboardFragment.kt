@@ -138,12 +138,15 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     if (isAdded) adapter.updateItem(ItemType.GEOIP)
                 }
             } catch (_: Exception) {
-                geoIpInfo.ip = getString(R.string.unavailable)
-                geoIpInfo.location = getString(R.string.unavailable)
-                geoIpInfo.isp = ""
-                geoIpInfo.asn = ""
                 withContext(Dispatchers.Main) {
-                    if (isAdded) adapter.updateItem(ItemType.GEOIP)
+                    if (isAdded) {
+                        val unavailableText = getString(R.string.unavailable)
+                        geoIpInfo.ip = unavailableText
+                        geoIpInfo.location = unavailableText
+                        geoIpInfo.isp = ""
+                        geoIpInfo.asn = ""
+                        adapter.updateItem(ItemType.GEOIP)
+                    }
                 }
             }
         }
