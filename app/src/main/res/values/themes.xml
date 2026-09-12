@@ -213,7 +213,7 @@
     <style name="ThemeOverlay.SagerNet.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet">
         <item name="android:windowBackground">@drawable/bg_dialog_window_whitish</item>
         <item name="android:windowBlurBehindEnabled" tools:targetApi="s">false</item>
-        <item name="colorSurface">@android:color/transparent</item>
+        <item name="colorSurface">?attr/glassCardBackground</item>
         <item name="android:backgroundDimEnabled">false</item>
         <item name="android:backgroundDimAmount">0.0</item>
         <item name="android:windowElevation" tools:targetApi="o">0dp</item>
