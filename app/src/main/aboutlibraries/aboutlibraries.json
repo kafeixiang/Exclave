@@ -238,15 +238,15 @@
         },
         {
             "uniqueId": "androidx.room:room-common",
-            "artifactVersion": "2.8.4"
+            "artifactVersion": "2.8.5"
         },
         {
             "uniqueId": "androidx.room:room-ktx",
-            "artifactVersion": "2.8.4"
+            "artifactVersion": "2.8.5"
         },
         {
             "uniqueId": "androidx.room:room-runtime",
-            "artifactVersion": "2.8.4"
+            "artifactVersion": "2.8.5"
         },
         {
             "uniqueId": "androidx.savedstate:savedstate",
@@ -454,11 +454,11 @@
         },
         {
             "uniqueId": "org.jetbrains.kotlin:kotlin-parcelize-runtime",
-            "artifactVersion": "2.4.10"
+            "artifactVersion": "2.4.20"
         },
         {
             "uniqueId": "org.jetbrains.kotlin:kotlin-stdlib",
-            "artifactVersion": "2.4.10"
+            "artifactVersion": "2.4.20"
         },
         {
             "uniqueId": "org.jetbrains.kotlin:kotlin-stdlib-jdk7",
