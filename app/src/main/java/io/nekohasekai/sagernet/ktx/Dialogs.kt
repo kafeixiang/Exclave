@@ -41,7 +41,7 @@ fun Fragment.alert(text: String) = requireContext().alert(text)
 
 fun AlertDialog.applyGlassBlur() {
     window?.let { window ->
-        // 使用原样苹果风卡片背景
+        // 使用苹果风奶油质感卡片背景
         window.setBackgroundDrawableResource(R.drawable.bg_dialog_window_whitish)
 
         // 弹窗外部 100% 完全透明，移除灰色遮罩
@@ -53,7 +53,9 @@ fun AlertDialog.applyGlassBlur() {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+            // 启用系统高斯模糊，赋予弹窗卡片区域苹果风奶油磨砂质感
+            window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+            window.attributes.blurBehindRadius = 60
         }
     }
 }
