@@ -337,9 +337,9 @@
     <color name="color_verdant_mint_300">#509177</color>
 
     <!-- 苹果风（iOS Style）语义化颜色：支持深浅模式切换 -->
-    <color name="glass_window_tint">#0DFFFFFF</color> <!-- 极其通透 -->
-    <color name="glass_card_bg">#E6FAFAFC</color> <!-- 90% 不透明度奶油白，营造苹果风高斯模糊奶油质感 -->
-    <color name="glass_card_stroke">#80FFFFFF</color> <!-- 亮白色描边，模拟边缘反光 -->
+    <color name="glass_window_tint">#0DFFFFFF</color>
+    <color name="glass_card_bg">#E8F2F2F5</color>
+    <color name="glass_card_stroke">#80FFFFFF</color>
 
     <!-- 还原苹果风（iOS Style）：高度通透的磨砂质感 -->
     <color name="surface_glass">#80FFFFFF</color> <!-- 50% 不透明度白色 -->

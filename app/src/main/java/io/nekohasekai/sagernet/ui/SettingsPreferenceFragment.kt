@@ -70,7 +70,6 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 监听并确保 Preference 弹窗外部 100% 透明，卡片内部保持苹果风高斯模糊奶油质感
         parentFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
                 if (f is DialogFragment) {
@@ -78,8 +77,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
                         window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
                         window.setDimAmount(0f)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-                            window.attributes.blurBehindRadius = 60
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
                         }
                     }
                 }

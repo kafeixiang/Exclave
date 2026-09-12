@@ -211,13 +211,11 @@
     </style>
 
     <style name="ThemeOverlay.SagerNet.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet">
-        <!-- 核心：弹窗外部 100% 完全透明，内部苹果风高斯模糊奶油质感卡片 -->
         <item name="android:windowBackground">@drawable/bg_dialog_window_whitish</item>
-        <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
-        <item name="android:windowBlurBehindRadius" tools:targetApi="s">60dp</item>
+        <item name="android:windowBlurBehindEnabled" tools:targetApi="s">false</item>
         <item name="colorSurface">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">false</item>
-        <item name="android:backgroundDimAmount">0.0</item> <!-- 弹窗外部 100% 透明，完全无遮罩 -->
+        <item name="android:backgroundDimAmount">0.0</item>
         <item name="android:windowElevation" tools:targetApi="o">0dp</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Dialog</item>
     </style>
@@ -247,7 +245,7 @@
         <item name="colorPrimaryDark">@color/black</item>
         <item name="colorAccent">@color/white</item>
         <item name="surfaceGlassColor">#99121212</item>
-        <item name="glassCardBackground">#E62C2C2E</item>
+        <item name="glassCardBackground">#EE2C2C2E</item>
         <item name="glassWindowTint">#80000000</item>
         <item name="glassCardStroke">#33FFFFFF</item>
         <item name="colorMaterial100">@color/material_grey_700</item>
@@ -270,7 +268,7 @@
         <item name="colorPrimaryDark">@color/material_light_white</item>
         <item name="colorAccent">@color/black</item>
         <item name="surfaceGlassColor">#CCFFFFFF</item>
-        <item name="glassCardBackground">#E6FAFAFC</item>
+        <item name="glassCardBackground">#E8F2F2F5</item>
         <item name="glassWindowTint">#4DFFFFFF</item>
         <item name="glassCardStroke">#1A000000</item>
         <item name="colorMaterial300">@color/white</item>
