@@ -49,6 +49,8 @@ editorkit = { module = "com.blacksquircle.ui:editorkit", version = "2.0.0" }
 #noinspection NewerVersionAvailable
 editorkit-language-json = { module = "com.blacksquircle.ui:language-json", version = "2.0.0" }
 desugar-jdk-libs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
+blurry = { module = "jp.wasabeef:blurry", version = "4.0.1" }
+constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version = "2.2.2" }
 
 #noinspection GradleDependency,SimilarGradleDependency
 core-ktx-minSdk21 = { module = "androidx.core:core-ktx", version = "1.17.0" }
