@@ -198,26 +198,6 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                         .outline(false)
                         .title(R.string.project)
                         .addItem(MaterialAboutActionItem.Builder()
-                            .icon(R.drawable.ic_baseline_sanitizer_24)
-                            .text(R.string.github)
-                            .setOnClickAction {
-                                startActivity(Intent(
-                                    Intent.ACTION_VIEW,
-                                    "https://github.com/ExclaveNetwork/Exclave".toUri()
-                                ))
-                            }
-                            .build())
-                        .addItem(MaterialAboutActionItem.Builder()
-                            .icon(R.drawable.baseline_translate_24)
-                            .text(R.string.translation_platform)
-                            .setOnClickAction {
-                                startActivity(Intent(
-                                    Intent.ACTION_VIEW,
-                                    "https://hosted.weblate.org/projects/exclave/".toUri()
-                                ))
-                            }
-                            .build())
-                        .addItem(MaterialAboutActionItem.Builder()
                             .icon(R.drawable.ic_action_copyleft)
                             .text(R.string.license)
                             .setOnClickAction {
