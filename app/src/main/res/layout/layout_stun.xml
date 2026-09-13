@@ -39,6 +39,7 @@
             android:orientation="vertical">
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/stun_server_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="16dp"
@@ -46,7 +47,9 @@
                 android:layout_marginRight="16dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardElevation="2dp">
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="?attr/glassCardStroke">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -108,7 +111,9 @@
                 android:layout_marginRight="16dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardElevation="2dp">
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="?attr/glassCardStroke">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -144,7 +149,9 @@
                 android:layout_marginRight="16dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardElevation="2dp">
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="?attr/glassCardStroke">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -180,7 +187,9 @@
                 android:layout_marginRight="16dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardElevation="2dp">
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="?attr/glassCardStroke">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -217,7 +226,9 @@
                 android:layout_marginRight="16dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardElevation="2dp">
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="?attr/glassCardStroke">
 
                 <LinearLayout
                     android:layout_width="match_parent"

@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@android:color/transparent"
     tools:context=".ui.ConfigurationFragment">
 
     <include
@@ -15,19 +16,23 @@
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/group_tab"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?colorPrimary"
+        android:layout_height="32dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_segmented_control"
         android:elevation="0dp"
         android:visibility="gone"
-        app:tabIndicatorColor="?tabIndicatorColor"
-        app:tabIndicatorFullWidth="false"
-        app:tabMode="scrollable"
-        app:tabPaddingStart="16dp"
-        app:tabRippleColor="?tabRippleColor"
-        app:tabSelectedTextColor="?tabSelectedTextColor"
+        app:tabIndicator="@drawable/bg_segmented_pill"
+        app:tabIndicatorColor="@android:color/white"
+        app:tabIndicatorFullWidth="true"
+        app:tabIndicatorGravity="center"
+        app:tabIndicatorHeight="28dp"
+        app:tabMode="fixed"
+        app:tabRippleColor="@android:color/transparent"
+        app:tabSelectedTextColor="?colorAccent"
         app:tabTextAppearance="@style/TabTextAppearance"
-        app:tabTextColor="?tabTextColor"
-        app:tabUnboundedRipple="false" />
+        app:tabTextColor="?tabTextColor" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/group_pager"

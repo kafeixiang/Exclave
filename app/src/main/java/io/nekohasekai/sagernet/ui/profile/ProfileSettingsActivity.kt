@@ -25,6 +25,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.LayoutRes
 import androidx.core.content.pm.ShortcutInfoCompat
@@ -33,6 +34,9 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.preference.EditTextPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceDataStore
@@ -276,6 +280,18 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+
+            // 【关键修改点】监听并去掉 Preference 弹窗外部的灰色遮罩
+            parentFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
+                override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
+                    if (f is DialogFragment) {
+                        f.dialog?.window?.let { window ->
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+                            window.setDimAmount(0f)
+                        }
+                    }
+                }
+            }, false)
 
             ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
                 val bars = insets.getInsets(
