@@ -28,6 +28,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.os.LocaleListCompat
@@ -37,6 +38,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
@@ -66,8 +70,20 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 【关键修改点】监听并去掉 Preference 弹窗外部的灰色遮罩
+        parentFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
+            override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
+                if (f is DialogFragment) {
+                    f.dialog?.window?.let { window ->
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+                        window.setDimAmount(0f)
+                    }
+                }
+            }
+        }, false)
+
         listView.layoutManager = FixedLinearLayoutManager(listView)
-        listView.setPadding(0,0,0,dp2px(64))
+        listView.setPadding(0,0,0,dp2px(112))
         ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
@@ -76,7 +92,7 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
             v.updatePadding(
                 left = bars.left,
                 right = bars.right,
-                bottom = bars.bottom + dp2px(64),
+                bottom = bars.bottom + dp2px(112),
             )
             insets
         }
