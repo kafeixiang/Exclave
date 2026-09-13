@@ -13,7 +13,7 @@
         android:text="@string/no_statistics"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="?android:attr/textColorPrimary"
-        android:paddingBottom="64dp" />
+        android:paddingBottom="112dp" />
 
     <com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
         android:id="@+id/traffic_list"
@@ -23,11 +23,11 @@
         android:paddingTop="4dp"
         android:paddingLeft="4dp"
         android:paddingRight="4dp"
-        android:paddingBottom="64dp"
+        android:paddingBottom="112dp"
         android:scrollbarSize="0dp"
         android:visibility="gone"
         app:fastScrollAutoHide="true"
         app:fastScrollThumbColor="?colorPrimary"
         app:fastScrollThumbInactiveColor="?colorPrimary"
-        tools:listitem="@layout/layout_profile" />
+        tools:listitem="@layout/layout_traffic_item" />
 </LinearLayout>
