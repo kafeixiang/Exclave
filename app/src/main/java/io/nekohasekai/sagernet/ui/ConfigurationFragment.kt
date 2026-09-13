@@ -567,7 +567,8 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
                 dialog = MaterialAlertDialogBuilder(context).setTitle(R.string.matsuri_plugins)
                     .setView(linearLayout)
-                    .show()
+                    .create()
+                dialog.apply { applyGlassBlur() }.show()
             }
             R.id.action_new_anytls -> {
                 startActivity(Intent(requireActivity(), AnyTLSSettingsActivity::class.java))
@@ -1366,6 +1367,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
             setupLayoutManager()
             configurationListView.layoutManager = layoutManager
+            configurationListView.applyGlassBlur()
             adapter = ConfigurationAdapter()
             ProfileManager.addListener(adapter)
             GroupManager.addListener(adapter)
@@ -1742,19 +1744,20 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             private val card = view as MaterialCardView
 
-            private fun applySelected(selected: Boolean) {
+            fun applySelected(selected: Boolean) {
                 val ctx = card.context
-                val primary = ctx.getColorAttr(androidx.appcompat.R.attr.colorPrimary)
-                val surface = ctx.getColorAttr(com.google.android.material.R.attr.colorSurface)
+                val accent = ctx.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+                val surface = ctx.getColour(R.color.surface_glass)
                 card.strokeWidth = ctx.resources.getDimensionPixelSize(
                     if (selected) R.dimen.card_stroke_width_selected else R.dimen.card_stroke_width
                 )
                 card.strokeColor =
-                    if (selected) primary else ctx.getColour(R.color.card_stroke)
+                    if (selected) accent else ctx.getColour(R.color.card_stroke)
+                card.cardElevation = 0f // 彻底去掉阴影，确保玻璃通透感
                 card.setCardBackgroundColor(
                     if (selected) {
                         ColorUtils.compositeColors(
-                            ColorUtils.setAlphaComponent(primary, 26), surface
+                            ColorUtils.setAlphaComponent(accent, 32), surface
                         )
                     } else {
                         surface
@@ -2057,27 +2060,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                     shareButton.isVisible = true
                 }
-                    }
-                    shareButton.isVisible = true
-                }
             }
 
-            fun showShare(anchor: View) {
-                val profile = entity
-                val popup = PopupMenu(requireContext(), anchor)
-                popup.menuInflater.inflate(R.menu.profile_share_menu, popup.menu)
 
-                if (!profile.hasShareLink() && profile.wgBean == null) {
-                    popup.menu.removeItem(R.id.action_qr)
-                    popup.menu.removeItem(R.id.action_clipboard)
-                }
-                if (showBackup && profile.canExportBackup()) {
-                    popup.menu.findItem(R.id.action_export_backup).isVisible = true
-                }
-
-                popup.setOnMenuItemClickListener(this@ConfigurationHolder)
-                popup.show()
-            }
 
             fun updateTraffic(proxyEntity: ProxyEntity) {
                 val parent = parent ?: return

@@ -7,6 +7,9 @@
     <string name="menu_configuration">配置</string>
     <string name="menu_group">分组</string>
     <string name="menu_about">关于</string>
+    <string name="theme_cupertino_category">Cupertino 艺术主题 (23色)</string>
+    <string name="theme_material_category">经典主题</string>
+    <string name="full_test">全测速</string>
     <string name="group_default">未分组</string>
     <string name="quick_toggle">切换</string>
     <!-- group -->
