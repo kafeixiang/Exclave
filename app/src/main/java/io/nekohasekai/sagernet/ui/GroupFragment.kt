@@ -82,6 +82,7 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
         layoutManager = FixedLinearLayoutManager(groupListView)
         groupListView.layoutManager = layoutManager
+        groupListView.applyGlassBlur()
         groupAdapter = GroupAdapter()
         GroupManager.addListener(groupAdapter)
         groupListView.adapter = groupAdapter

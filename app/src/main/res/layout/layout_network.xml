@@ -12,12 +12,13 @@
         android:orientation="vertical">
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/stun_card"
+            style="@style/Widget.SagerNet.CardView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="16dp"
             android:clickable="true"
-            android:focusable="true"
-            app:cardElevation="2dp">
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -53,9 +54,9 @@
                     android:gravity="end"
                     android:orientation="horizontal">
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/stunTest"
-                        style="@style/Widget.AppCompat.Button.Borderless"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
@@ -67,12 +68,13 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/probe_card"
+            style="@style/Widget.SagerNet.CardView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_margin="16dp"
             android:clickable="true"
-            android:focusable="true"
-            app:cardElevation="2dp">
+            android:focusable="true">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -108,9 +110,9 @@
                     android:gravity="end"
                     android:orientation="horizontal">
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/probeCertificate"
-                        style="@style/Widget.AppCompat.Button.Borderless"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
