@@ -55,7 +55,31 @@ object Theme {
 
     const val DYNAMIC = 21
 
-    private fun defaultTheme() = PINK
+    const val CUPERTINO_PINK = 101
+    const val CUPERTINO_BLUE = 102
+    const val CUPERTINO_ORANGE = 103
+    const val CUPERTINO_GREEN = 104
+    const val CUPERTINO_PURPLE = 105
+    const val CUPERTINO_AMBER = 106
+    const val CUPERTINO_MINT = 107
+    const val CUPERTINO_CORAL = 108
+    const val CUPERTINO_ROSE_GOLD = 109
+    const val CUPERTINO_PISTACHIO = 110
+    const val CUPERTINO_SUNFLOWER = 111
+    const val CUPERTINO_VIOLET = 112
+    const val CUPERTINO_WHITE = 113
+    const val CUPERTINO_SKY = 114
+    const val CUPERTINO_MORANDI = 115
+    const val CUPERTINO_WINE = 116
+    const val CUPERTINO_SAGE = 117
+    const val CUPERTINO_WHEAT = 118
+    const val CUPERTINO_ICE = 119
+    const val CUPERTINO_EMERALD = 120
+    const val CUPERTINO_CHAMPAGNE = 121
+    const val CUPERTINO_SILVER = 122
+    const val CUPERTINO_UNICORN = 123
+
+    private fun defaultTheme() = CUPERTINO_PINK
 
     fun apply(context: Context) {
         context.setTheme(getTheme())
@@ -97,6 +121,29 @@ object Theme {
             BLACK -> if (usingNightMode()) R.style.Theme_SagerNet_Black else R.style.Theme_SagerNet_LightBlack
             VERDANT_MINT -> R.style.Theme_SagerNet_VerdantMint
             DYNAMIC -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.Theme_SagerNet_Dynamic else getTheme(defaultTheme())
+            CUPERTINO_PINK -> R.style.Theme_SagerNet_Cupertino_Pink
+            CUPERTINO_BLUE -> R.style.Theme_SagerNet_Cupertino_Blue
+            CUPERTINO_ORANGE -> R.style.Theme_SagerNet_Cupertino_Orange
+            CUPERTINO_GREEN -> R.style.Theme_SagerNet_Cupertino_Green
+            CUPERTINO_PURPLE -> R.style.Theme_SagerNet_Cupertino_Purple
+            CUPERTINO_AMBER -> R.style.Theme_SagerNet_Cupertino_Amber
+            CUPERTINO_MINT -> R.style.Theme_SagerNet_Cupertino_Mint
+            CUPERTINO_CORAL -> R.style.Theme_SagerNet_Cupertino_Coral
+            CUPERTINO_ROSE_GOLD -> R.style.Theme_SagerNet_Cupertino_RoseGold
+            CUPERTINO_PISTACHIO -> R.style.Theme_SagerNet_Cupertino_Pistachio
+            CUPERTINO_SUNFLOWER -> R.style.Theme_SagerNet_Cupertino_Sunflower
+            CUPERTINO_VIOLET -> R.style.Theme_SagerNet_Cupertino_Violet
+            CUPERTINO_WHITE -> R.style.Theme_SagerNet_Cupertino_White
+            CUPERTINO_SKY -> R.style.Theme_SagerNet_Cupertino_Sky
+            CUPERTINO_MORANDI -> R.style.Theme_SagerNet_Cupertino_Morandi
+            CUPERTINO_WINE -> R.style.Theme_SagerNet_Cupertino_Wine
+            CUPERTINO_SAGE -> R.style.Theme_SagerNet_Cupertino_Sage
+            CUPERTINO_WHEAT -> R.style.Theme_SagerNet_Cupertino_Wheat
+            CUPERTINO_ICE -> R.style.Theme_SagerNet_Cupertino_Ice
+            CUPERTINO_EMERALD -> R.style.Theme_SagerNet_Cupertino_Emerald
+            CUPERTINO_CHAMPAGNE -> R.style.Theme_SagerNet_Cupertino_Champagne
+            CUPERTINO_SILVER -> R.style.Theme_SagerNet_Cupertino_Silver
+            CUPERTINO_UNICORN -> R.style.Theme_SagerNet_Cupertino_Unicorn
             else -> getTheme(defaultTheme())
         }
     }
@@ -125,6 +172,29 @@ object Theme {
             BLACK -> if (usingNightMode()) R.style.Theme_SagerNet_Dialog_Black else R.style.Theme_SagerNet_Dialog_LightBlack
             VERDANT_MINT -> R.style.Theme_SagerNet_Dialog_VerdantMint
             DYNAMIC -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) R.style.Theme_SagerNet_Dialog_Dynamic else getDialogTheme(defaultTheme())
+            CUPERTINO_PINK -> R.style.Theme_SagerNet_Dialog_Cupertino_Pink
+            CUPERTINO_BLUE -> R.style.Theme_SagerNet_Dialog_Cupertino_Blue
+            CUPERTINO_ORANGE -> R.style.Theme_SagerNet_Dialog_Cupertino_Orange
+            CUPERTINO_GREEN -> R.style.Theme_SagerNet_Dialog_Cupertino_Green
+            CUPERTINO_PURPLE -> R.style.Theme_SagerNet_Dialog_Cupertino_Purple
+            CUPERTINO_AMBER -> R.style.Theme_SagerNet_Dialog_Cupertino_Amber
+            CUPERTINO_MINT -> R.style.Theme_SagerNet_Dialog_Cupertino_Mint
+            CUPERTINO_CORAL -> R.style.Theme_SagerNet_Dialog_Cupertino_Coral
+            CUPERTINO_ROSE_GOLD -> R.style.Theme_SagerNet_Dialog_Cupertino_RoseGold
+            CUPERTINO_PISTACHIO -> R.style.Theme_SagerNet_Dialog_Cupertino_Pistachio
+            CUPERTINO_SUNFLOWER -> R.style.Theme_SagerNet_Dialog_Cupertino_Sunflower
+            CUPERTINO_VIOLET -> R.style.Theme_SagerNet_Dialog_Cupertino_Violet
+            CUPERTINO_WHITE -> R.style.Theme_SagerNet_Dialog_Cupertino_White
+            CUPERTINO_SKY -> R.style.Theme_SagerNet_Dialog_Cupertino_Sky
+            CUPERTINO_MORANDI -> R.style.Theme_SagerNet_Dialog_Cupertino_Morandi
+            CUPERTINO_WINE -> R.style.Theme_SagerNet_Dialog_Cupertino_Wine
+            CUPERTINO_SAGE -> R.style.Theme_SagerNet_Dialog_Cupertino_Sage
+            CUPERTINO_WHEAT -> R.style.Theme_SagerNet_Dialog_Cupertino_Wheat
+            CUPERTINO_ICE -> R.style.Theme_SagerNet_Dialog_Cupertino_Ice
+            CUPERTINO_EMERALD -> R.style.Theme_SagerNet_Dialog_Cupertino_Emerald
+            CUPERTINO_CHAMPAGNE -> R.style.Theme_SagerNet_Dialog_Cupertino_Champagne
+            CUPERTINO_SILVER -> R.style.Theme_SagerNet_Dialog_Cupertino_Silver
+            CUPERTINO_UNICORN -> R.style.Theme_SagerNet_Dialog_Cupertino_Unicorn
             else -> getDialogTheme(defaultTheme())
         }
     }

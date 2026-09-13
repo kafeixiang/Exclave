@@ -14,90 +14,36 @@
         android:layout_height="match_parent"
         android:clipChildren="false">
 
+        <!-- 全局背景模糊层 -->
+        <ImageView
+            android:id="@+id/global_bg_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="@null"
+            android:alpha="0.2" />
+
+        <!-- 背景霓虹灯影：改用圆形并增加尺寸 -->
+        <View
+            android:id="@+id/ambient_glow"
+            android:layout_width="400dp"
+            android:layout_height="400dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_ambient_glow"
+            android:alpha="0.1"
+            android:visibility="visible" />
+
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:id="@+id/fragment_holder"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <!-- We double trackThickness as half of it will be invisible -->
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:id="@+id/fabProgress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:max="1"
-            android:visibility="invisible"
-            app:indicatorColor="?colorMaterial100"
-            app:layout_anchor="@+id/fab"
-            app:layout_anchorGravity="center"
-            app:layout_behavior="io.nekohasekai.sagernet.widget.FabProgressBehavior"
-            app:trackCornerRadius="@dimen/mtrl_progress_track_thickness"
-            app:trackThickness="8dp" />
-
-        <io.nekohasekai.sagernet.widget.ServiceButton
-            android:id="@+id/fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:elevation="6dp"
-            android:nextFocusDown="@+id/stats"
-            app:backgroundTint="?fabColorBackground"
-            app:layout_anchor="@id/stats"
-            app:pressedTranslationZ="6dp"
-            app:srcCompat="@drawable/ic_service_idle" />
-
-        <io.nekohasekai.sagernet.widget.StatsBar
-            android:id="@+id/stats"
+        <io.nekohasekai.sagernet.widget.CupertinoDock
+            android:id="@+id/cupertino_dock"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="104dp"
             android:layout_gravity="bottom"
-            android:nextFocusUp="@+id/fab"
-            app:backgroundTint="?colorPrimary"
-            app:contentInsetStart="0dp"
-            app:fabAlignmentMode="center"
-            app:fabCradleMargin="5dp"
-            app:fabCradleRoundedCornerRadius="6dp"
-            app:fabCradleVerticalOffset="0dp"
-            app:hideOnScroll="true"
-            app:layout_scrollFlags="enterAlways|scroll">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/tx"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_columnWeight="1"
-                    android:layout_gravity="start"
-                    android:ellipsize="marquee"
-                    android:textColor="?whiteOrTextPrimary"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/rx"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_columnWeight="1"
-                    android:layout_gravity="start"
-                    android:ellipsize="marquee"
-                    android:textColor="?whiteOrTextPrimary"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:ellipsize="marquee"
-                    android:textColor="?whiteOrTextPrimary"
-                    android:textSize="16sp"
-                    tools:text="@string/connection_test_available" />
-
-            </LinearLayout>
-
-        </io.nekohasekai.sagernet.widget.StatsBar>
+            app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
@@ -105,6 +51,7 @@
         android:id="@+id/nav_view"
         style="@style/Widget.Design.NavigationView"
         app:insetForeground="@android:color/transparent"
+        android:background="@color/surface_glass_heavy"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
@@ -123,6 +70,7 @@
         android:id="@+id/nav_view_black"
         style="@style/Widget.Design.NavigationView"
         app:insetForeground="@android:color/transparent"
+        android:background="@color/surface_glass_heavy"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"

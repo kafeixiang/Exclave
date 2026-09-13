@@ -21,6 +21,9 @@ package io.nekohasekai.sagernet.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
@@ -35,11 +38,10 @@ import android.widget.TextView
 import androidx.activity.result.component1
 import androidx.activity.result.component2
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.setPadding
 import androidx.core.view.updatePadding
 import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.RecyclerView
@@ -51,10 +53,9 @@ import com.danielstone.materialaboutlibrary.model.MaterialAboutList
 import io.nekohasekai.sagernet.BuildConfig
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
-import io.nekohasekai.sagernet.ktx.dp2px
-import io.nekohasekai.sagernet.ktx.dp2pxf
-import io.nekohasekai.sagernet.ktx.snackbar
+import io.nekohasekai.sagernet.ktx.*
 import libexclavecore.Libexclavecore
+import android.widget.ImageView
 
 class AboutFragment : ToolbarFragment(R.layout.layout_about) {
 
@@ -100,12 +101,12 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                 }
                 return MaterialAboutList.Builder()
                     .addCard(MaterialAboutCard.Builder()
-                        .outline(true)
-                        .addItem(MaterialAboutTitleItem.Builder()
+                        .title(R.string.app_version) // 【卡片 1】 标题：版本
+                        .addItem(MaterialAboutTitleItem.Builder() // 恢复突出的图标项
                             .icon(R.mipmap.ic_launcher)
                             .text(R.string.app_name)
                             .setOnLongClickAction {
-                                AlertDialog.Builder(activityContext).apply {
+                                MaterialAlertDialogBuilder(activityContext).apply {
                                     setView(NestedScrollView(activityContext).apply {
                                         layoutDirection = View.LAYOUT_DIRECTION_LTR
                                         setPadding(dp2px(16), dp2px(16), dp2px(16), 0)
@@ -121,7 +122,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                         })
                                     })
                                     setPositiveButton(android.R.string.ok, null)
-                                }.show()
+                                }.create().apply { applyGlassBlur() }.show()
                             }
                             .build())
                         .addItem(MaterialAboutActionItem.Builder()
@@ -155,7 +156,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                             .text(getString(R.string.version_x, "Go"))
                             .subText(Libexclavecore.getGoVersion())
                             .setOnLongClickAction {
-                                AlertDialog.Builder(activityContext).apply {
+                                MaterialAlertDialogBuilder(activityContext).apply {
                                     setView(NestedScrollView(activityContext).apply {
                                         layoutDirection = View.LAYOUT_DIRECTION_LTR
                                         setPadding(dp2px(16), dp2px(16), dp2px(16), 0)
@@ -171,7 +172,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                         })
                                     })
                                     setPositiveButton(android.R.string.ok, null)
-                                }.show()
+                                }.create().apply { applyGlassBlur() }.show()
                             }
                             .build())
                         .apply {
@@ -195,16 +196,15 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                         }
                         .build())
                     .addCard(MaterialAboutCard.Builder()
-                        .outline(true)
-                        .title(R.string.project)
+                        .title(R.string.license) // 【卡片 2】 标题：许可证
                         .addItem(MaterialAboutActionItem.Builder()
                             .icon(R.drawable.ic_action_copyleft)
                             .text(R.string.license)
                             .setOnClickAction {
-                                AlertDialog.Builder(activityContext).apply {
+                                MaterialAlertDialogBuilder(activityContext).apply {
                                     setView(
                                         TextView(activityContext).apply {
-                                            setPadding(dp2px(16))
+                                            setPadding(dp2px(16), dp2px(16), dp2px(16), dp2px(16))
                                             text = getString(
                                                 if (Libexclavecore.buildWithClash()) {
                                                     R.string.license_gpl_v3_only
@@ -222,14 +222,14 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                     setPositiveButton(android.R.string.ok) { _, _ ->
                                         showLicenseAlertDialogFromAssets(activityContext, "license/GPL-3.0.txt")
                                     }
-                                }.show()
+                                }.create().apply { applyGlassBlur() }.show()
                             }
                             .build())
                         .addItem(MaterialAboutActionItem.Builder()
                             .icon(R.drawable.ic_action_description)
                             .text(R.string.third_party_notices)
                             .setOnClickAction {
-                                AlertDialog.Builder(activityContext).apply {
+                                MaterialAlertDialogBuilder(activityContext).apply {
                                     setView(ListView(activityContext).apply {
                                         adapter = ArrayAdapter(activityContext, android.R.layout.simple_list_item_1,
                                             arrayOf(
@@ -260,7 +260,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                                         }
                                     })
                                     setPositiveButton(android.R.string.ok, null)
-                                }.show()
+                                }.create().apply { applyGlassBlur() }.show()
                             }
                             .build())
                         .build())
@@ -271,7 +271,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
         }
 
         private fun showLicenseAlertDialogFromAssets(context: Context, asset: String) {
-            AlertDialog.Builder(context).apply {
+            MaterialAlertDialogBuilder(context).apply {
                 setView(NestedScrollView(context).apply {
                     layoutDirection = View.LAYOUT_DIRECTION_LTR
                     setPadding(dp2px(16), dp2px(16), dp2px(16), 0)
@@ -287,14 +287,30 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                     })
                 })
                 setPositiveButton(android.R.string.ok, null)
-            }.show()
+            }.create().apply { applyGlassBlur() }.show()
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
 
-            view.findViewById<RecyclerView>(com.danielstone.materialaboutlibrary.R.id.mal_recyclerview).apply {
+            view.setBackgroundColor(Color.TRANSPARENT)
+
+            // 使用全局统一的高斯模糊磨砂样式注入
+            val recyclerView = view.findViewById<RecyclerView>(com.danielstone.materialaboutlibrary.R.id.mal_recyclerview)
+            recyclerView.apply {
                 overScrollMode = RecyclerView.OVER_SCROLL_ALWAYS
+                setPadding(dp2px(20), dp2px(12), dp2px(20), dp2px(80))
+                clipToPadding = false
+                setBackgroundColor(Color.TRANSPARENT)
+                applyGlassBlur()
+            }
+
+            // 还原苹果风背景模糊：应用于 MainActivity 的背景图，从而透过透明卡片显示出来
+            (requireActivity() as? MainActivity)?.findViewById<ImageView>(R.id.global_bg_image)?.let { bg ->
+                bg.alpha = 0.5f 
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    bg.setRenderEffect(RenderEffect.createBlurEffect(75f, 75f, Shader.TileMode.CLAMP))
+                }
             }
         }
 
