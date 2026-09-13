@@ -32,6 +32,7 @@ import androidx.preference.DropDownPreference
 import androidx.preference.PreferenceViewHolder
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.ktx.dp2px
+import io.nekohasekai.sagernet.ktx.getColour
 import io.nekohasekai.sagernet.ktx.getColorAttr
 
 open class SimpleMenuPreference
@@ -66,7 +67,7 @@ open class SimpleMenuPreference
     }
 
     override fun createAdapter(): ArrayAdapter<CharSequence?> {
-        mAdapter = SimpleMenuAdapter(context, android.R.layout.simple_list_item_1)
+        mAdapter = SimpleMenuAdapter(context, R.layout.layout_spinner_item)
         return mAdapter
     }
 
@@ -75,7 +76,7 @@ open class SimpleMenuPreference
         private var selectedItemPosition = -1
 
         private val radius = 12f * context.resources.displayMetrics.density
-        private val selectedColor = context.getColorAttr(R.attr.colorMaterial100)
+        private val selectedColor = context.getColour(R.color.dropdown_color_selected)
 
         private val topDrawable = GradientDrawable().apply {
             setColor(selectedColor)
