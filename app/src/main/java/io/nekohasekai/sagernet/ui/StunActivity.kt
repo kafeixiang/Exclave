@@ -31,10 +31,7 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.databinding.LayoutStunBinding
-import io.nekohasekai.sagernet.ktx.PUBLIC_STUN_SERVERS
-import io.nekohasekai.sagernet.ktx.listByLineOrComma
-import io.nekohasekai.sagernet.ktx.onMainDispatcher
-import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
+import io.nekohasekai.sagernet.ktx.*
 import io.noties.markwon.Markwon
 import libexclavecore.Libexclavecore
 
@@ -49,6 +46,12 @@ class StunActivity : ThemedActivity() {
         binding = LayoutStunBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.stunServerCard.applyGlassBlur()
+        binding.natMappingBehaviourCard.applyGlassBlur()
+        binding.natFilteringBehaviourCard.applyGlassBlur()
+        binding.natTypeCard.applyGlassBlur()
+        binding.natExternalAddressCard.applyGlassBlur()
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             v.updatePadding(
@@ -56,7 +59,7 @@ class StunActivity : ThemedActivity() {
             )
             insets
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.result_layout)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.resultLayout) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
@@ -65,7 +68,7 @@ class StunActivity : ThemedActivity() {
             v.updatePadding(
                 left = bars.left,
                 right = bars.right,
-                bottom = if (ime.bottom > bars.bottom) 0 else bars.bottom - ime.bottom,
+                bottom = if (ime.bottom > bars.bottom) 0 else bars.bottom - ime.bottom + dp2px(16),
             )
             insets
         }
@@ -142,7 +145,6 @@ class StunActivity : ThemedActivity() {
                 binding.resultLayout.isVisible = true
                 markwon.setMarkdown(binding.natMappingBehaviour, result.natMapping)
                 markwon.setMarkdown(binding.natFilteringBehaviour, result.natFiltering)
-                markwon.setMarkdown(binding.natExternalAddress, result.host)
                 binding.natMappingBehaviourCard.isVisible = true
                 binding.natFilteringBehaviourCard.isVisible = true
                 binding.natTypeCard.isVisible = false

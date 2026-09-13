@@ -99,7 +99,7 @@ abstract class ThemedActivity : AppCompatActivity {
                 insetController.isAppearanceLightNavigationBars = !Theme.usingNightMode()
             }
             insetController.isAppearanceLightStatusBars =
-                if (DataStore.appTheme == Theme.BLACK) !Theme.usingNightMode() else false
+                if (DataStore.appTheme == Theme.BLACK || DataStore.appTheme >= 100) !Theme.usingNightMode() else false
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
@@ -129,7 +129,7 @@ abstract class ThemedActivity : AppCompatActivity {
         if (newConfig.uiMode != uiMode) {
             uiMode = newConfig.uiMode
 
-            if (DataStore.appTheme == Theme.BLACK) {
+            if (DataStore.appTheme == Theme.BLACK || DataStore.appTheme >= 100) {
                 Theme.apply(this)
             }
 
