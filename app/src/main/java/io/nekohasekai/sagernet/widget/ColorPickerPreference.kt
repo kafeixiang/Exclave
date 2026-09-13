@@ -28,6 +28,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
@@ -42,6 +43,7 @@ import com.google.android.flexbox.FlexboxLayout
 import com.google.android.flexbox.JustifyContent
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.nekohasekai.sagernet.R
+import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.dp2px
 import io.nekohasekai.sagernet.ktx.getColorAttr
 import kotlin.math.roundToInt
@@ -112,38 +114,72 @@ class ColorPickerPreference
 
         lateinit var dialog: AlertDialog
 
-        val flexbox = FlexboxLayout(context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            flexWrap = FlexWrap.WRAP
-            justifyContent = JustifyContent.SPACE_BETWEEN
-            val colors = context.resources.getIntArray(R.array.material_colors)
+        fun addColorsToLayout(layout: FlexboxLayout, arrayRes: Int, idOffset: Int) {
+            val colors = context.resources.getIntArray(arrayRes)
             for ((i, color) in colors.withIndex()) {
                 val view = getImageViewAtColor(color, 64, 0).apply {
                     setOnClickListener {
-                        persistInt(i + 1)
+                        persistInt(i + idOffset)
                         dialog.dismiss()
-                        callChangeListener(i + 1)
+                        callChangeListener(i + idOffset)
                     }
                 }
-                addView(view)
+                layout.addView(view)
             }
         }
 
-        val scrollView = NestedScrollView(context).apply {
-            setPadding(dp2px(16), dp2px(16), dp2px(16), 0)
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            addView(flexbox)
+            
+            // Cupertino Section
+            addView(TextView(context).apply {
+                text = context.getString(R.string.theme_cupertino_category)
+                textSize = 14f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setPadding(0, 0, 0, dp2px(8))
+            })
+            val cupertinoFlex = FlexboxLayout(context).apply {
+                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                flexWrap = FlexWrap.WRAP
+                justifyContent = JustifyContent.SPACE_BETWEEN
+            }
+            addColorsToLayout(cupertinoFlex, R.array.cupertino_colors, 101)
+            addView(cupertinoFlex)
+
+            // Material Section
+            addView(TextView(context).apply {
+                text = context.getString(R.string.theme_material_category)
+                textSize = 14f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setPadding(0, dp2px(16), 0, dp2px(8))
+            })
+            val materialFlex = FlexboxLayout(context).apply {
+                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                flexWrap = FlexWrap.WRAP
+                justifyContent = JustifyContent.SPACE_BETWEEN
+            }
+            addColorsToLayout(materialFlex, R.array.material_colors, 1)
+            addView(materialFlex)
+        }
+
+        val scrollView = NestedScrollView(context).apply {
+            setPadding(dp2px(16), dp2px(16), dp2px(16), dp2px(16))
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            addView(container)
         }
 
         dialog = MaterialAlertDialogBuilder(context).setTitle(title)
             .setView(scrollView)
             .setNegativeButton(android.R.string.cancel, null)
-            .show()
+            .create()
+        dialog.applyGlassBlur()
+        dialog.show()
     }
 }

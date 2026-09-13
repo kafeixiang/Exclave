@@ -33,10 +33,10 @@
             @style/ShapeAppearance.MaterialComponents.MediumComponent
         </item>
         <item name="alertDialogTheme">
-            @style/ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet
+            @style/ThemeOverlay.SagerNet.AlertDialog
         </item>
         <item name="materialAlertDialogTheme">
-            @style/ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet
+            @style/ThemeOverlay.SagerNet.AlertDialog
         </item>
     </style>
 </resources>
