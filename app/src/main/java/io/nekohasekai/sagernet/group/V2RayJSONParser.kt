@@ -351,13 +351,13 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                                     try {
                                         // RPRX's smart-assed invention. This of course will break under some conditions.
                                         val u = Libexclavecore.parseURL(path)
-                                        u.queryParameter("ed")?.also { ed ->
+                                        u.queryParameter("ed")?.takeIf { it.isNotEmpty() }?.also { ed ->
                                             u.deleteQueryParameter("ed")
                                             v2rayBean.path = u.string
-                                            ed.toIntOrNull()?.also {
+                                            ed.toIntOrNull()?.takeIf { it > 0 }?.also {
                                                 v2rayBean.maxEarlyData = it
+                                                v2rayBean.earlyDataHeaderName = "Sec-WebSocket-Protocol"
                                             }
-                                            v2rayBean.earlyDataHeaderName = "Sec-WebSocket-Protocol"
                                         }
                                     } catch (_: Exception) {}
                                 }
@@ -426,7 +426,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                                     try {
                                         // RPRX's smart-assed invention. This of course will break under some conditions.
                                         val u = Libexclavecore.parseURL(it)
-                                        u.queryParameter("ed")?.also {
+                                        u.queryParameter("ed")?.takeIf { it.isNotEmpty() }?.also {
                                             u.deleteQueryParameter("ed")
                                             v2rayBean.path = u.string
                                         }
