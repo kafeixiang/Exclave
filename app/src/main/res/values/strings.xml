@@ -461,6 +461,8 @@
     <string name="congestion_control">Congestion control</string>
     <string name="tuic_disable_sni">Disable SNI</string>
     <string name="tuic_zero_rtt_handshake">0-RTT handshake</string>
+    <string name="tuic_token" translatable="false">Token</string>
+    <string name="tuic_reduce_rtt" translatable="false">Reduce RTT</string>
     <string name="reality_public_key">REALITY public key</string>
     <string name="reality_short_id">REALITY Short ID</string>
     <string name="reality_fingerprint">REALITY uTLS fingerprint</string>
@@ -689,4 +691,5 @@
     <string name="naiveproxy_idle_timeout">Idle timeout (s)</string>
     <string name="uri_template">URI Template</string>
     <string name="action_masque" translatable="false">MASQUE</string>
+    <string name="heartbeat_interval">Heartbeat interval (s)</string>
 </resources>

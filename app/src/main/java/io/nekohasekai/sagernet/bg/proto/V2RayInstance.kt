@@ -161,6 +161,7 @@ abstract class V2RayInstance(
                         )
                         processes.start(commands, env)
                     }
+
                     bean is MatsuriBean -> {
                         // config built from JS
                         val nekoRunConfigs = bean.allConfig?.getJsonArray("nekoRunConfigs")
