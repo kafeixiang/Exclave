@@ -25,4 +25,5 @@ import (
 	// and https://github.com/golang/go/issues/73097. As a workaround, bind
 	// a remote module (`gomobile bind "example.com/module"`) instead.
 	_ "github.com/exclavenetwork/libexclavecore"
+	_ "github.com/exclavenetwork/sing-tuicv4"
 )
