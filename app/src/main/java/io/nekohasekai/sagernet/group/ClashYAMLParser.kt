@@ -41,6 +41,9 @@ import io.nekohasekai.sagernet.fmt.ssh.SSHBean
 import io.nekohasekai.sagernet.fmt.trojan.TrojanBean
 import io.nekohasekai.sagernet.fmt.trusttunnel.TrustTunnelBean
 import io.nekohasekai.sagernet.fmt.snell.SnellBean
+import io.nekohasekai.sagernet.fmt.tuic.TuicBean
+import io.nekohasekai.sagernet.fmt.tuic.supportedTuicCongestionControl
+import io.nekohasekai.sagernet.fmt.tuic.supportedTuicRelayMode
 import io.nekohasekai.sagernet.fmt.tuic5.Tuic5Bean
 import io.nekohasekai.sagernet.fmt.tuic5.supportedTuic5CongestionControl
 import io.nekohasekai.sagernet.fmt.tuic5.supportedTuic5RelayMode
@@ -704,8 +707,27 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
         }
         "tuic" -> {
             if (proxy.getString("token") != null) {
-                // v4, unsupported
-                return listOf()
+                return listOf(TuicBean().apply {
+                    serverAddress = proxy.getString("ip") ?: proxy.getString("server") ?: return listOf()
+                    serverPort = proxy.getInt("port")?.takeIf { it > 0 } ?: return listOf()
+                    token = proxy.getString("token")
+                    udpRelayMode = when (val mode = proxy.getString("udp-relay-mode")) {
+                        in supportedTuicRelayMode -> mode
+                        else -> "native"
+                    }
+                    congestionController = when (val controller = proxy.getString("congestion-controller")) {
+                        in supportedTuicCongestionControl -> controller
+                        else -> "cubic"
+                    }
+                    disableSNI = proxy.getBoolean("disable-sni") == true
+                    reduceRTT = proxy.getBoolean("reduce-rtt") == true
+                    allowInsecure = proxy.getBoolean("skip-cert-verify") == true || proxy.getBoolean("allow-insecure") == true || proxy.getBoolean("insecure") == true
+                    heartbeat = proxy.getInt("heartbeat-interval") ?: proxy.getInt("heartbeat") ?: 10
+                    sni = proxy.getString("sni")
+                        ?: (if (proxy.getString("ip") != null) proxy.getString("server") else null)
+                    alpn = if (!proxy.contains("alpn")) "h3" else proxy.getStringArray("alpn")?.joinToString("\n")
+                    name = proxy.getString("name")
+                })
             } else {
                 return listOf(Tuic5Bean().apply {
                     serverAddress = proxy.getString("ip") ?: proxy.getString("server") ?: return listOf()

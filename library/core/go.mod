@@ -23,6 +23,7 @@ require (
 	github.com/exclavenetwork/reality v0.0.0-20260921174136-96fe685b8ce9 // indirect
 	github.com/exclavenetwork/sing-juicity v0.3.0 // indirect
 	github.com/exclavenetwork/sing-shadowquic v0.0.0-20260904152941-03a261e772e4 // indirect
+	github.com/exclavenetwork/sing-tuicv4 v0.0.0-20260904153334-e3e810d029b6
 	github.com/gofrs/uuid/v5 v5.5.1 // indirect
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
@@ -49,7 +50,7 @@ require (
 	github.com/sagernet/quic-go v0.61.0-sing-box-mod.7 // indirect
 	github.com/sagernet/sing v0.9.5 // indirect
 	github.com/sagernet/sing-mux v0.3.8 // indirect
-	github.com/sagernet/sing-quic v0.7.0 // indirect
+	github.com/sagernet/sing-quic v0.7.1-0.20260904135313-497364e8ee3e // indirect
 	github.com/sagernet/sing-shadowsocks v0.2.8 // indirect
 	github.com/sagernet/sing-shadowsocks2 v0.2.1 // indirect
 	github.com/sagernet/sing-snell v0.0.0-20260904135315-bc5a12ac736f // indirect

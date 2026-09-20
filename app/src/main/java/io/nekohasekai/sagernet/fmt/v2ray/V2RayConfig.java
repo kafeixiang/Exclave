@@ -960,6 +960,7 @@ public class V2RayConfig {
         public Integer port;
         public String uuid;
         public String password;
+        public String token;
         public String congestionControl;
         public String udpRelayMode;
         public Integer heartbeat;

@@ -56,6 +56,7 @@ import io.nekohasekai.sagernet.fmt.ssh.SSHBean
 import io.nekohasekai.sagernet.fmt.trojan.TrojanBean
 import io.nekohasekai.sagernet.fmt.trusttunnel.TrustTunnelBean
 import io.nekohasekai.sagernet.fmt.snell.SnellBean
+import io.nekohasekai.sagernet.fmt.tuic.TuicBean
 import io.nekohasekai.sagernet.fmt.tuic5.Tuic5Bean
 import io.nekohasekai.sagernet.fmt.v2ray.StandardV2RayBean
 import io.nekohasekai.sagernet.fmt.v2ray.V2RayConfig
@@ -1422,6 +1423,49 @@ fun buildV2RayConfig(
                                         }
                                         if (bean.serverNameToVerify.isNotEmpty()) {
                                             serverNameToVerify = bean.serverNameToVerify.listByLineOrComma()
+                                        }
+                                    }
+                                }
+                            } else if (bean is TuicBean) {
+                                protocol = "tuic"
+                                settings = LazyOutboundConfigurationObject(this,
+                                    V2RayConfig.TUICOutboundConfigurationObject().apply {
+                                        address = bean.serverAddress
+                                        port = bean.serverPort
+                                        token = bean.token
+                                        password = bean.token
+                                        congestionControl = bean.congestionController
+                                        udpRelayMode = bean.udpRelayMode
+                                        if (bean.heartbeat != null && bean.heartbeat > 0) heartbeat = bean.heartbeat
+                                        if (bean.reduceRTT) zeroRTTHandshake = bean.reduceRTT
+                                    }
+                                )
+                                streamSettings = StreamSettingsObject().apply {
+                                    security = "tls"
+                                    tlsSettings = TLSObject().apply {
+                                        if (bean.sni.isNotEmpty()) {
+                                            serverName = bean.sni
+                                        }
+                                        if (bean.alpn.isNotEmpty()) {
+                                            alpn = bean.alpn.listByLineOrComma()
+                                        }
+                                        if (bean.allowInsecure) {
+                                            allowInsecure = true
+                                        }
+                                        if (bean.disableSNI) {
+                                            serverName = "127.0.0.1"
+                                            if (serverNameToVerify.isNullOrEmpty()) {
+                                                serverNameToVerify = listOf(bean.sni.ifEmpty { bean.serverAddress })
+                                            }
+                                        }
+                                        if (bean.caText.isNotEmpty()) {
+                                            disableSystemRoot = true
+                                            certificates = mutableListOf(
+                                                TLSObject.CertificateObject().apply {
+                                                    usage = "verify"
+                                                    certificate = bean.caText.lines()
+                                                }
+                                            )
                                         }
                                     }
                                 }

@@ -67,6 +67,9 @@ import io.nekohasekai.sagernet.fmt.trusttunnel.TrustTunnelBean
 import io.nekohasekai.sagernet.fmt.snell.SnellBean
 import io.nekohasekai.sagernet.ui.profile.SnellSettingsActivity
 import io.nekohasekai.sagernet.fmt.trusttunnel.toUri
+import io.nekohasekai.sagernet.fmt.tuic.TuicBean
+import io.nekohasekai.sagernet.fmt.tuic.buildTuicConfig
+import io.nekohasekai.sagernet.fmt.tuic.toUri
 import io.nekohasekai.sagernet.fmt.tuic5.Tuic5Bean
 import io.nekohasekai.sagernet.fmt.tuic5.toUri
 import io.nekohasekai.sagernet.fmt.v2ray.VLESSBean
@@ -101,6 +104,7 @@ data class ProxyEntity(
     var naiveBean: NaiveBean? = null,
     var hysteria2Bean: Hysteria2Bean? = null,
     var mieruBean: MieruBean? = null,
+    var tuicBean: TuicBean? = null,
     var tuic5Bean: Tuic5Bean? = null,
     var sshBean: SSHBean? = null,
     var wgBean: WireGuardBean? = null,
@@ -129,6 +133,7 @@ data class ProxyEntity(
         const val TYPE_SSH = 17
         const val TYPE_WG = 18
         const val TYPE_MIERU = 19
+        const val TYPE_TUIC = 20
         const val TYPE_TUIC5 = 23
         const val TYPE_JUICITY = 25
         const val TYPE_HTTP3 = 26
@@ -224,6 +229,7 @@ data class ProxyEntity(
             TYPE_SSH -> sshBean = KryoConverters.sshDeserialize(byteArray)
             TYPE_WG -> wgBean = KryoConverters.wireguardDeserialize(byteArray)
             TYPE_MIERU -> mieruBean = KryoConverters.mieruDeserialize(byteArray)
+            TYPE_TUIC -> tuicBean = KryoConverters.tuicDeserialize(byteArray)
             TYPE_TUIC5 -> tuic5Bean = KryoConverters.tuic5Deserialize(byteArray)
             TYPE_JUICITY -> juicityBean = KryoConverters.juicityDeserialize(byteArray)
             TYPE_HTTP3 -> http3Bean = KryoConverters.http3Deserialize(byteArray)
@@ -252,7 +258,8 @@ data class ProxyEntity(
         TYPE_SSH -> "SSH"
         TYPE_WG -> "WireGuard"
         TYPE_MIERU -> "mieru"
-        TYPE_TUIC5 -> "TUIC"
+        TYPE_TUIC -> "TUIC v4"
+        TYPE_TUIC5 -> "TUIC v5"
         TYPE_JUICITY -> "Juicity"
         TYPE_HTTP3 -> "HTTP/3"
         TYPE_ANYTLS -> "AnyTLS"
@@ -284,6 +291,7 @@ data class ProxyEntity(
             TYPE_SSH -> sshBean
             TYPE_WG -> wgBean
             TYPE_MIERU -> mieruBean
+            TYPE_TUIC -> tuicBean
             TYPE_TUIC5 -> tuic5Bean
             TYPE_JUICITY -> juicityBean
             TYPE_HTTP3 -> http3Bean
@@ -331,6 +339,7 @@ data class ProxyEntity(
             is NaiveBean -> toUri()
             is Hysteria2Bean -> toUri()
             is JuicityBean -> toUri()
+            is TuicBean -> toUri()
             is Tuic5Bean -> toUri()
             is MieruBean -> toUri()
             is Http3Bean -> toUri()
@@ -364,6 +373,10 @@ data class ProxyEntity(
                                 append("\n\n")
                                 append(bean.buildNaiveConfig(port, username, password))
                             }
+                            is TuicBean -> {
+                                append("\n\n")
+                                append(bean.buildTuicConfig(port, forExport = true, cacheFile = null))
+                            }
                         }
                     }
                 }
@@ -391,6 +404,7 @@ data class ProxyEntity(
         sshBean = null
         wgBean = null
         mieruBean = null
+        tuicBean = null
         tuic5Bean = null
         juicityBean = null
         http3Bean = null
@@ -453,6 +467,10 @@ data class ProxyEntity(
             is MieruBean -> {
                 type = TYPE_MIERU
                 mieruBean = bean
+            }
+            is TuicBean -> {
+                type = TYPE_TUIC
+                tuicBean = bean
             }
             is Tuic5Bean -> {
                 type = TYPE_TUIC5
@@ -519,6 +537,7 @@ data class ProxyEntity(
             TYPE_SSH -> SSHSettingsActivity::class.java
             TYPE_WG -> WireGuardSettingsActivity::class.java
             TYPE_MIERU -> MieruSettingsActivity::class.java
+            TYPE_TUIC -> TuicSettingsActivity::class.java
             TYPE_TUIC5 -> Tuic5SettingsActivity::class.java
             TYPE_JUICITY -> JuicitySettingsActivity::class.java
             TYPE_HTTP3 -> Http3SettingsActivity::class.java

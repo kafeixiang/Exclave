@@ -421,6 +421,7 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverNaiveNoPostQuantum by profileCacheStore.boolean(Key.SERVER_NAIVE_NO_POST_QUANTUM)
     var serverNaiveTunnelTimeout by profileCacheStore.stringToIntIfExists(Key.SERVER_NAIVE_TUNNEL_TIMEOUT)
     var serverNaiveIdleTimeout by profileCacheStore.stringToIntIfExists(Key.SERVER_NAIVE_IDLE_TIMEOUT)
+    var serverHeartbeatInterval by profileCacheStore.stringToIntIfExists(Key.SERVER_HEARTBEAT_INTERVAL)
     var serverSingUot by profileCacheStore.boolean(Key.SERVER_SING_UOT)
     var serverSingMux by profileCacheStore.boolean(Key.SERVER_SING_MUX)
     var serverSingMuxProtocol by profileCacheStore.string(Key.SERVER_SING_MUX_PROTOCOL)

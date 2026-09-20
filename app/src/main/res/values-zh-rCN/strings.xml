@@ -444,6 +444,8 @@
     <string name="route_need_fine_location">路由规则`%s`需要获取你的**Wi-Fi SSID**，但这需要**确切位置信息权限**</string>
     <string name="route_need_coarse_location">路由规则`%s`需要获取你的**Wi-Fi SSID**，但这需要**大概位置信息权限**</string>
     <string name="tuic_zero_rtt_handshake">0-RTT 握手</string>
+    <string name="tuic_token">Token</string>
+    <string name="tuic_reduce_rtt">降低 RTT</string>
     <string name="reality_public_key">REALITY 公钥</string>
     <string name="reality_short_id">REALITY Short ID</string>
     <string name="reality_fingerprint">REALITY uTLS 指纹</string>
@@ -664,4 +666,5 @@
     <string name="snell_obfs_uri">混淆 URI</string>
     <string name="naiveproxy_tunnel_timeout">隧道超时（秒）</string>
     <string name="naiveproxy_idle_timeout">空闲超时（秒）</string>
+    <string name="heartbeat_interval">心跳间隔（秒）</string>
 </resources>
