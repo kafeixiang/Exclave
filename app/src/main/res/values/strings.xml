@@ -461,6 +461,8 @@
     <string name="congestion_control">Congestion control</string>
     <string name="tuic_disable_sni">Disable SNI</string>
     <string name="tuic_zero_rtt_handshake">0-RTT handshake</string>
+    <string name="tuic_token" translatable="false">Token</string>
+    <string name="tuic_reduce_rtt" translatable="false">Reduce RTT</string>
     <string name="reality_public_key">REALITY public key</string>
     <string name="reality_short_id">REALITY Short ID</string>
     <string name="reality_fingerprint">REALITY uTLS fingerprint</string>
@@ -692,4 +694,5 @@
     <string name="disable_toggle_shortcut">Disable toggle shortcut</string>
     <string name="disable_tasker_integration">Disable Tasker integration</string>
     <string name="kill_and_restart">Kill and restart the app to take effect</string>
+    <string name="heartbeat_interval">Heartbeat interval (s)</string>
 </resources>

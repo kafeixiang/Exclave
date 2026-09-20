@@ -20,6 +20,7 @@
 package io.nekohasekai.sagernet.fmt.tuic5
 
 import io.nekohasekai.sagernet.fmt.AbstractBean
+import io.nekohasekai.sagernet.fmt.tuic.parseTuic4
 import io.nekohasekai.sagernet.ktx.listByLineOrComma
 import io.nekohasekai.sagernet.ktx.parseUUID
 import io.nekohasekai.sagernet.ktx.queryParameter
@@ -32,7 +33,7 @@ val supportedTuic5RelayMode = arrayOf("native", "quic")
 fun parseTuic(server: String): AbstractBean {
     val link = Libexclavecore.parseURL(server)
     if (link.queryParameter("version") == "4") {
-        error("unsupported")
+        return parseTuic4(server)
     }
     return Tuic5Bean().apply {
         serverAddress = link.host
@@ -94,7 +95,9 @@ fun parseTuic(server: String): AbstractBean {
                 parseUUID(link.username)
             }
         }
-        require(u != null) { "invalid uuid" }
+        if (u == null) {
+            return parseTuic4(server)
+        }
         uuid = u.toHexDashString()
         link.queryParameter("sni")?.let {
             sni = it
