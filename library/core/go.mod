@@ -23,6 +23,7 @@ require (
 	github.com/exclavenetwork/reality v0.0.0-20261008155612-cc902fba9d14 // indirect
 	github.com/exclavenetwork/sing-juicity v0.3.1 // indirect
 	github.com/exclavenetwork/sing-shadowquic v0.0.0-20261003180916-bfda7e07df34 // indirect
+	github.com/exclavenetwork/sing-tuicv4 v0.0.0-20260928132939-00e432eecb74
 	github.com/gofrs/uuid/v5 v5.5.1 // indirect
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect

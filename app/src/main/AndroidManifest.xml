@@ -186,6 +186,8 @@
         <activity
             android:name="io.nekohasekai.sagernet.ui.profile.MieruSettingsActivity" />
         <activity
+            android:name="io.nekohasekai.sagernet.ui.profile.TuicSettingsActivity" />
+        <activity
             android:name="io.nekohasekai.sagernet.ui.profile.Tuic5SettingsActivity" />
         <activity
             android:name="io.nekohasekai.sagernet.ui.profile.JuicitySettingsActivity" />
