@@ -28,6 +28,7 @@ import io.nekohasekai.sagernet.database.*
 import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.fmt.hysteria2.Hysteria2Bean
 import io.nekohasekai.sagernet.fmt.shadowsocks.ShadowsocksBean
+import io.nekohasekai.sagernet.fmt.tuic.TuicBean
 import io.nekohasekai.sagernet.fmt.tuic5.Tuic5Bean
 import io.nekohasekai.sagernet.fmt.trojan.TrojanBean
 import io.nekohasekai.sagernet.fmt.v2ray.StandardV2RayBean
@@ -220,15 +221,31 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
                         uploadMbps = profile.getLong("uploadMbps") ?: 0L
                         downloadMbps = profile.getLong("downloadMbps") ?: 0L
                     }
-                    "tuic" -> Tuic5Bean().apply {
-                        serverAddress = profile.getString("address") ?: error("missing address")
-                        serverPort = profile.getInt("port") ?: error("missing port")
-                        uuid = profile.getString("uuid") ?: ""
-                        password = profile.getString("password") ?: ""
-                        sni = profile.getString("sni") ?: ""
-                        allowInsecure = profile.getBoolean("allowInsecure") ?: false
-                        congestionControl = profile.getString("congestionControl") ?: "cubic"
-                        udpRelayMode = profile.getString("udpRelayMode") ?: "native"
+                    "tuic" -> {
+                        val token = profile.getString("token")
+                        if (!token.isNullOrEmpty()) {
+                            TuicBean().apply {
+                                serverAddress = profile.getString("address") ?: error("missing address")
+                                serverPort = profile.getInt("port") ?: error("missing port")
+                                this.token = token
+                                sni = profile.getString("sni") ?: ""
+                                congestionController = profile.getString("congestionControl") ?: "cubic"
+                                udpRelayMode = profile.getString("udpRelayMode") ?: "native"
+                                allowInsecure = profile.getBoolean("allowInsecure") ?: false
+                                heartbeat = profile.getInt("heartbeat") ?: 10
+                            }
+                        } else {
+                            Tuic5Bean().apply {
+                                serverAddress = profile.getString("address") ?: error("missing address")
+                                serverPort = profile.getInt("port") ?: error("missing port")
+                                uuid = profile.getString("uuid") ?: ""
+                                password = profile.getString("password") ?: ""
+                                sni = profile.getString("sni") ?: ""
+                                allowInsecure = profile.getBoolean("allowInsecure") ?: false
+                                congestionControl = profile.getString("congestionControl") ?: "cubic"
+                                udpRelayMode = profile.getString("udpRelayMode") ?: "native"
+                            }
+                        }
                     }
                     else -> continue
                 }
