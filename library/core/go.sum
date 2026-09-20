@@ -76,6 +76,8 @@ github.com/exclavenetwork/sing-juicity v0.3.1 h1:0NXWxJwQZqyoeE9WOWj7YzJ6k0GEHOI
 github.com/exclavenetwork/sing-juicity v0.3.1/go.mod h1:6ShPI5F5+2gTWqT3TJufV7/1zPOKx2M5yy7a5GGzfeE=
 github.com/exclavenetwork/sing-shadowquic v0.0.0-20260904152941-03a261e772e4 h1:NPHSqceAGOa7G6jCN4BdKrl6ofMhnDbnxR+6OYK8UoY=
 github.com/exclavenetwork/sing-shadowquic v0.0.0-20260904152941-03a261e772e4/go.mod h1:dnogioLE7ZFypHbYHMFo2NMvzUniEdhht0qKlN0IlIM=
+github.com/exclavenetwork/sing-tuicv4 v0.0.0-20260928132939-00e432eecb74 h1:3GncxTVTYYwE1r3l4Bem+go30jZWK5D++2LdZaEmrDQ=
+github.com/exclavenetwork/sing-tuicv4 v0.0.0-20260928132939-00e432eecb74/go.mod h1:G/j2WlG1oJ512wtXSutKS4bu+wNl88UCSoBXUurwloI=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=

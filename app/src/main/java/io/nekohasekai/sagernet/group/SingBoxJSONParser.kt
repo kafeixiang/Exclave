@@ -40,6 +40,9 @@ import io.nekohasekai.sagernet.fmt.snell.SnellBean
 import io.nekohasekai.sagernet.fmt.socks.SOCKSBean
 import io.nekohasekai.sagernet.fmt.ssh.SSHBean
 import io.nekohasekai.sagernet.fmt.trojan.TrojanBean
+import io.nekohasekai.sagernet.fmt.tuic.TuicBean
+import io.nekohasekai.sagernet.fmt.tuic.supportedTuicCongestionControl
+import io.nekohasekai.sagernet.fmt.tuic.supportedTuicRelayMode
 import io.nekohasekai.sagernet.fmt.tuic5.Tuic5Bean
 import io.nekohasekai.sagernet.fmt.tuic5.supportedTuic5CongestionControl
 import io.nekohasekai.sagernet.fmt.tuic5.supportedTuic5RelayMode
@@ -538,119 +541,171 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
             return listOf(hysteria2Bean)
         }
         "tuic" -> {
-            val tuic5Bean = Tuic5Bean().apply {
-                outbound.getString("tag", ignoreCase = false)?.also {
-                    name = it
-                }
-                outbound.getString("server")?.also {
-                    serverAddress = it
-                } ?: return listOf()
-                outbound.getInt("server_port")?.also {
-                    serverPort = it
-                } ?: return listOf()
-                outbound.getString("uuid").orEmpty().also {
-                    uuid = parseUUID(it)?.toHexDashString() ?: return listOf()
-                }
-                outbound.getString("password")?.also {
-                    password = it
-                }
-                outbound.getString("congestion_control")?.also {
-                    congestionControl = if (it in supportedTuic5CongestionControl) it else "cubic"
-                }
-                outbound.getString("udp_relay_mode")?.also {
-                    udpRelayMode = if (it in supportedTuic5RelayMode) it else "native"
-                }
-                outbound.getBoolean("zero_rtt_handshake")?.also {
-                    zeroRTTHandshake = it
-                }
-                outbound.getObject("tls")?.also { tls ->
-                    if (tls.getBoolean("enabled") != true) {
-                        return listOf()
+            val tokenStr = outbound.getString("token")
+            val uuidStr = outbound.getString("uuid")
+            val parsedUuid = uuidStr?.let { parseUUID(it) }
+
+            if (!tokenStr.isNullOrEmpty() || parsedUuid == null) {
+                val tuicBean = TuicBean().apply {
+                    outbound.getString("tag", ignoreCase = false)?.also {
+                        name = it
                     }
-                    if (tls.getObject("reality")?.getBoolean("enabled") == true) {
-                        return listOf()
+                    outbound.getString("server")?.also {
+                        serverAddress = it
+                    } ?: return listOf()
+                    outbound.getInt("server_port")?.also {
+                        serverPort = it
+                    } ?: return listOf()
+                    token = tokenStr ?: outbound.getString("password").orEmpty()
+                    outbound.getString("congestion_control")?.also {
+                        congestionController = if (it in supportedTuicCongestionControl) it else "cubic"
                     }
-                    tls.getString("server_name")?.also {
-                        sni = it
+                    outbound.getString("udp_relay_mode")?.also {
+                        udpRelayMode = if (it in supportedTuicRelayMode) it else "native"
                     }
-                    tls.getStringArray("alpn")?.also {
-                        alpn = it.joinToString("\n")
-                    } ?: tls.getString("alpn")?.also {
-                        alpn = it
+                    outbound.getBoolean("zero_rtt_handshake")?.also {
+                        reduceRTT = it
                     }
-                    tls.getBoolean("insecure")?.also {
-                        allowInsecure = it
-                    }
-                    tls.getBoolean("disable_sni")?.also {
-                        disableSNI = it
-                    }
-                    if (!tls.contains("certificate_path")) {
-                        var cert: String? = null
-                        tls.getStringArray("certificate")?.also { certificate ->
-                            cert = certificate.joinToString("\n").takeIf {
-                                it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
-                            }
-                        } ?: tls.getString("certificate")?.also { certificate ->
-                            cert = certificate.takeIf {
-                                it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
-                            }
+                    outbound.getObject("tls")?.also { tls ->
+                        if (tls.getBoolean("enabled") != true) {
+                            return listOf()
                         }
-                        if (cert != null) {
-                            certificates = cert
+                        tls.getString("server_name")?.also {
+                            sni = it
                         }
-                    }
-                    if (!tls.contains("client_certificate_path") && !tls.contains("client_key_path")) {
-                        var cert: String? = null
-                        tls.getStringArray("client_certificate")?.also { clientCert ->
-                            cert = clientCert.joinToString("\n").takeIf {
-                                it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                        tls.getStringArray("alpn")?.also {
+                            alpn = it.joinToString("\n")
+                        } ?: tls.getString("alpn")?.also {
+                            alpn = it
+                        }
+                        tls.getBoolean("insecure")?.also {
+                            allowInsecure = it
+                        }
+                        tls.getBoolean("disable_sni")?.also {
+                            disableSNI = it
+                        }
+                        if (!tls.contains("certificate_path")) {
+                            var cert: String? = null
+                            tls.getStringArray("certificate")?.also { certificate ->
+                                cert = certificate.joinToString("\n").takeIf {
+                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                }
+                            } ?: tls.getString("certificate")?.also { certificate ->
+                                cert = certificate.takeIf {
+                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                }
                             }
-                        } ?: tls.getString("client_certificate")?.also { clientCert ->
-                            cert = clientCert.takeIf {
-                                it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                            if (cert != null) {
+                                caText = cert
                             }
                         }
-                        var key: String? = null
-                        tls.getStringArray("client_key")?.also { clientKey ->
-                            key = clientKey.joinToString("\n").takeIf {
-                                it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                    }
+                }
+                return listOf(tuicBean)
+            } else {
+                val tuic5Bean = Tuic5Bean().apply {
+                    outbound.getString("tag", ignoreCase = false)?.also {
+                        name = it
+                    }
+                    outbound.getString("server")?.also {
+                        serverAddress = it
+                    } ?: return listOf()
+                    outbound.getInt("server_port")?.also {
+                        serverPort = it
+                    } ?: return listOf()
+                    uuid = parsedUuid.toHexDashString()
+                    outbound.getString("password")?.also {
+                        password = it
+                    }
+                    outbound.getString("congestion_control")?.also {
+                        congestionControl = if (it in supportedTuic5CongestionControl) it else "cubic"
+                    }
+                    outbound.getString("udp_relay_mode")?.also {
+                        udpRelayMode = if (it in supportedTuic5RelayMode) it else "native"
+                    }
+                    outbound.getBoolean("zero_rtt_handshake")?.also {
+                        zeroRTTHandshake = it
+                    }
+                    outbound.getObject("tls")?.also { tls ->
+                        if (tls.getBoolean("enabled") != true) {
+                            return listOf()
+                        }
+                        if (tls.getObject("reality")?.getBoolean("enabled") == true) {
+                            return listOf()
+                        }
+                        tls.getString("server_name")?.also {
+                            sni = it
+                        }
+                        tls.getStringArray("alpn")?.also {
+                            alpn = it.joinToString("\n")
+                        } ?: tls.getString("alpn")?.also {
+                            alpn = it
+                        }
+                        tls.getBoolean("insecure")?.also {
+                            allowInsecure = it
+                        }
+                        tls.getBoolean("disable_sni")?.also {
+                            disableSNI = it
+                        }
+                        if (!tls.contains("certificate_path")) {
+                            var cert: String? = null
+                            tls.getStringArray("certificate")?.also { certificate ->
+                                cert = certificate.joinToString("\n").takeIf {
+                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                }
+                            } ?: tls.getString("certificate")?.also { certificate ->
+                                cert = certificate.takeIf {
+                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                }
                             }
-                        } ?: tls.getString("client_key")?.also { clientKey ->
-                            key = clientKey.takeIf {
-                                it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                            if (cert != null) {
+                                certificates = cert
                             }
                         }
-                        if (cert != null && key != null) {
-                            mtlsCertificate = cert
-                            mtlsCertificatePrivateKey = key
+                        if (!tls.contains("client_certificate_path") && !tls.contains("client_key_path")) {
+                            var cert: String? = null
+                            tls.getStringArray("client_certificate")?.also { clientCert ->
+                                cert = clientCert.joinToString("\n").takeIf {
+                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                }
+                            } ?: tls.getString("client_certificate")?.also { clientCert ->
+                                cert = clientCert.takeIf {
+                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                }
+                            }
+                            var key: String? = null
+                            tls.getStringArray("client_key")?.also { clientKey ->
+                                key = clientKey.joinToString("\n").takeIf {
+                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                                }
+                            } ?: tls.getString("client_key")?.also { clientKey ->
+                                key = clientKey.takeIf {
+                                    it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                                }
+                            }
+                            if (cert != null && key != null) {
+                                mtlsCertificate = cert
+                                mtlsCertificatePrivateKey = key
+                            }
                         }
-                    }
-                    tls.getByteArrayArray("certificate_public_key_sha256")?.takeIf { it.isNotEmpty() }?.also {
-                        pinnedPeerCertificatePublicKeySha256 = it.joinToString("\n") { Base64.encode(it) }
-                        allowInsecure = true
-                    } ?: tls.getByteArray("certificate_public_key_sha256")?.takeIf { it.isNotEmpty() }?.also {
-                        pinnedPeerCertificatePublicKeySha256 = Base64.encode(it)
-                        allowInsecure = true
-                    }
-                    tls.getByteArrayArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
-                        pinnedPeerCertificateSha256 = it.joinToString("\n") { it.toHexString() }
-                        allowInsecure = true
-                    } ?: tls.getByteArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
-                        pinnedPeerCertificateSha256 = it.toHexString()
-                        allowInsecure = true
-                    }
-                    /*tls.getObject("ech")?.also { ech ->
-                        echEnabled = ech.getBoolean("enabled")
-                        ech.getStringArray("config")?.also {
-                            echConfig = parseECHConfigPem(it.joinToString("\n"))
-                        } ?: ech.getString("config")?.also {
-                            echConfig = parseECHConfigPem(it)
+                        tls.getByteArrayArray("certificate_public_key_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                            pinnedPeerCertificatePublicKeySha256 = it.joinToString("\n") { Base64.encode(it) }
+                            allowInsecure = true
+                        } ?: tls.getByteArray("certificate_public_key_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                            pinnedPeerCertificatePublicKeySha256 = Base64.encode(it)
+                            allowInsecure = true
                         }
-                        echQueryName = ech.getString("query_server_name")
-                    }*/
-                } ?: return listOf()
+                        tls.getByteArrayArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                            pinnedPeerCertificateSha256 = it.joinToString("\n") { it.toHexString() }
+                            allowInsecure = true
+                        } ?: tls.getByteArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                            pinnedPeerCertificateSha256 = it.toHexString()
+                            allowInsecure = true
+                        }
+                    } ?: return listOf()
+                }
+                return listOf(tuic5Bean)
             }
-            return listOf(tuic5Bean)
         }
         "ssh" -> {
             val sshBean = SSHBean().apply {
