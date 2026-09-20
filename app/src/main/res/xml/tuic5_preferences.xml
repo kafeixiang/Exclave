@@ -17,6 +17,15 @@
             app:key="serverPort"
             app:title="@string/server_port"
             app:useSimpleSummaryProvider="true" />
+        <io.nekohasekai.sagernet.widget.SimpleMenuPreference
+            app:defaultValue="5"
+            app:entries="@array/tuic_version_value"
+            app:entryValues="@array/tuic_version_value"
+            app:icon="@drawable/ic_baseline_compare_arrows_24"
+            app:key="serverTuicVersion"
+            app:singleLineTitle="false"
+            app:title="@string/app_version"
+            app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:icon="@drawable/ic_baseline_person_24"
             app:key="serverUserId"
@@ -73,6 +82,16 @@
             app:key="serverAllowInsecure"
             app:summary="@string/allow_insecure_sum"
             app:title="@string/allow_insecure" />
+        <EditTextPreference
+            app:icon="@drawable/baseline_public_24"
+            app:key="serverMTU"
+            app:title="@string/mtu"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            app:icon="@drawable/ic_baseline_cached"
+            app:key="serverHeartbeatInterval"
+            app:title="@string/heartbeat_interval"
+            app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:dialogMessage="@string/pinned_peer_certificate_sha256_hex_dialog_message"
             app:icon="@drawable/ic_baseline_push_pin_24"
