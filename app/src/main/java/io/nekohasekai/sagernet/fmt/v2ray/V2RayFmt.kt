@@ -957,7 +957,10 @@ fun StandardV2RayBean.toUri(): String? {
                     builder.addQueryParameter("sni", sni)
                 }
             }
-            if (alpn.isNotEmpty()) {
+            if (type == "quic" && (alpn.isEmpty() || alpn.listByLineOrComma().isEmpty())) {
+                // https://github.com/ExclaveNetwork/Exclave/issues/488
+                builder.addQueryParameter("alpn", "h3")
+            } else if (alpn.isNotEmpty()) {
                 builder.addQueryParameter("alpn", alpn.listByLineOrComma().joinToString(","))
             }
             // as pinned certificate is not exportable, only add `allowInsecure=1` if pinned certificate is not used

@@ -289,6 +289,10 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                     }
                     outbound.getString("plugin")?.takeIf { it.isNotEmpty() }?.also { pluginId ->
                         if (pluginId != "obfs-local" && pluginId != "v2ray-plugin") return listOf()
+                        // In sing-box, v2ray-plugin quic mode sends ALPN "h3" but nobody complains about it.
+                        // Let's assume nobody uses v2ray-plugin quic mode in sing-box. Keep it broken.
+                        // https://github.com/SagerNet/sing-box/pull/1934
+                        // https://github.com/ExclaveNetwork/Exclave/issues/488
                         v2rayBean.plugin = PluginOptions(pluginId, outbound.getString("plugin_opts")).toString(trimId = false)
                     }
                 }

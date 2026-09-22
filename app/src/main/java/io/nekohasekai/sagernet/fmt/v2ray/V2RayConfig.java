@@ -1251,6 +1251,7 @@ public class V2RayConfig {
         public String security;
         public String key;
         public HeaderObject header;
+        public Integer connectionIDLength;
 
         public static class HeaderObject {
 
