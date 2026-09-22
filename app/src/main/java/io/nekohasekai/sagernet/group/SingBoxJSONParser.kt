@@ -214,6 +214,13 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                                     v2rayBean.pinnedPeerCertificatePublicKeySha256 = Base64.encode(it)
                                     v2rayBean.allowInsecure = true
                                 }
+                                tls.getByteArrayArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                                    v2rayBean.pinnedPeerCertificateSha256 = it.joinToString("\n") { it.toHexString() }
+                                    v2rayBean.allowInsecure = true
+                                } ?: tls.getByteArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                                    v2rayBean.pinnedPeerCertificateSha256 = it.toHexString()
+                                    v2rayBean.allowInsecure = true
+                                }
                                 tls.getObject("reality")?.also { reality ->
                                     reality.getBoolean("enabled")?.also { enabled ->
                                         if (enabled) {
@@ -461,6 +468,13 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                         pinnedPeerCertificatePublicKeySha256 = Base64.encode(it)
                         allowInsecure = true
                     }
+                    tls.getByteArrayArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                        pinnedPeerCertificateSha256 = it.joinToString("\n") { it.toHexString() }
+                        allowInsecure = true
+                    } ?: tls.getByteArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                        pinnedPeerCertificateSha256 = it.toHexString()
+                        allowInsecure = true
+                    }
                     tls.getObject("ech")?.also { ech ->
                         echEnabled = ech.getBoolean("enabled")
                         ech.getStringArray("config")?.also {
@@ -592,6 +606,13 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                         allowInsecure = true
                     } ?: tls.getByteArray("certificate_public_key_sha256")?.takeIf { it.isNotEmpty() }?.also {
                         pinnedPeerCertificatePublicKeySha256 = Base64.encode(it)
+                        allowInsecure = true
+                    }
+                    tls.getByteArrayArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                        pinnedPeerCertificateSha256 = it.joinToString("\n") { it.toHexString() }
+                        allowInsecure = true
+                    } ?: tls.getByteArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                        pinnedPeerCertificateSha256 = it.toHexString()
                         allowInsecure = true
                     }
                     /*tls.getObject("ech")?.also { ech ->
@@ -766,6 +787,13 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                                 allowInsecure = true
                             } ?: tls.getByteArray("certificate_public_key_sha256")?.takeIf { it.isNotEmpty() }?.also {
                                 pinnedPeerCertificatePublicKeySha256 = Base64.encode(it)
+                                allowInsecure = true
+                            }
+                            tls.getByteArrayArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                                pinnedPeerCertificateSha256 = it.joinToString("\n") { it.toHexString() }
+                                allowInsecure = true
+                            } ?: tls.getByteArray("certificate_sha256")?.takeIf { it.isNotEmpty() }?.also {
+                                pinnedPeerCertificateSha256 = it.toHexString()
                                 allowInsecure = true
                             }
                             tls.getObject("reality")?.also { reality ->
