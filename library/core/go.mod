@@ -2,7 +2,7 @@ module libexclavecore
 
 go 1.26.0
 
-require github.com/exclavenetwork/libexclavecore v0.0.0-20260916015005-9c96e6f87afd
+require github.com/exclavenetwork/libexclavecore v0.0.0-20260922114515-91dbaa3d1271
 
 require (
 	filippo.io/age v1.3.2 // indirect
@@ -16,10 +16,10 @@ require (
 	github.com/dgryski/go-camellia v0.0.0-20191119043421-69a8a13fb23d // indirect
 	github.com/dgryski/go-metro v0.0.0-20250106013310-edb8663e5e33 // indirect
 	github.com/enfein/mieru/v3 v3.37.0 // indirect
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260916014909-b475c4ad44e6 // indirect
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20260922114328-5f7b6a108876 // indirect
 	github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065 // indirect
-	github.com/exclavenetwork/hysteria/core/v2 v2.12.2-1 // indirect
-	github.com/exclavenetwork/hysteria/extras/v2 v2.12.2-1 // indirect
+	github.com/exclavenetwork/hysteria/core/v2 v2.12.3-1 // indirect
+	github.com/exclavenetwork/hysteria/extras/v2 v2.12.3-1 // indirect
 	github.com/exclavenetwork/sing-juicity v0.3.0 // indirect
 	github.com/exclavenetwork/sing-shadowquic v0.0.0-20260904152941-03a261e772e4 // indirect
 	github.com/gofrs/uuid/v5 v5.5.1 // indirect
@@ -46,8 +46,8 @@ require (
 	github.com/refraction-networking/utls v1.8.3-0.20260802151714-23b1dac19c06 // indirect
 	github.com/riobard/go-bloom v0.0.0-20200614022211-cdc8013cb5b3 // indirect
 	github.com/sagernet/quic-go v0.61.0-sing-box-mod.7 // indirect
-	github.com/sagernet/sing v0.9.4 // indirect
-	github.com/sagernet/sing-mux v0.3.6 // indirect
+	github.com/sagernet/sing v0.9.5 // indirect
+	github.com/sagernet/sing-mux v0.3.8 // indirect
 	github.com/sagernet/sing-quic v0.7.0 // indirect
 	github.com/sagernet/sing-shadowsocks v0.2.8 // indirect
 	github.com/sagernet/sing-shadowsocks2 v0.2.1 // indirect
@@ -68,8 +68,8 @@ require (
 	golang.org/x/time v0.16.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20260522210424-ecfc5a8d5446 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
-	google.golang.org/grpc v1.83.2 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect
+	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gvisor.dev/gvisor v0.0.0-20250503011706-39ed1f5ac29c // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
