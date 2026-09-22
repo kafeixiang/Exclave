@@ -1153,6 +1153,8 @@ public class V2RayConfig {
         public String password; // alias of privateKey
         public String privateKey;
         public List<String> shortIds;
+        public Integer maxTimeDiff;
+        public String mldsa65Seed;
         public String serverName;
         public String publicKey;
         public String shortId;

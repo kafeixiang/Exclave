@@ -1027,7 +1027,7 @@ fun StandardV2RayBean.toUri(): String? {
                 }
                 builder.addQueryParameter("pqv", realityMldsa65Verify)
             }
-            builder.addQueryParameter("fp", "chrome") // "chrome" is only a placeholder because "若使用 REALITY，此项不可省略。".
+            // builder.addQueryParameter("fp", "chrome") // "chrome" is only a placeholder because "若使用 REALITY，此项不可省略。".
             if (this is VLESSBean && flow.isNotEmpty()) {
                 builder.addQueryParameter("flow", flow.removeSuffix("-udp443"))
             }
