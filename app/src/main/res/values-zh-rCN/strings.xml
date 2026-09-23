@@ -334,7 +334,8 @@
     <string name="traffic_statistics_summary">可能增加电量使用</string>
     <string name="ssh_private_key_passphrase">私钥密码句</string>
     <string name="ssh_private_key">私钥</string>
-    <string name="ssh_public_key">主机密钥</string>
+    <string name="ssh_public_key">公钥</string>
+    <string name="ssh_host_key">主机密钥</string>
     <string name="ssh_auth_type_none">无</string>
     <string name="clear_logcat">清空日志</string>
     <string name="menu_log">日志</string>
