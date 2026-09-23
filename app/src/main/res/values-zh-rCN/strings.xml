@@ -156,8 +156,8 @@
     <string name="traffic_sniffing">启用流量嗅探</string>
     <string name="disable">禁用</string>
     <string name="cag_misc">杂项</string>
-    <string name="enable_mux">启用 Mux</string>
-    <string name="mux_concurrency">Mux 最大并发</string>
+    <string name="enable_mux">启用 Mux.Cool</string>
+    <string name="mux_concurrency">最大并发连接</string>
     <string name="ws_host">WebSocket 主机</string>
     <string name="ws_path">WebSocket 路径</string>
     <string name="http_host">HTTP 主机</string>
@@ -439,7 +439,7 @@
     <string name="rules_geosite_url">geosite.dat URL</string>
     <string name="rules_geoip_url">geoip.dat URL</string>
     <string name="http_proxy_exception_list">HTTP 代理例外列表</string>
-    <string name="mux_settings">Mux 设置</string>
+    <string name="mux_settings">Mux.Cool 设置</string>
     <string name="update_subscription">更新订阅</string>
     <string name="group_not_a_subscription">此分组不是订阅。</string>
     <string name="enable_fragment">启用 TLS Client Hello 分片</string>
