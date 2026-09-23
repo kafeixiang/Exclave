@@ -626,4 +626,6 @@
     <string name="option_globally_enabled">This option has been enabled globally and the value will be omitted.</string>
     <string name="ech_query_name" translatable="false">ECHQueryName</string>
     <string name="snell_obfs_uri">Obfuscation URI</string>
+    <string name="naiveproxy_tunnel_timeout">Tunnel timeout (s)</string>
+    <string name="naiveproxy_idle_timeout">Idle timeout (s)</string>
 </resources>

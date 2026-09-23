@@ -69,12 +69,12 @@
         <EditTextPreference
             app:icon="@drawable/ic_baseline_cached"
             app:key="serverNaiveTunnelTimeout"
-            app:title="tunnel-timeout (s)"
+            app:title="@string/naiveproxy_tunnel_timeout"
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             app:icon="@drawable/ic_baseline_cached"
             app:key="serverNaiveIdleTimeout"
-            app:title="idle-timeout (s)"
+            app:title="@string/naiveproxy_idle_timeout"
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
