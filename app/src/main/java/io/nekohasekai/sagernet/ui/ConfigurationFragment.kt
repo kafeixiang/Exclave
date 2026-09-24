@@ -572,33 +572,38 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
             R.id.action_new_matsuri -> {
                 val context = requireContext()
-                lateinit var dialog: AlertDialog
-                val linearLayout = LinearLayout(context).apply {
-                    orientation = LinearLayout.VERTICAL
-                    MatsuriPluginManager.getProtocols().forEach { obj ->
-                        LayoutAppsItemBinding.inflate(layoutInflater, this, true).apply {
-                            itemcheck.isGone = true
-                            itemicon.setImageDrawable(
-                                PackageCache.installedApps[obj.plgId]?.loadIcon(
-                                    context.packageManager
+                val protocols = MatsuriPluginManager.getProtocols()
+                if (protocols.isEmpty()) {
+                    context.alert(getString(R.string.no_matsuri_plugins_installed)).show()
+                } else {
+                    lateinit var dialog: AlertDialog
+                    val linearLayout = LinearLayout(context).apply {
+                        orientation = LinearLayout.VERTICAL
+                        protocols.forEach { obj ->
+                            LayoutAppsItemBinding.inflate(layoutInflater, this, true).apply {
+                                itemcheck.isGone = true
+                                itemicon.setImageDrawable(
+                                    PackageCache.installedApps[obj.plgId]?.loadIcon(
+                                        context.packageManager
+                                    )
                                 )
-                            )
-                            title.text = obj.protocolId
-                            desc.text = obj.plgId
-                            appitem.setOnClickListener {
-                                dialog.dismiss()
-                                val intent = Intent(context, MatsuriSettingsActivity::class.java)
-                                intent.putExtra("plgId", obj.plgId)
-                                intent.putExtra("protocolId", obj.protocolId)
-                                startActivity(intent)
+                                title.text = obj.protocolId
+                                desc.text = obj.plgId
+                                appitem.setOnClickListener {
+                                    dialog.dismiss()
+                                    val intent = Intent(context, MatsuriSettingsActivity::class.java)
+                                    intent.putExtra("plgId", obj.plgId)
+                                    intent.putExtra("protocolId", obj.protocolId)
+                                    startActivity(intent)
+                                }
                             }
                         }
                     }
+                    dialog = MaterialAlertDialogBuilder(context).setTitle(R.string.matsuri_plugins)
+                        .setView(linearLayout)
+                        .create()
+                    dialog.apply { applyGlassBlur() }.show()
                 }
-                dialog = MaterialAlertDialogBuilder(context).setTitle(R.string.matsuri_plugins)
-                    .setView(linearLayout)
-                    .create()
-                dialog.apply { applyGlassBlur() }.show()
             }
             R.id.action_new_anytls -> {
                 startActivity(Intent(requireActivity(), AnyTLSSettingsActivity::class.java))
