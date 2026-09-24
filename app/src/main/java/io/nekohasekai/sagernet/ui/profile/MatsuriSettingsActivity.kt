@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.preference.PreferenceDataStore
-import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import androidx.preference.PreferenceFragmentCompat
 import io.nekohasekai.sagernet.Key
@@ -12,6 +11,7 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.fmt.matsuri.MatsuriBean
 import io.nekohasekai.sagernet.fmt.matsuri.onSharedStorageSet
+import io.nekohasekai.sagernet.ktx.alert
 import io.nekohasekai.sagernet.ktx.runOnIoDispatcher
 import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
 import io.nekohasekai.sagernet.plugin.MatsuriPreferenceInflater
@@ -55,7 +55,7 @@ class MatsuriSettingsActivity : ProfileSettingsActivity<MatsuriBean>() {
     }
 
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
-        if (loaded && key != Key.PROFILE_DIRTY) {
+        if ((loaded) && (key != Key.PROFILE_DIRTY)) {
             dirty = true
             onBackPressedCallback.isEnabled = true
         }
@@ -76,7 +76,7 @@ class MatsuriSettingsActivity : ProfileSettingsActivity<MatsuriBean>() {
                 jsi.jsObject.preferenceScreen = preferenceScreen
 
                 // Because of the Preference problem, first require the KV and then inflate the UI
-                jsip.setSharedStorage(DataStore.matsuriPluginStorage ?: "{}")
+                jsip.setSharedStorage(DataStore.matsuriPluginStorage)
                 jsip.requireSetProfileCache()
 
                 val config = jsip.requirePreferenceScreenConfig()
@@ -90,7 +90,12 @@ class MatsuriSettingsActivity : ProfileSettingsActivity<MatsuriBean>() {
                     listView.isVisible = true
                 }
             } catch (e: Exception) {
-                //Dialogs.logExceptionAndShow(this@NekoSettingActivity, e) { finish() }
+                runOnUiThread {
+                    alert("Failed to load plugin preferences: ${e.localizedMessage ?: e.toString()}").apply {
+                        setOnDismissListener { finish() }
+                        show()
+                    }
+                }
             }
         }
     }

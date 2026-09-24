@@ -1,5 +1,6 @@
 package io.nekohasekai.sagernet.ui
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
@@ -8,9 +9,16 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
 import android.util.SparseBooleanArray
-import android.view.*
-import android.widget.*
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
+import android.widget.TextView
 import androidx.annotation.UiThread
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.util.set
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -22,20 +30,27 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.databinding.LayoutAppListBinding
 import io.nekohasekai.sagernet.databinding.LayoutAppsItemBinding
-import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.ktx.alert
+import io.nekohasekai.sagernet.ktx.applyGlassBlur
+import io.nekohasekai.sagernet.ktx.crossFadeFrom
+import io.nekohasekai.sagernet.ktx.onMainDispatcher
+import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
+import io.nekohasekai.sagernet.ktx.runOnIoDispatcher
+import io.nekohasekai.sagernet.plugin.MatsuriJSInterface
 import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
 import io.nekohasekai.sagernet.utils.PackageCache
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.coroutineContext
 
 class MatsuriPluginListActivity : ThemedActivity() {
     companion object {
@@ -43,8 +58,10 @@ class MatsuriPluginListActivity : ThemedActivity() {
     }
 
     private class SelectedApp(
-        private val pm: PackageManager, private val appInfo: ApplicationInfo,
+        private val pm: PackageManager,
+        private val appInfo: ApplicationInfo,
         val packageName: String,
+        val versionName: String,
     ) {
         val name: CharSequence = appInfo.loadLabel(pm) // cached for sorting
         val icon: Drawable get() = appInfo.loadIcon(pm)
@@ -53,9 +70,8 @@ class MatsuriPluginListActivity : ThemedActivity() {
     }
 
     private inner class AppViewHolder(val binding: LayoutAppsItemBinding) : RecyclerView.ViewHolder(
-        binding.root
-    ),
-        View.OnClickListener {
+        binding.root,
+    ), View.OnClickListener {
         private lateinit var item: SelectedApp
 
         init {
@@ -66,7 +82,47 @@ class MatsuriPluginListActivity : ThemedActivity() {
             item = app
             binding.itemicon.setImageDrawable(app.icon)
             binding.title.text = app.name
-            binding.desc.text = "${app.packageName} (${app.uid})"
+            binding.desc.text = if (app.versionName.isNotBlank()) {
+                "${app.packageName} (${app.versionName})"
+            } else {
+                "${app.packageName} (${app.uid})"
+            }
+
+            binding.button.isVisible = true
+            binding.button.setImageDrawable(
+                AppCompatResources.getDrawable(
+                    this@MatsuriPluginListActivity,
+                    R.drawable.ic_baseline_info_24,
+                )
+            )
+            binding.button.setOnClickListener {
+                runOnIoDispatcher {
+                    try {
+                        val jsi = MatsuriJSInterface(app.packageName)
+                        jsi.init()
+                        val about = jsi.getAbout()
+                        MatsuriJSInterface.Default.destroyJsi(app.packageName)
+                        onMainDispatcher {
+                            val dialog = MaterialAlertDialogBuilder(this@MatsuriPluginListActivity)
+                                .setTitle(app.name.toString())
+                                .setMessage(
+                                    "PackageName: ${app.packageName}\n" +
+                                            "Version: ${app.versionName}\n" +
+                                            "------------------------\n" + about,
+                                )
+                                .setPositiveButton(android.R.string.ok, null)
+                                .create()
+                            dialog.apply { applyGlassBlur() }.show()
+                            dialog.findViewById<TextView>(android.R.id.message)?.setTextIsSelectable(true)
+                        }
+                    } catch (e: Exception) {
+                        onMainDispatcher {
+                            alert(e.localizedMessage ?: e.toString()).show()
+                        }
+                    }
+                }
+            }
+
             handlePayload(listOf(SWITCH))
         }
 
@@ -74,22 +130,35 @@ class MatsuriPluginListActivity : ThemedActivity() {
             if (payloads.contains(SWITCH)) {
                 val selected = isSelectedApp(item)
                 binding.itemcheck.isChecked = selected
+                binding.button.isVisible = selected
             }
         }
 
         override fun onClick(v: View?) {
-            if (isSelectedApp(item)) selectedUids.delete(item.uid) else selectedUids[item.uid] = true
+            val wasSelected = isSelectedApp(item)
+            if (wasSelected) {
+                selectedUids.delete(item.uid)
+            } else {
+                selectedUids[item.uid] = true
+            }
+
+            val nowSelected = isSelectedApp(item)
             DataStore.matsuriPlugins = apps.filter { isSelectedApp(it) }
                 .joinToString("\n") { it.packageName }
 
-            if (isSelectedApp(item)) {
+            if (nowSelected) {
                 runOnIoDispatcher {
                     try {
                         MatsuriPluginManager.installPlugin(item.packageName)
                     } catch (e: Exception) {
-                        // failed UI
-                        runOnUiThread { onClick(v) }
-                        //Dialogs.logExceptionAndShow(this@AppListActivity, e) { }
+                        onMainDispatcher {
+                            // Revert selection state on failure
+                            selectedUids.delete(item.uid)
+                            DataStore.matsuriPlugins = apps.filter { isSelectedApp(it) }
+                                .joinToString("\n") { it.packageName }
+                            appsAdapter.notifyItemRangeChanged(0, appsAdapter.itemCount, SWITCH)
+                            alert("Failed to install plugin ${item.packageName}:\n${e.localizedMessage ?: e.toString()}").show()
+                        }
                     }
                 }
             } else {
@@ -106,9 +175,17 @@ class MatsuriPluginListActivity : ThemedActivity() {
         var filteredApps = apps
 
         suspend fun reload() {
-            apps = getCachedApps().map { (packageName, packageInfo) ->
-                coroutineContext[Job]!!.ensureActive()
-                SelectedApp(packageManager, packageInfo.applicationInfo!!, packageName)
+            val coroutineCtx = currentCoroutineContext()
+            apps = getCachedApps().mapNotNull { (packageName, packageInfo) ->
+                coroutineCtx.ensureActive()
+                packageInfo.applicationInfo?.let { appInfo ->
+                    SelectedApp(
+                        packageManager,
+                        appInfo,
+                        packageName,
+                        packageInfo.versionName ?: "",
+                    )
+                }
             }.sortedWith(compareBy({ !isSelectedApp(it) }, { it.name.toString() }))
         }
 
@@ -132,8 +209,8 @@ class MatsuriPluginListActivity : ThemedActivity() {
         private val filterImpl = object : Filter() {
             override fun performFiltering(constraint: CharSequence) = FilterResults().apply {
                 var filteredApps = if (constraint.isEmpty()) apps else apps.filter {
-                    it.name.contains(constraint, true) || it.packageName.contains(
-                        constraint, true
+                    it.name.contains(constraint, ignoreCase = true) || it.packageName.contains(
+                        constraint, ignoreCase = true,
                     ) || it.uid.toString().contains(constraint)
                 }
                 if (!sysApps) filteredApps = filteredApps.filter { !it.sys }
@@ -141,6 +218,7 @@ class MatsuriPluginListActivity : ThemedActivity() {
                 values = filteredApps
             }
 
+            @SuppressLint("NotifyDataSetChanged")
             override fun publishResults(constraint: CharSequence, results: FilterResults) {
                 @Suppress("UNCHECKED_CAST")
                 filteredApps = results.values as List<SelectedApp>
@@ -164,11 +242,14 @@ class MatsuriPluginListActivity : ThemedActivity() {
     private var apps = emptyList<SelectedApp>()
     private val appsAdapter = AppsAdapter()
 
-    private fun initSelectedUids(str: String = DataStore.matsuriPlugins ?: "") {
+    private fun initSelectedUids(str: String = DataStore.matsuriPlugins) {
         selectedUids.clear()
-        val apps = getCachedApps()
-        for (line in str.lineSequence()) selectedUids[(apps[line]
-            ?: continue).applicationInfo!!.uid] = true
+        val installedMap = getCachedApps()
+        for (line in str.lineSequence()) {
+            val pkg = installedMap[line] ?: continue
+            val uid = pkg.applicationInfo?.uid ?: continue
+            selectedUids[uid] = true
+        }
     }
 
     private fun isSelectedApp(app: SelectedApp) = selectedUids[app.uid]
@@ -180,8 +261,8 @@ class MatsuriPluginListActivity : ThemedActivity() {
             loading.crossFadeFrom(binding.list)
             val adapter = binding.list.adapter as AppsAdapter
             withContext(Dispatchers.IO) { adapter.reload() }
-            val search = binding.root.findViewById<EditText>(R.id.search)
-            adapter.filter.filter(search?.text?.toString() ?: "")
+            val search = binding.appbarLayout.search
+            adapter.filter.filter(search.text?.toString() ?: "")
             binding.list.crossFadeFrom(loading)
         }
     }
@@ -197,7 +278,7 @@ class MatsuriPluginListActivity : ThemedActivity() {
         binding = LayoutAppListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) && (Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
         ViewCompat.setOnApplyWindowInsetsListener(binding.appbarLayout.appbar) { v, insets ->
@@ -227,7 +308,7 @@ class MatsuriPluginListActivity : ThemedActivity() {
 
         setSupportActionBar(binding.appbarLayout.toolbar)
         supportActionBar?.apply {
-            setTitle(R.string.select_apps)
+            setTitle(R.string.matsuri_plugins)
             setDisplayHomeAsUpEnabled(true)
             setHomeAsUpIndicator(R.drawable.ic_navigation_close)
         }
@@ -237,18 +318,16 @@ class MatsuriPluginListActivity : ThemedActivity() {
         binding.list.itemAnimator = DefaultItemAnimator()
         binding.list.adapter = appsAdapter
 
-        val search = binding.root.findViewById<EditText>(R.id.search)
-        val showSystemAppsView = binding.root.findViewById<CheckBox>(R.id.showSystemApps)
-        binding.root.findViewById<View>(R.id.matsuri_search_layout)?.isVisible = true
+        binding.appbarLayout.matsuriSearchLayout.isVisible = true
 
-        search?.addTextChangedListener {
+        binding.appbarLayout.search.addTextChangedListener {
             appsAdapter.filter.filter(it?.toString() ?: "")
         }
 
-        showSystemAppsView?.isChecked = sysApps
-        showSystemAppsView?.setOnCheckedChangeListener { _, isChecked ->
+        binding.appbarLayout.showSystemApps.isChecked = sysApps
+        binding.appbarLayout.showSystemApps.setOnCheckedChangeListener { _, isChecked ->
             sysApps = isChecked
-            appsAdapter.filter.filter(search?.text?.toString() ?: "")
+            appsAdapter.filter.filter(binding.appbarLayout.search.text?.toString() ?: "")
         }
 
         loadApps()
@@ -275,6 +354,7 @@ class MatsuriPluginListActivity : ThemedActivity() {
                         appsAdapter.notifyItemRangeChanged(0, appsAdapter.itemCount, SWITCH)
                     }
                 }
+                return true
             }
         }
         return super.onOptionsItemSelected(item)

@@ -419,7 +419,10 @@
     <string name="menu_tools">Tools</string>
     <string name="menu_log">Logs</string>
     <string name="matsuri_plugins" translatable="false">Matsuri plugins</string>
-    <string name="uninstall_all_plugins">Uninstall All Plugins</string>
+    <string name="uninstall_all_plugins" translatable="false">Uninstall All Plugins</string>
+    <string name="neko_plugin_summary" translatable="false">Advanced plugins extend functionality by integrating external protocol implementations and drivers.</string>
+    <string name="action_learn_more" translatable="false">Learn More</string>
+    <string name="no_matsuri_plugins_installed" translatable="false">No advanced plugins found. Please install a plugin app first.</string>
     <string name="clear_logcat">Clear Logcat</string>
     <string name="wireguard_local_address">Local address</string>
     <string name="wireguard_public_key">Peer public key</string>
