@@ -1,17 +1,27 @@
 package io.nekohasekai.sagernet.widget
 
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
+import android.animation.ValueAnimator
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.RenderEffect
 import android.graphics.Shader
+import android.os.Build
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.graphics.ColorUtils
+import androidx.core.view.ViewCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
+import io.nekohasekai.sagernet.utils.Theme
 
 class CupertinoDock @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -25,45 +35,45 @@ class CupertinoDock @JvmOverloads constructor(
     val speedLayout: View
     val fab: FloatingActionButton
     private var isConnected = false
-    private var accentColor = android.graphics.Color.RED
+    private var accentColor = Color.RED
 
-    private lateinit var pulseAnimator: android.animation.ObjectAnimator
-    private lateinit var fabScaleAnimator: android.animation.ObjectAnimator
-    private var colorAnimator: android.animation.ValueAnimator? = null
+    private var pulseAnimator: ObjectAnimator
+    private var fabScaleAnimator: ObjectAnimator
+    private var colorAnimator: ValueAnimator? = null
 
     init {
         LayoutInflater.from(context).inflate(R.layout.layout_cupertino_dock, this, true)
         waveView = findViewById(R.id.wave_view)
         upSpeedText = findViewById(R.id.up_speed)
         downSpeedText = findViewById(R.id.down_speed)
-        fabGlow = findViewById<View>(R.id.fab_glow)
-        blurContainer = findViewById<View>(R.id.blur_container)
-        speedLayout = findViewById<View>(R.id.speed_layout)
+        fabGlow = findViewById(R.id.fab_glow)
+        blurContainer = findViewById(R.id.blur_container)
+        speedLayout = findViewById(R.id.speed_layout)
         fab = findViewById(R.id.fab)
 
-        pulseAnimator = android.animation.ObjectAnimator.ofFloat(fabGlow, "alpha", 0.15f, 0.65f).apply {
+        pulseAnimator = ObjectAnimator.ofFloat(fabGlow, "alpha", 0.15f, 0.65f).apply {
             duration = 1000
-            repeatMode = android.animation.ValueAnimator.REVERSE
-            repeatCount = android.animation.ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            repeatCount = ValueAnimator.INFINITE
         }
 
-        fabScaleAnimator = android.animation.ObjectAnimator.ofPropertyValuesHolder(
+        fabScaleAnimator = ObjectAnimator.ofPropertyValuesHolder(
             fab,
-            android.animation.PropertyValuesHolder.ofFloat("scaleX", 1.0f, 1.25f),
-            android.animation.PropertyValuesHolder.ofFloat("scaleY", 1.0f, 1.25f)
+            PropertyValuesHolder.ofFloat("scaleX", 1.0f, 1.25f),
+            PropertyValuesHolder.ofFloat("scaleY", 1.0f, 1.25f)
         ).apply {
             duration = 1200
-            repeatMode = android.animation.ValueAnimator.REVERSE
-            repeatCount = android.animation.ValueAnimator.INFINITE
+            repeatMode = ValueAnimator.REVERSE
+            repeatCount = ValueAnimator.INFINITE
         }
 
         applyFrostedEffect()
     }
 
     private fun applyFrostedEffect() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             blurContainer.setRenderEffect(
-                android.graphics.RenderEffect.createBlurEffect(
+                RenderEffect.createBlurEffect(
                     30f, 30f, Shader.TileMode.DECAL
                 )
             )
@@ -73,17 +83,17 @@ class CupertinoDock @JvmOverloads constructor(
     private fun startColorCycling() {
         colorAnimator?.cancel()
         val hsv = FloatArray(3)
-        android.graphics.Color.colorToHSV(accentColor, hsv)
-        
-        colorAnimator = android.animation.ValueAnimator.ofFloat(0f, 360f).apply {
+        Color.colorToHSV(accentColor, hsv)
+
+        colorAnimator = ValueAnimator.ofFloat(0f, 360f).apply {
             duration = 6000
-            repeatCount = android.animation.ValueAnimator.INFINITE
+            repeatCount = ValueAnimator.INFINITE
             addUpdateListener { animator ->
                 val offset = animator.animatedValue as Float
                 val currentHsv = hsv.copyOf()
                 currentHsv[0] = (hsv[0] + offset) % 360f
-                val color = android.graphics.Color.HSVToColor(currentHsv)
-                androidx.core.view.ViewCompat.setBackgroundTintList(fabGlow, android.content.res.ColorStateList.valueOf(color))
+                val color = Color.HSVToColor(currentHsv)
+                ViewCompat.setBackgroundTintList(fabGlow, ColorStateList.valueOf(color))
             }
             start()
         }
@@ -96,9 +106,9 @@ class CupertinoDock @JvmOverloads constructor(
         downSpeedText.text = context.getString(
             R.string.speed, FormatFileSizeCompat.formatFileSize(context, rxRate, DataStore.useIECUnit)
         )
-        // Normalize speed for WaveView (0-50 range)
-        val combinedRate = (txRate + rxRate).toFloat() / 1024f / 1024f // MB/s
-        waveView.updateSpeed(5f + combinedRate * 8f)
+        // Convert Bytes/sec to KB/s for WaveView
+        val combinedRateKB = (txRate + rxRate).toFloat() / 1024f
+        waveView.updateSpeed(combinedRateKB)
     }
 
     fun changeState(state: BaseService.State) {
@@ -108,7 +118,7 @@ class CupertinoDock @JvmOverloads constructor(
             fab.animate()
                 .rotation(if (newState) 360f else 0f)
                 .setDuration(600)
-                .withEndAction { 
+                .withEndAction {
                     fab.rotation = 0f // Reset for next time and ensure stability
                 }
                 .start()
@@ -116,37 +126,47 @@ class CupertinoDock @JvmOverloads constructor(
         isConnected = newState
         waveView.setConnected(isConnected)
 
+        updateFabColors()
+
         if (isConnected) {
-            fab.setImageResource(R.drawable.ic_paper_plane_up)
-            fab.supportBackgroundTintList = android.content.res.ColorStateList.valueOf(accentColor)
-            fab.supportImageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
-            fabGlow.visibility = View.VISIBLE
             pulseAnimator.start()
             fabScaleAnimator.start()
             startColorCycling()
         } else {
-            fab.setImageResource(R.drawable.ic_service_idle)
-            fab.supportBackgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
-            fab.supportImageTintList = android.content.res.ColorStateList.valueOf(accentColor)
             pulseAnimator.cancel()
             fabScaleAnimator.cancel()
             colorAnimator?.cancel()
-            fabGlow.visibility = View.GONE
             fab.animate().scaleX(1.0f).scaleY(1.0f).setDuration(300).start()
-            androidx.core.view.ViewCompat.setBackgroundTintList(fabGlow, android.content.res.ColorStateList.valueOf(accentColor))
         }
     }
 
     fun setAccentColor(color: Int) {
         accentColor = color
         waveView.setAccentColor(color)
+        updateFabColors()
+    }
+
+    private fun updateFabColors() {
+        val isNight = Theme.usingNightMode()
+        val isAccentLight = ColorUtils.calculateLuminance(accentColor) > 0.65
+
         if (isConnected) {
-            fab.supportBackgroundTintList = android.content.res.ColorStateList.valueOf(color)
-            fab.supportImageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
+            fab.setImageResource(R.drawable.ic_service_connected)
+            fab.supportBackgroundTintList = ColorStateList.valueOf(accentColor)
+            val iconColor = if (isAccentLight) Color.BLACK else Color.WHITE
+            fab.supportImageTintList = ColorStateList.valueOf(iconColor)
+            fabGlow.visibility = VISIBLE
         } else {
-            fab.supportBackgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
-            fab.supportImageTintList = android.content.res.ColorStateList.valueOf(color)
+            fab.setImageResource(R.drawable.ic_service_idle)
+            val bgTint = if (isNight) Color.argb(255, 44, 44, 46) else Color.WHITE
+            val iconColor = if (!isNight && isAccentLight) Color.argb(255, 28, 28, 30) else accentColor
+            fab.supportBackgroundTintList = ColorStateList.valueOf(bgTint)
+            fab.supportImageTintList = ColorStateList.valueOf(iconColor)
+            fabGlow.visibility = GONE
         }
-        androidx.core.view.ViewCompat.setBackgroundTintList(fabGlow, android.content.res.ColorStateList.valueOf(color))
+        ViewCompat.setBackgroundTintList(
+            fabGlow,
+            ColorStateList.valueOf(accentColor)
+        )
     }
 }

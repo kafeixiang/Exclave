@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_window"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Drag handle indicator -->
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_segmented_pill"
+        android:backgroundTint="?android:attr/textColorSecondary"
+        android:alpha="0.4" />
+
+    <!-- Sheet Header -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/dashboard_add_card_title"
+        android:textAppearance="?attr/textAppearanceHeadline6"
+        android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="12dp"
+        android:background="@color/card_stroke"
+        android:alpha="0.5" />
+
+    <TextView
+        android:id="@+id/empty_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="24dp"
+        android:gravity="center"
+        android:text="@string/dashboard_no_hidden_cards"
+        android:textAppearance="?attr/textAppearanceBody1"
+        android:alpha="0.6"
+        android:visibility="gone" />
+
+    <!-- Hidden Cards List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/add_cards_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:overScrollMode="never"
+        tools:listitem="@layout/item_add_dashboard_card_row" />
+
+</LinearLayout>

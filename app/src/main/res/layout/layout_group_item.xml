@@ -6,7 +6,11 @@
     style="@style/Widget.SagerNet.CardView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp">
+    android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="@drawable/bg_card_ripple"
+    app:rippleColor="@android:color/transparent">
 
     <LinearLayout
         android:layout_width="match_parent"
