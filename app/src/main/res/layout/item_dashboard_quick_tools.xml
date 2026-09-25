@@ -5,6 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="@drawable/bg_card_ripple"
+    app:rippleColor="@android:color/transparent"
     app:cardBackgroundColor="@color/surface_glass"
     app:cardCornerRadius="@dimen/card_corner_radius"
     app:cardElevation="0dp"
@@ -17,17 +21,61 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/dashboard_quick_tools"
-            android:textAppearance="?attr/textAppearanceSubtitle1"
-            android:textStyle="bold" />
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="@string/dashboard_quick_tools"
+                android:textAppearance="?attr/textAppearanceSubtitle1"
+                android:textStyle="bold" />
+
+            <!-- Edit Controls Bar -->
+            <LinearLayout
+                android:id="@+id/card_edit_controls"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/btn_card_resize"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_icon_btn_outlined"
+                    android:contentDescription="@string/dashboard_card_resize"
+                    android:padding="5dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_baseline_compare_arrows_24"
+                    app:tint="?attr/colorAccent" />
+
+                <ImageView
+                    android:id="@+id/btn_card_delete"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/bg_icon_btn_delete_outlined"
+                    android:contentDescription="@string/dashboard_card_delete"
+                    android:padding="5dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_action_delete"
+                    app:tint="@color/material_red_500" />
+            </LinearLayout>
+
+        </RelativeLayout>
 
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="4dp"
             android:columnCount="3">
 
             <com.google.android.material.button.MaterialButton
