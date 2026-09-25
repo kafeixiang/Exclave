@@ -2,9 +2,14 @@
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_service_status"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="@drawable/bg_card_ripple"
+    app:rippleColor="@android:color/transparent"
     app:cardBackgroundColor="@color/surface_glass"
     app:cardCornerRadius="@dimen/card_corner_radius"
     app:cardElevation="0dp"
@@ -17,77 +22,192 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/latency_card_title"
+        <!-- Header -->
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/dashboard_latency"
-            android:textAppearance="?attr/textAppearanceSubtitle1"
-            android:textStyle="bold"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground" />
+            android:layout_marginBottom="12dp">
 
-        <GridLayout
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/header_actions"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/latency_card_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dashboard_latency"
+                    android:textAppearance="?attr/textAppearanceSubtitle1"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dashboard_latency_desc"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:alpha="0.7" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/header_actions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <!-- Edit Controls Bar -->
+                <LinearLayout
+                    android:id="@+id/card_edit_controls"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <ImageView
+                        android:id="@+id/btn_card_resize"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_icon_btn_outlined"
+                        android:contentDescription="@string/dashboard_card_resize"
+                        android:padding="5dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_baseline_compare_arrows_24"
+                        app:tint="?attr/colorAccent" />
+
+                    <ImageView
+                        android:id="@+id/btn_card_delete"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_icon_btn_delete_outlined"
+                        android:contentDescription="@string/dashboard_card_delete"
+                        android:padding="5dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_action_delete"
+                        app:tint="@color/material_red_500" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_test_all"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:icon="@drawable/ic_baseline_cached"
+                    app:iconTint="?attr/colorAccent"
+                    android:contentDescription="@string/service_check_all"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <ImageView
+                    android:id="@+id/btn_open_detail"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="4dp"
+                    android:src="@drawable/ic_baseline_arrow_drop_down_24"
+                    app:tint="?android:attr/textColorSecondary"
+                    android:contentDescription="@string/service_status_sheet_title" />
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <!-- Interactive Icon Picker / Swipe Selector -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/icon_picker_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:overScrollMode="never"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_service_icon_picker" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="12dp"
+            android:background="@color/card_stroke"
+            android:alpha="0.5" />
+
+        <!-- Selected Service Summary Row -->
+        <LinearLayout
+            android:id="@+id/summary_row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:columnCount="2">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/selected_service_icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                app:tint="?android:attr/textColorPrimary"
+                tools:src="@drawable/ic_service_google"
+                android:contentDescription="@string/dashboard_latency" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/selected_service_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceSubtitle1"
+                        android:textStyle="bold"
+                        tools:text="Google" />
+
+                    <TextView
+                        android:id="@+id/selected_service_status_pill"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_segmented_pill"
+                        android:backgroundTint="@color/glass_window_tint"
+                        android:paddingHorizontal="8dp"
+                        android:paddingVertical="2dp"
+                        android:textColor="?attr/colorAccent"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        tools:text="可用" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/selected_service_sub_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:alpha="0.7"
+                    tools:text="点击卡片查看所有服务检测详情" />
+
+            </LinearLayout>
 
             <TextView
+                android:id="@+id/selected_service_latency"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/dashboard_google"
-                android:textAppearance="?attr/textAppearanceBody2" />
-
-            <TextView
-                android:id="@+id/latency_google"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:text="@string/unavailable"
-                android:textColor="@color/cupertino_green"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textColor="?attr/colorAccent"
                 android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground" />
+                tools:text="120 ms" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/dashboard_youtube"
-                android:textAppearance="?attr/textAppearanceBody2" />
+        </LinearLayout>
 
-            <TextView
-                android:id="@+id/latency_youtube"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:text="@string/unavailable"
-                android:textColor="@color/cupertino_green"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/dashboard_github"
-                android:textAppearance="?attr/textAppearanceBody2" />
-
-            <TextView
-                android:id="@+id/latency_github"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:text="@string/unavailable"
-                android:textColor="@color/cupertino_orange"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground" />
-
-        </GridLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
