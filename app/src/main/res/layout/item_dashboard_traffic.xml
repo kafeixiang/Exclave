@@ -5,6 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="@drawable/bg_card_ripple"
+    app:rippleColor="@android:color/transparent"
     app:cardBackgroundColor="@color/surface_glass"
     app:cardCornerRadius="@dimen/card_corner_radius"
     app:cardElevation="0dp"
@@ -17,36 +21,152 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <RelativeLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/dashboard_traffic"
-            android:textAppearance="?attr/textAppearanceSubtitle1"
-            android:textStyle="bold" />
+            android:layout_marginBottom="12dp">
 
-        <TextView
-            android:id="@+id/traffic_usage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            tools:text="128.5 GB"
-            android:textAppearance="?attr/textAppearanceHeadline6" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="@string/dashboard_traffic"
+                android:textAppearance="?attr/textAppearanceSubtitle1"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/traffic_total"
-            android:layout_width="wrap_content"
+            <!-- Edit Controls Bar -->
+            <LinearLayout
+                android:id="@+id/card_edit_controls"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/btn_card_resize"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_icon_btn_outlined"
+                    android:contentDescription="@string/dashboard_card_resize"
+                    android:padding="5dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_baseline_compare_arrows_24"
+                    app:tint="?attr/colorAccent" />
+
+                <ImageView
+                    android:id="@+id/btn_card_delete"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/bg_icon_btn_delete_outlined"
+                    android:contentDescription="@string/dashboard_card_delete"
+                    android:padding="5dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_action_delete"
+                    app:tint="@color/material_red_500" />
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:text="/ 500 GB"
-            android:textAppearance="?attr/textAppearanceCaption"
-            android:alpha="0.7" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- Left Stats Column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- Upload Row -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    tools:ignore="UseCompoundDrawables">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_file_file_upload"
+                        app:tint="@color/cupertino_orange"
+                        android:contentDescription="@string/dashboard_traffic" />
+
+                    <TextView
+                        android:id="@+id/traffic_upload_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:textAppearance="?attr/textAppearanceBody2"
+                        android:textColor="@color/cupertino_orange"
+                        android:textStyle="bold"
+                        tools:text="⬆ 1.2 GB" />
+                </LinearLayout>
+
+                <!-- Download Row -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    tools:ignore="UseCompoundDrawables">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_baseline_download_24"
+                        app:tint="@color/cupertino_blue"
+                        android:contentDescription="@string/dashboard_traffic" />
+
+                    <TextView
+                        android:id="@+id/traffic_download_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:textAppearance="?attr/textAppearanceBody2"
+                        android:textColor="@color/cupertino_blue"
+                        android:textStyle="bold"
+                        tools:text="⬇ 14.8 GB" />
+                </LinearLayout>
+
+                <!-- Total Usage Info -->
+                <TextView
+                    android:id="@+id/traffic_usage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:alpha="0.8"
+                    tools:text="已用 16.0 GB / 500 GB" />
+
+            </LinearLayout>
+
+            <!-- Right Percentage Traffic Arc Ring -->
+            <io.nekohasekai.sagernet.ui.widget.TrafficRingView
+                android:id="@+id/traffic_ring_view"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginStart="12dp" />
+
+        </LinearLayout>
 
         <ProgressBar
             android:id="@+id/traffic_progress"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:progress="0"
             android:progressTint="?attr/colorAccent" />
+
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

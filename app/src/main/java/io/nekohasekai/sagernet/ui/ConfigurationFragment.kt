@@ -19,6 +19,8 @@
 
 package io.nekohasekai.sagernet.ui
 
+import io.nekohasekai.sagernet.aidl.AppStats
+
 import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
@@ -1005,6 +1007,10 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     fun trafficUpdated(stats: TrafficStats) {
         adapter.dashboardFragment?.trafficUpdated(stats)
+    }
+
+    fun appStatsUpdated(stats: List<AppStats>) {
+        adapter.dashboardFragment?.appStatsUpdated(stats)
     }
 
     inner class GroupPagerAdapter : FragmentStateAdapter(this),
