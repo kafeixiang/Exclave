@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="10dp">
+
+    <ImageView
+        android:id="@+id/item_icon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_baseline_view_list_24"
+        app:tint="?android:attr/textColorPrimary"
+        android:contentDescription="@string/dashboard_card_profiles" />
+
+    <TextView
+        android:id="@+id/item_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textStyle="bold"
+        tools:text="Default Group / Node Name" />
+
+    <!-- Badges Container -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <!-- Protocol Type Pill -->
+        <TextView
+            android:id="@+id/item_type_pill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_segmented_pill"
+            android:backgroundTint="@color/glass_window_tint"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:textColor="?attr/colorAccent"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            tools:text="VLESS" />
+
+        <!-- Ping Delay Pill -->
+        <TextView
+            android:id="@+id/item_ping_pill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_segmented_pill"
+            android:backgroundTint="@color/glass_window_tint"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:textColor="@color/cupertino_green"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            tools:text="120 ms" />
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/item_check"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="8dp"
+        android:src="@drawable/ic_action_done"
+        app:tint="?attr/colorAccent"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:contentDescription="@string/dashboard_card_profiles" />
+
+</LinearLayout>

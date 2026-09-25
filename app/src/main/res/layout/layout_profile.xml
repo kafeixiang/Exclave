@@ -8,7 +8,9 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:foreground="@drawable/bg_card_ripple"
+    app:rippleColor="@android:color/transparent">
 
     <LinearLayout
         android:id="@+id/content_lin"
