@@ -2242,6 +2242,8 @@ org.jetbrains.kotlinx:atomicfu
 org.jetbrains.kotlinx:kotlinx-coroutines-android
 org.jetbrains.kotlinx:kotlinx-coroutines-bom
 org.jetbrains.kotlinx:kotlinx-coroutines-core
+org.jetbrains.kotlinx:kotlinx-serialization-bom
+org.jetbrains.kotlinx:kotlinx-serialization-core
 
       Copyright 2016-2025 JetBrains s.r.o and contributors
 
