@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_window"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Handle -->
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_segmented_pill"
+        android:backgroundTint="?android:attr/textColorSecondary"
+        android:alpha="0.4" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/btn_gc_clean"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dashboard_card_memory"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/dashboard_card_memory_desc"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:alpha="0.7" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_gc_clean"
+            style="@style/Widget.Material3.Button.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:text="一键 GC"
+            app:backgroundTint="?attr/colorAccent"
+            android:textColor="@color/white"
+            app:icon="@drawable/ic_baseline_cached"
+            app:iconTint="@color/white"
+            tools:ignore="HardcodedText,TouchTargetSizeCheck" />
+
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginVertical="12dp"
+        android:background="@color/card_stroke"
+        android:alpha="0.5" />
+
+    <!-- Top Prominent App Memory Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        app:cardBackgroundColor="@color/surface_glass"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/card_stroke"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="App 进程实际占用 (PSS)"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:alpha="0.8"
+                    tools:ignore="HardcodedText" />
+
+                <TextView
+                    android:id="@+id/app_total_pss_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textAppearance="?attr/textAppearanceHeadline5"
+                    android:textColor="?attr/colorAccent"
+                    android:textStyle="bold"
+                    tools:text="68.4 MB" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/baseline_developer_board_24"
+                app:tint="?attr/colorAccent"
+                android:contentDescription="@null" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Memory Details Cards Grid -->
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2">
+
+        <!-- JVM Heap Card -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_segmented_control"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="JVM 堆内存"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:alpha="0.7"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/jvm_heap_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:textColor="?attr/colorAccent"
+                android:textStyle="bold"
+                tools:text="42 MB / 512 MB" />
+        </LinearLayout>
+
+        <!-- Native Heap Card -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_segmented_control"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Native 原生堆"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:alpha="0.7"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/native_heap_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:textColor="?attr/colorAccent"
+                android:textStyle="bold"
+                tools:text="18 MB" />
+        </LinearLayout>
+
+        <!-- System Physical RAM Card -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_segmented_control"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="系统物理内存"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:alpha="0.7"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/system_ram_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:textColor="?attr/colorAccent"
+                android:textStyle="bold"
+                tools:text="3.2 GB / 8.0 GB" />
+        </LinearLayout>
+
+        <!-- Active Threads Card -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_segmented_control"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="活跃线程数"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:alpha="0.7"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/thread_count_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:textColor="?attr/colorAccent"
+                android:textStyle="bold"
+                tools:text="28 线程" />
+        </LinearLayout>
+
+    </GridLayout>
+
+</LinearLayout>

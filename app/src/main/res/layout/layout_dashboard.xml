@@ -1,11 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/dashboard_recycler"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="8dp"
-    android:clipToPadding="false"
-    android:paddingBottom="120dp"
-    tools:listitem="@layout/item_dashboard_status" />
+    android:layout_height="match_parent">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/dashboard_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="120dp"
+        tools:listitem="@layout/item_dashboard_status" />
+
+    <!-- Edit Mode Floating Action Bar (Only visible in edit mode after long-pressing a card) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/edit_mode_floating_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="90dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="@color/surface_glass"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="6dp"
+        app:strokeColor="@color/card_stroke"
+        app:strokeWidth="@dimen/card_stroke_width"
+        tools:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_add_card"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginEnd="10dp"
+                android:paddingHorizontal="16dp"
+                android:text="@string/dashboard_add_card"
+                android:textColor="?attr/colorAccent"
+                android:textSize="13sp"
+                app:icon="@drawable/ic_baseline_add_road_24"
+                app:iconSize="18dp"
+                app:iconTint="?attr/colorAccent"
+                app:strokeColor="?attr/colorAccent"
+                app:strokeWidth="1dp"
+                tools:ignore="TouchTargetSizeCheck" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_done_edit"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:paddingHorizontal="16dp"
+                android:text="@string/dashboard_edit_done"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                app:backgroundTint="?attr/colorAccent"
+                app:icon="@drawable/ic_action_done"
+                app:iconSize="18dp"
+                app:iconTint="@color/white"
+                tools:ignore="TouchTargetSizeCheck" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

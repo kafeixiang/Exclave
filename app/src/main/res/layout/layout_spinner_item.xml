@@ -11,4 +11,4 @@
     android:paddingBottom="12dp"
     android:singleLine="true"
     android:textAlignment="inherit"
-    android:textColor="?attr/colorOnSurface" />
+    android:textColor="?android:attr/textColorPrimary" />

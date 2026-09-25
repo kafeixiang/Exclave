@@ -287,7 +287,9 @@ object DataStore : OnPreferenceDataStoreChangeListener {
 
     var confirmProfileDelete by configurationStore.boolean(Key.CONFIRM_PROFILE_DELETE) { true }
     var groupLayoutMode by configurationStore.stringToInt(Key.GROUP_LAYOUT_MODE) { 0 }
-    var dashboardOrder by configurationStore.string(Key.DASHBOARD_ORDER) { "status,speed,traffic,geoip,latency,quick_tools" }
+    var dashboardOrder by configurationStore.string(Key.DASHBOARD_ORDER) { "status,speed,traffic,geoip,latency,quick_tools,profiles,connections,run_time,dns_queries,memory_info" }
+    var dashboardSizes by configurationStore.string(Key.DASHBOARD_SIZES) { "" }
+    var dashboardHidden by configurationStore.string(Key.DASHBOARD_HIDDEN) { "" }
 
     // Auto-switch timeout settings
     var enableAutoSwitchTimeout by configurationStore.boolean(Key.ENABLE_AUTO_SWITCH_TIMEOUT) { false }
