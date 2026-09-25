@@ -102,7 +102,6 @@
                                 android:id="@+id/action_new_wg"
                                 android:title="@string/action_wireguard" />
                             <item
-                            <item
                                 android:id="@+id/action_new_masque"
                                 android:title="@string/action_masque" />
                             <item

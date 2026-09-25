@@ -24,15 +24,15 @@
         android:elevation="0dp"
         android:visibility="gone"
         app:tabIndicator="@drawable/bg_segmented_pill"
-        app:tabIndicatorColor="@android:color/white"
+        app:tabIndicatorColor="@color/segmented_pill_bg"
         app:tabIndicatorFullWidth="true"
         app:tabIndicatorGravity="center"
         app:tabIndicatorHeight="28dp"
         app:tabMode="fixed"
         app:tabRippleColor="@android:color/transparent"
-        app:tabSelectedTextColor="?colorAccent"
+        app:tabSelectedTextColor="?attr/colorAccent"
         app:tabTextAppearance="@style/TabTextAppearance"
-        app:tabTextColor="?tabTextColor" />
+        app:tabTextColor="?android:attr/textColorSecondary" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/group_pager"
