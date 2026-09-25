@@ -143,6 +143,8 @@ object Key {
     const val CONFIRM_PROFILE_DELETE = "confirmProfileDelete"
     const val GROUP_LAYOUT_MODE = "groupLayoutMode"
     const val DASHBOARD_ORDER = "dashboardOrder"
+    const val DASHBOARD_SIZES = "dashboardSizes"
+    const val DASHBOARD_HIDDEN = "dashboardHidden"
 
     const val PROFILE_DIRTY = "profileDirty"
     const val PROFILE_ID = "profileId"

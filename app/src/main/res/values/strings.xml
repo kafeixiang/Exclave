@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name" translatable="false">Exclave</string>
     <string name="project">Project</string>
     <string name="github">Source code</string>
-    <string name="dashboard_google">Google</string>
-    <string name="dashboard_youtube">YouTube</string>
-    <string name="dashboard_github">GitHub</string>
     <string name="app_version">Version</string>
     <string name="version_x">Version (%s)</string>
     <string name="logcat">Export debug information</string>
@@ -56,7 +53,42 @@
     <string name="dashboard_speed">Speed</string>
     <string name="dashboard_traffic">Traffic</string>
     <string name="dashboard_geoip">GeoIP</string>
-    <string name="dashboard_latency">Latency</string>
+    <string name="dashboard_latency">Latency Test</string>
+    <string name="dashboard_latency_desc">Test service connection speed</string>
+    <string name="dashboard_google">Google</string>
+    <string name="dashboard_youtube">YouTube</string>
+    <string name="dashboard_github">GitHub</string>
+    <string name="dashboard_chatgpt">ChatGPT</string>
+    <string name="dashboard_claude">Claude</string>
+    <string name="dashboard_gemini">Gemini</string>
+    <string name="dashboard_netflix">Netflix</string>
+    <string name="dashboard_disneyplus">Disney+</string>
+    <string name="dashboard_prime_video">Prime Video</string>
+    <string name="dashboard_spotify">Spotify</string>
+    <string name="dashboard_tiktok">TikTok</string>
+    <string name="dashboard_bilibili">Bilibili</string>
+    <string name="service_available">Available</string>
+    <string name="service_restricted">Restricted</string>
+    <string name="service_status_sheet_title">Service Status Detail</string>
+    <string name="service_check_all">Check All</string>
+    <string name="dashboard_edit">Edit Dashboard</string>
+    <string name="dashboard_edit_done">Done</string>
+    <string name="dashboard_edit_tip">Drag cards to reorder; click ↔ to resize</string>
+    <string name="dashboard_add_card">Add Card</string>
+    <string name="dashboard_card_resize">Toggle Size</string>
+    <string name="dashboard_card_delete">Remove Card</string>
+    <string name="dashboard_add_card_title">Add Dashboard Cards</string>
+    <string name="dashboard_no_hidden_cards">All cards are currently active</string>
+    <string name="dashboard_card_profiles">Profiles &amp; Node</string>
+    <string name="dashboard_card_profiles_desc">Active profile, group, and node details</string>
+    <string name="dashboard_card_connections">Active Connections</string>
+    <string name="dashboard_card_connections_desc">Network connection count and traffic</string>
+    <string name="dashboard_card_runtime">Uptime &amp; Status</string>
+    <string name="dashboard_card_runtime_desc">Service uptime and core status</string>
+    <string name="dashboard_card_dns">DNS Overview</string>
+    <string name="dashboard_card_dns_desc">DNS query mode and status</string>
+    <string name="dashboard_card_memory">Memory Usage</string>
+    <string name="dashboard_card_memory_desc">App memory footprint and heap</string>
     <string name="dashboard_traffic_total">/ %s</string>
     <string name="dashboard_quick_tools">Quick Tools</string>
     <string name="dashboard_test_all">Test All</string>

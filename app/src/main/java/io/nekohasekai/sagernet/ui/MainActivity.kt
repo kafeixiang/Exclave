@@ -529,6 +529,12 @@ class MainActivity : ThemedActivity(),
         (supportFragmentManager.findFragmentById(R.id.fragment_holder) as? TrafficFragment)?.emitStats(
             stats
         )
+        (supportFragmentManager.findFragmentById(R.id.fragment_holder) as? ConfigurationFragment)?.appStatsUpdated(
+            stats
+        )
+        (supportFragmentManager.findFragmentById(R.id.fragment_holder) as? DashboardFragment)?.appStatsUpdated(
+            stats
+        )
     }
 
     override fun routeAlert(type: Int, routeName: String) {
