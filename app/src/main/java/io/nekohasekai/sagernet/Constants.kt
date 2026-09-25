@@ -143,6 +143,8 @@ object Key {
     const val PROFILE_TRAFFIC_STATISTICS = "profileTrafficStatistics"
 
     const val DASHBOARD_ORDER = "dashboardOrder"
+    const val DASHBOARD_SIZES = "dashboardSizes"
+    const val DASHBOARD_HIDDEN = "dashboardHidden"
     const val PROFILE_DIRTY = "profileDirty"
     const val PROFILE_ID = "profileId"
     const val PROFILE_NAME = "profileName"
