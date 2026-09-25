@@ -74,6 +74,7 @@ abstract class ThemedActivity : AppCompatActivity {
         }
 
         super.onCreate(savedInstanceState)
+        window.setBackgroundDrawableResource(R.color.cupertino_window_bg)
         uiMode = resources.configuration.uiMode
 
         onBackPressedCallback?.let {
