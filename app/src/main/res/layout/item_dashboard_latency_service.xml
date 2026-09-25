@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="8dp"
+    android:paddingVertical="10dp">
+
+    <ImageView
+        android:id="@+id/service_icon"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        app:tint="?android:attr/textColorPrimary"
+        tools:src="@drawable/ic_service_google"
+        android:contentDescription="@string/dashboard_latency" />
+
+    <TextView
+        android:id="@+id/service_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textStyle="bold"
+        tools:text="Google" />
+
+    <TextView
+        android:id="@+id/service_latency"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_segmented_pill"
+        android:backgroundTint="@color/glass_window_tint"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="3dp"
+        android:textColor="?attr/colorAccent"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        tools:text="120 ms" />
+
+</LinearLayout>
