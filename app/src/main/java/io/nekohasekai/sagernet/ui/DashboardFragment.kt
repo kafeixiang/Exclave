@@ -1084,11 +1084,14 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 setupEditControls(ItemType.DNS_QUERIES, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
 
                 binding.dnsTitle.setText(R.string.dashboard_card_dns)
-                binding.dnsStatus.text = if (SagerNet.started) "点击重载并刷新 DNS 缓存" else "服务未启动"
+                binding.dnsStatus.text = if (SagerNet.started) "点击查看 DNS 详情与实时解析" else "服务未启动 (点击查看配置)"
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
-                        handleRefreshDns()
+                        val sheet = DnsQueriesBottomSheet {
+                            handleRefreshDns()
+                        }
+                        sheet.show(parentFragmentManager, "DnsQueriesSheet")
                     }
                 } else {
                     binding.root.setOnClickListener(null)
