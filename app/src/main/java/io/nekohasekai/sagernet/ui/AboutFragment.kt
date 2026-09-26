@@ -22,8 +22,6 @@ package io.nekohasekai.sagernet.ui
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.graphics.RenderEffect
-import android.graphics.Shader
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
@@ -305,12 +303,8 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                 applyGlassBlur()
             }
 
-            // 还原苹果风背景模糊：应用于 MainActivity 的背景图，从而透过透明卡片显示出来
             (requireActivity() as? MainActivity)?.findViewById<ImageView>(R.id.global_bg_image)?.let { bg ->
-                bg.alpha = 0.5f 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    bg.setRenderEffect(RenderEffect.createBlurEffect(75f, 75f, Shader.TileMode.CLAMP))
-                }
+                bg.visibility = View.GONE
             }
         }
 

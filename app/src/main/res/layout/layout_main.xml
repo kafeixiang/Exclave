@@ -14,16 +14,17 @@
         android:layout_height="match_parent"
         android:clipChildren="false">
 
-        <!-- 全局背景模糊层 -->
+        <!-- 全局背景模糊层 (隐藏，避免跟随工具主题变色) -->
         <ImageView
             android:id="@+id/global_bg_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
             android:contentDescription="@null"
-            android:alpha="0.2" />
+            android:alpha="0.2"
+            android:visibility="gone" />
 
-        <!-- 背景霓虹灯影：改用圆形并增加尺寸 -->
+        <!-- 背景霓虹灯影 (隐藏，避免跟随工具主题变色) -->
         <View
             android:id="@+id/ambient_glow"
             android:layout_width="400dp"
@@ -31,7 +32,7 @@
             android:layout_gravity="center"
             android:background="@drawable/bg_ambient_glow"
             android:alpha="0.1"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:id="@+id/fragment_holder"

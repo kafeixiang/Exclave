@@ -170,11 +170,10 @@ class MainActivity : ThemedActivity(),
 
         setContentView(binding.root)
 
-        // 全局磨砂背景初始化：使用高质量渐变背景，营造高级感
+        // 全局背景隐藏，不跟随主题变色
         val bgImage = findViewById<ImageView>(R.id.global_bg_image)
         if (bgImage != null) {
-            bgImage.setImageResource(R.drawable.bg_mesh_gradient)
-            bgImage.alpha = if (io.nekohasekai.sagernet.utils.Theme.usingNightMode()) 0f else 0.5f
+            bgImage.visibility = View.GONE
         }
         
         // 初始化 Cupertino 主题色和背景光
@@ -409,14 +408,10 @@ class MainActivity : ThemedActivity(),
         // Ensure dock is visible when switching fragments
         binding.cupertinoDock.animate().translationY(0f).setDuration(225).start()
         
-        // 全局苹果风：进入主要页面应用模糊，但夜间模式需保持纯黑
+        // 全局背景保持隐藏
         val bgImage = findViewById<ImageView>(R.id.global_bg_image)
         if (bgImage != null) {
-            val isNight = io.nekohasekai.sagernet.utils.Theme.usingNightMode()
-            bgImage.alpha = if (isNight) 0f else 0.5f
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                bgImage.setRenderEffect(RenderEffect.createBlurEffect(75f, 75f, Shader.TileMode.CLAMP))
-            }
+            bgImage.visibility = View.GONE
         }
 
         supportFragmentManager.beginTransaction()
@@ -469,16 +464,8 @@ class MainActivity : ThemedActivity(),
         
         val isNight = io.nekohasekai.sagernet.utils.Theme.usingNightMode()
         
-        // 设置背景光颜色与极大的模糊效果
-        binding.ambientGlow.backgroundTintList = ColorStateList.valueOf(colorAccent)
-        binding.ambientGlow.alpha = if (isNight) 0f else 0.1f
-        binding.ambientGlow.visibility = if (isNight) View.GONE else View.VISIBLE
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            binding.ambientGlow.setRenderEffect(
-                RenderEffect.createBlurEffect(40f, 40f, Shader.TileMode.DECAL)
-            )
-        }
+        // 背景光保持隐藏，避免跟随主题变色
+        binding.ambientGlow.visibility = View.GONE
         
         if (isNight) {
             window.navigationBarColor = android.graphics.Color.BLACK
