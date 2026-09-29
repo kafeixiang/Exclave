@@ -826,6 +826,12 @@ fun buildV2RayConfig(
                                                         pass = bean.password
                                                     })
                                                 }
+                                                if (bean.connectUDP) {
+                                                    connectUDP = true
+                                                    if (bean.uriTemplate.isNotEmpty()) {
+                                                        uriTemplate = bean.uriTemplate
+                                                    }
+                                                }
                                             })
                                         }
                                     )
@@ -1511,6 +1517,12 @@ fun buildV2RayConfig(
                                         port = bean.serverPort
                                         if (bean.username.isNotEmpty()) username = bean.username
                                         if (bean.password.isNotEmpty()) password = bean.password
+                                        if (bean.connectUDP) {
+                                            connectUDP = true
+                                            if (bean.uriTemplate.isNotEmpty()) {
+                                                uriTemplate = bean.uriTemplate
+                                            }
+                                        }
                                     }
                                 )
                                 streamSettings = StreamSettingsObject().apply {
