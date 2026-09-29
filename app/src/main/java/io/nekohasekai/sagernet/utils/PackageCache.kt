@@ -85,8 +85,13 @@ object PackageCache {
 
         installedPluginPackages = pm.getInstalledPackages(
             PackageManager.GET_PROVIDERS or PackageManager.GET_META_DATA
-        ).filter {
-            it.providers?.getOrNull(0)?.authority?.startsWith("moe.matsuri.plugin.") == true
+        ).filter { pkg ->
+            pkg.providers?.any { provider ->
+                val auth = provider.authority ?: ""
+                auth.startsWith("moe.matsuri.plugin.") ||
+                        auth.startsWith("moe.matsuri.exe.") ||
+                        auth.startsWith("io.nekohasekai.sagernet.plugin.")
+            } == true
         }.associateBy { it.packageName }
 
         val installed = if (DataStore.queryAllPackagesAlternativeMethod) {
