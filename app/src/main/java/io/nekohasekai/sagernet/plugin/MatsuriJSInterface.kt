@@ -188,6 +188,10 @@ class MatsuriJSInterface(val plgId: String) {
         return p
     }
 
+    suspend fun getAbout(): String {
+        return callJS("nekoAbout()")
+    }
+
     inner class NekoProtocol(val protocolId: String, val callJS: suspend (String) -> String) {
         private suspend fun callProtocol(method: String, b64Str: String?): String {
             var arg = ""
