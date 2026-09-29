@@ -377,7 +377,8 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        app:key="serverHTTPConnectUDPCategory">
+        app:key="serverHTTPConnectUDPCategory"
+        app:title="@string/experimental_settings">
         <SwitchPreference
             app:icon="@drawable/ic_baseline_compare_arrows_24"
             app:key="serverHTTPConnectUDP"
