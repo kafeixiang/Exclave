@@ -22,6 +22,8 @@ package io.nekohasekai.sagernet.ktx
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
+import androidx.core.net.toUri
 
 inline fun <reified T: Activity> Context.findActivity(): T? {
     var ctx = this
@@ -30,4 +32,12 @@ inline fun <reified T: Activity> Context.findActivity(): T? {
         ctx = ctx.baseContext
     }
     return null
+}
+
+fun Context.launchCustomTab(url: String) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+        startActivity(intent)
+    } catch (_: Exception) {
+    }
 }
