@@ -529,6 +529,12 @@
     <string name="acquire_wake_lock">Acquire WakeLock</string>
     <string name="hide_from_recent_apps">Hide from recent tasks</string>
     <string name="hide_from_recent_apps_summary">Hide the app from recent tasks when running in background</string>
+    <string name="layout">Layout</string>
+    <string name="layout_single_column">Single column</string>
+    <string name="layout_double_column">Double column</string>
+    <string name="sort_and_layout">Sort and Layout</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
     <string name="log_level">Log level</string>
     <string name="fab_style">Floating action button style</string>
     <string name="wireguard_keepalive_interval">Persistent keepalive (s)</string>
