@@ -25,6 +25,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.text.TextUtils
 import android.view.*
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -42,6 +43,7 @@ import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -126,6 +128,16 @@ class ConfigurationFragment @JvmOverloads constructor(
         if (!::adapter.isInitialized) return
         adapter.groupFragments.values.forEach {
             it.refreshSelection()
+        }
+    }
+
+    fun switchAllGroupFragmentsLayout() {
+        adapter.groupFragments.values.forEach { fragment ->
+            if (fragment.isAdded && fragment.view != null) {
+                fragment.switchLayoutMode()
+            }
+        }
+    }
         }
     }
 
@@ -241,14 +253,18 @@ class ConfigurationFragment @JvmOverloads constructor(
                 )
                 if (selectedProfileIndex != -1) {
                     val layoutManager = fragment.layoutManager
-                    val first = layoutManager.findFirstVisibleItemPosition()
-                    val last = layoutManager.findLastVisibleItemPosition()
+                    if (layoutManager is LinearLayoutManager) {
+                        val first = layoutManager.findFirstVisibleItemPosition()
+                        val last = layoutManager.findLastVisibleItemPosition()
 
-                    if (selectedProfileIndex !in first..last) {
+                        if (selectedProfileIndex !in first..last) {
+                            fragment.configurationListView.scrollTo(selectedProfileIndex, true)
+                            return@setOnClickListener
+                        }
+                    } else {
                         fragment.configurationListView.scrollTo(selectedProfileIndex, true)
                         return@setOnClickListener
                     }
-
                 }
 
                 fragment.configurationListView.scrollTo(0)
@@ -1114,7 +1130,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                 outState.putParcelable("proxyGroup", proxyGroup)
             }
             if (::layoutManager.isInitialized) {
-                outState.putInt("scrollPosition", layoutManager.findFirstVisibleItemPosition())
+                val pos = (layoutManager as? LinearLayoutManager)?.findFirstVisibleItemPosition()
+                    ?: (layoutManager as? GridLayoutManager)?.findFirstVisibleItemPosition() ?: 0
+                outState.putInt("scrollPosition", pos)
             }
         }
 
@@ -1144,7 +1162,78 @@ class ConfigurationFragment @JvmOverloads constructor(
                 ?: return false).state == BaseService.State.Stopped || id != DataStore.selectedProxy
         }
 
-        lateinit var layoutManager: LinearLayoutManager
+        lateinit var layoutManager: RecyclerView.LayoutManager
+        private lateinit var itemTouchHelper: ItemTouchHelper
+
+        private fun setupItemTouchHelper() {
+            if (parent?.select == true) return
+
+            if (::itemTouchHelper.isInitialized) {
+                itemTouchHelper.attachToRecyclerView(null)
+            }
+
+            itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, 0) {
+                override fun getMovementFlags(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder
+                ): Int {
+                    val dragFlags = if (DataStore.groupLayoutMode == 1) {
+                        ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                    } else {
+                        ItemTouchHelper.UP or ItemTouchHelper.DOWN
+                    }
+                    return makeMovementFlags(dragFlags, 0) // No swipe flags
+                }
+
+                override fun getSwipeDirs(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                ): Int {
+                    return 0
+                }
+
+                override fun getDragDirs(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                ): Int {
+                    return if (isEnabled && !actionButtonPressed && proxyGroup.type == GroupType.BASIC) {
+                        if (DataStore.groupLayoutMode == 1) {
+                            ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+                        } else {
+                            ItemTouchHelper.UP or ItemTouchHelper.DOWN
+                        }
+                    } else 0
+                }
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                }
+
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder,
+                ): Boolean {
+                    val fromPosition = viewHolder.adapterPosition
+                    val toPosition = target.adapterPosition
+
+                    if (fromPosition == RecyclerView.NO_POSITION || toPosition == RecyclerView.NO_POSITION) {
+                        return false
+                    }
+
+                    adapter.move(fromPosition, toPosition)
+                    return true
+                }
+
+                override fun clearView(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                ) {
+                    super.clearView(recyclerView, viewHolder)
+                    adapter.commitMove()
+                }
+            })
+            itemTouchHelper.attachToRecyclerView(configurationListView)
+        }
+
         lateinit var configurationListView: RecyclerView
 
         val parent get() = parentFragment as? ConfigurationFragment
@@ -1219,6 +1308,46 @@ class ConfigurationFragment @JvmOverloads constructor(
                 updateTo(GroupOrder.BY_DELAY)
                 true
             }
+
+            val layoutSingle = menu.findItem(R.id.action_layout_single)
+            val layoutDouble = menu.findItem(R.id.action_layout_double)
+            when (DataStore.groupLayoutMode) {
+                0 -> layoutSingle?.isChecked = true
+                1 -> layoutDouble?.isChecked = true
+            }
+            layoutSingle?.setOnMenuItemClickListener {
+                it.isChecked = true
+                if (DataStore.groupLayoutMode != 0) {
+                    DataStore.groupLayoutMode = 0
+                    (parentFragment as? ConfigurationFragment)?.switchAllGroupFragmentsLayout()
+                }
+                true
+            }
+            layoutDouble?.setOnMenuItemClickListener {
+                it.isChecked = true
+                if (DataStore.groupLayoutMode != 1) {
+                    DataStore.groupLayoutMode = 1
+                    (parentFragment as? ConfigurationFragment)?.switchAllGroupFragmentsLayout()
+                }
+                true
+            }
+        }
+
+        private fun setupLayoutManager() {
+            layoutManager = if (DataStore.groupLayoutMode == 1) {
+                FixedGridLayoutManager(configurationListView, 2)
+            } else {
+                FixedLinearLayoutManager(configurationListView)
+            }
+        }
+
+        fun switchLayoutMode() {
+            setupLayoutManager()
+            configurationListView.layoutManager = layoutManager
+
+            setupItemTouchHelper()
+
+            adapter.notifyDataSetChanged()
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -1238,7 +1367,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 )
                 insets
             }
-            layoutManager = FixedLinearLayoutManager(configurationListView)
+            setupLayoutManager()
             configurationListView.layoutManager = layoutManager
             adapter = ConfigurationAdapter()
             ProfileManager.addListener(adapter)
@@ -1250,48 +1379,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 undoManager = UndoSnackbarManager(activity as MainActivity, adapter)
             }
 
-            if (!parent.select && proxyGroup.type == GroupType.BASIC) {
-                ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-                    ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.START
-                ) {
-                    override fun getSwipeDirs(
-                        recyclerView: RecyclerView,
-                        viewHolder: RecyclerView.ViewHolder,
-                    ): Int {
-                        return 0
-                    }
-
-                    override fun getDragDirs(
-                        recyclerView: RecyclerView,
-                        viewHolder: RecyclerView.ViewHolder,
-                    ) = if (isEnabled && !actionButtonPressed) super.getDragDirs(
-                        recyclerView, viewHolder
-                    ) else 0
-
-                    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                    }
-
-                    override fun onMove(
-                        recyclerView: RecyclerView,
-                        viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder,
-                    ): Boolean {
-                        adapter.move(
-                            viewHolder.adapterPosition, target.adapterPosition
-                        )
-                        return true
-                    }
-
-                    override fun clearView(
-                        recyclerView: RecyclerView,
-                        viewHolder: RecyclerView.ViewHolder,
-                    ) {
-                        super.clearView(recyclerView, viewHolder)
-                        adapter.commitMove()
-                    }
-                }).attachToRecyclerView(configurationListView)
-
-            }
-
+            setupItemTouchHelper()
         }
 
         override fun onDestroy() {
@@ -1444,6 +1532,16 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
 
             fun move(from: Int, to: Int) {
+                if (from == to) return
+
+                if (DataStore.groupLayoutMode == 1) {
+                    moveDualColumn(from, to)
+                } else {
+                    moveLinear(from, to)
+                }
+            }
+
+            private fun moveLinear(from: Int, to: Int) {
                 val first = getItemAt(from) ?: return
                 var previousOrder = first.userOrder
                 val (step, range) = if (from < to) Pair(1, from until to) else Pair(
@@ -1460,6 +1558,24 @@ class ConfigurationFragment @JvmOverloads constructor(
                 first.userOrder = previousOrder
                 configurationIdList[to] = first.id
                 updated.add(first)
+                notifyItemMoved(from, to)
+            }
+
+            private fun moveDualColumn(from: Int, to: Int) {
+                val draggedItemId = configurationIdList[from]
+
+                configurationIdList.removeAt(from)
+                configurationIdList.add(to, draggedItemId)
+
+                for (i in configurationIdList.indices) {
+                    val item = getItem(configurationIdList[i]) ?: continue
+                    val newOrder = (i + 1).toLong()
+                    if (item.userOrder != newOrder) {
+                        item.userOrder = newOrder
+                        updated.add(item)
+                    }
+                }
+
                 notifyItemMoved(from, to)
             }
 
@@ -1607,10 +1723,10 @@ class ConfigurationFragment @JvmOverloads constructor(
                     notifyDataSetChanged()
 
                     if (selectedProfileIndex != -1 && !scrolled) {
-                        layoutManager.scrollToPositionWithOffset(selectedProfileIndex, 0)
+                        (layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(selectedProfileIndex, 0)
                         scrolled = true
                     } else if (newProfiles.isNotEmpty() && !scrolled) {
-                        layoutManager.scrollToPositionWithOffset(0, 0)
+                        (layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(0, 0)
                         scrolled = true
                     }
 
@@ -1627,6 +1743,24 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             lateinit var entity: ProxyEntity
 
+            private fun showShareMenu(anchor: View, proxyEntity: ProxyEntity) {
+                val popup = PopupMenu(requireContext(), anchor)
+                popup.menuInflater.inflate(R.menu.profile_share_menu, popup.menu)
+
+                if (!proxyEntity.hasShareLink() && proxyEntity.wgBean == null) {
+                    popup.menu.removeItem(R.id.action_qr)
+                    popup.menu.removeItem(R.id.action_clipboard)
+                }
+                if (showBackup && proxyEntity.canExportBackup()) {
+                    popup.menu.findItem(R.id.action_export_backup)?.isVisible = true
+                } else {
+                    popup.menu.removeItem(R.id.action_export_backup)
+                }
+
+                popup.setOnMenuItemClickListener(this)
+                popup.show()
+            }
+
             val profileName: TextView = view.findViewById(R.id.profile_name)
             val profileType: TextView = view.findViewById(R.id.profile_type)
             val profileAddress: TextView = view.findViewById(R.id.profile_address)
@@ -1635,10 +1769,14 @@ class ConfigurationFragment @JvmOverloads constructor(
             val trafficText: TextView = view.findViewById(R.id.traffic_text)
             val selectedView: LinearLayout = view.findViewById(R.id.selected_view)
             val editButton: ImageView = view.findViewById(R.id.edit)
+            val doubleColumnMenuButton: ImageView = view.findViewById(R.id.double_column_menu)
             val shareLayout: LinearLayout = view.findViewById(R.id.share)
             val shareLayer: LinearLayout = view.findViewById(R.id.share_layer)
             val shareButton: ImageView = view.findViewById(R.id.shareIcon)
             val deleteButton: ImageView = view.findViewById(R.id.deleteIcon)
+
+            val middleLine: LinearLayout = view.findViewById(R.id.middle_line)
+            val bottomLine: LinearLayout = view.findViewById(R.id.bottom_line)
 
             fun bind(proxyEntity: ProxyEntity) {
                 val parent = parent ?: return
@@ -1681,59 +1819,45 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                 }
 
-                profileStatus.setOnClickListener {
-                    if (entity.status == 3) {
-                        alert(entity.error ?: "<?>").show()
-                    }
-                }
-
-                editButton.setOnClickListener {
-                    entity.settingIntent(it.context, proxyGroup.type == GroupType.SUBSCRIPTION)?.let {
-                        editProfileLauncher.launch(it)
-                    }
-                }
-
-                deleteButton.setOnClickListener { view ->
-                    view.post {
-                        adapter.let {
-                            val profile = entity
-                            val index = it.configurationIdList.indexOf(profile.id)
-                            if (index >= 0) {
-                                it.remove(index)
-                                it.pendingDeletedIds.add(profile.id)
-                                undoManager.remove(index to profile)
-                            }
-                        }
-                    }
-                }
-
-                // Suppress ItemTouchHelper drag while a row button is held to avoid conflict with parent item's long press.
-                deleteButton.suppressDragWhilePressed { actionButtonPressed = it }
-                editButton.suppressDragWhilePressed { actionButtonPressed = it }
-                shareLayout.suppressDragWhilePressed { actionButtonPressed = it }
-
-                if (!parent.select) {
-                    shareLayout.setOnClickListener { anchor ->
-                        val profile = entity
-                        if (DataStore.profileSecurityAdvisory && profile.requireBean().isInsecure) {
-                            MaterialAlertDialogBuilder(requireContext())
-                                .setTitle(R.string.insecure_warn)
-                                .setMessage(R.string.insecure_warning_detail)
-                                .setPositiveButton(android.R.string.ok) { _, _ ->
-                                    showShare(anchor)
+                doubleColumnMenuButton.setOnClickListener {
+                    val popup = PopupMenu(requireContext(), it)
+                    popup.menuInflater.inflate(R.menu.double_column_item_menu, popup.menu)
+                    popup.setOnMenuItemClickListener { menuItem ->
+                        when (menuItem.itemId) {
+                            R.id.action_edit -> {
+                                entity.settingIntent(it.context, proxyGroup.type == GroupType.SUBSCRIPTION)?.let { intent ->
+                                    editProfileLauncher.launch(intent)
                                 }
-                                .show()
-                        } else {
-                            showShare(anchor)
+                                true
+                            }
+                            R.id.action_share -> {
+                                showShare(it)
+                                true
+                            }
+                            R.id.action_delete -> {
+                                adapter.let { adapter ->
+                                    val index = adapter.configurationIdList.indexOf(entity.id)
+                                    if (DataStore.confirmProfileDelete) {
+                                        AlertDialog.Builder(requireContext())
+                                            .setTitle(R.string.delete_confirm_prompt)
+                                            .setPositiveButton(R.string.yes) { dialog: DialogInterface, which: Int ->
+                                                adapter.remove(index)
+                                                undoManager.remove(index to entity)
+                                            }
+                                            .setNegativeButton(R.string.no, null)
+                                            .show()
+                                    } else {
+                                        adapter.remove(index)
+                                        undoManager.remove(index to entity)
+                                    }
+                                }
+                                true
+                            }
+                            else -> false
                         }
                     }
-                } else {
-                    shareLayout.setOnClickListener(null)
+                    popup.show()
                 }
-
-                editButton.isGone = parent.select
-                deleteButton.isGone = parent.select
-                shareButton.isGone = parent.select
 
                 updateState(proxyEntity)
                 updateSelectionState(proxyEntity.id)
@@ -1752,6 +1876,64 @@ class ConfigurationFragment @JvmOverloads constructor(
 
                 entity = proxyEntity
 
+                val isDoubleColumn = DataStore.groupLayoutMode == 1
+                if (isDoubleColumn) {
+                    profileName.maxLines = 1
+                    profileName.ellipsize = TextUtils.TruncateAt.END
+
+                    profileAddress.maxLines = 1
+                    profileAddress.ellipsize = TextUtils.TruncateAt.END
+
+                    trafficText.maxLines = 1
+                    trafficText.ellipsize = TextUtils.TruncateAt.END
+
+                    profileType.maxLines = 1
+                    profileType.ellipsize = TextUtils.TruncateAt.END
+
+                    profileStatus.maxLines = 1
+                    profileStatus.ellipsize = TextUtils.TruncateAt.END
+
+                    middleLine.orientation = LinearLayout.HORIZONTAL
+                    bottomLine.orientation = LinearLayout.HORIZONTAL
+
+                    profileAddress.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
+                    trafficText.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                        marginStart = dp2px(4)
+                    }
+
+                    profileType.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
+                    profileStatus.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                        marginStart = dp2px(4)
+                    }
+                } else {
+                    profileName.maxLines = 2
+                    profileName.ellipsize = TextUtils.TruncateAt.END
+
+                    profileAddress.maxLines = 1
+                    profileAddress.ellipsize = TextUtils.TruncateAt.END
+
+                    trafficText.maxLines = 1
+                    trafficText.ellipsize = TextUtils.TruncateAt.END
+
+                    profileType.maxLines = 1
+                    profileType.ellipsize = TextUtils.TruncateAt.END
+
+                    profileStatus.maxLines = 1
+                    profileStatus.ellipsize = TextUtils.TruncateAt.END
+
+                    middleLine.orientation = LinearLayout.HORIZONTAL
+                    bottomLine.orientation = LinearLayout.HORIZONTAL
+
+                    profileAddress.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
+                    trafficText.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                        marginStart = dp2px(8)
+                    }
+
+                    profileType.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
+                    profileStatus.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                        marginStart = dp2px(8)
+                    }
+                }
                 profileName.text = proxyEntity.displayName()
                 profileType.text = proxyEntity.displayType()
 
@@ -1805,7 +1987,21 @@ class ConfigurationFragment @JvmOverloads constructor(
 
                 profileStatus.isClickable = proxyEntity.status == 3
 
-                if (!parent.select) {
+                val selectOrChain = parent.select || proxyEntity.type == ProxyEntity.TYPE_CHAIN
+
+                if (isDoubleColumn) {
+                    editButton.isGone = true
+                    shareLayout.isGone = true
+                    deleteButton.isGone = true
+                    doubleColumnMenuButton.isVisible = true
+                } else {
+                    shareLayout.isGone = selectOrChain
+                    editButton.isGone = parent.select
+                    deleteButton.isGone = parent.select
+                    doubleColumnMenuButton.isGone = true
+                }
+
+                if (!parent.select && !isDoubleColumn) {
                     val isInsecure = DataStore.profileSecurityAdvisory && proxyEntity.requireBean().isInsecure
                     if (isInsecure) {
                         shareLayer.setBackgroundColor(Color.RED)
@@ -1816,8 +2012,8 @@ class ConfigurationFragment @JvmOverloads constructor(
                         shareButton.setImageResource(R.drawable.ic_social_share)
                         shareButton.setColorFilter(Color.GRAY)
                     }
-                    shareButton.isVisible = true
                 }
+                shareButton.isVisible = true
             }
 
             fun showShare(anchor: View) {
