@@ -445,6 +445,11 @@
             app:icon="@drawable/baseline_developer_board_24"
             app:key="acquireWakeLock"
             app:title="@string/acquire_wake_lock" />
+        <SwitchPreference
+            app:icon="@drawable/ic_baseline_lock_24"
+            app:key="hideFromRecentApps"
+            app:summary="@string/hide_from_recent_apps_summary"
+            app:title="@string/hide_from_recent_apps" />
         <EditTextPreference
             app:dialogMessage="@string/one_per_line"
             app:icon="@drawable/ic_hardware_router"
