@@ -121,6 +121,8 @@ object Key {
     const val ALLOW_APPS_BYPASS_VPN = "allowAppsBypassVpn"
     const val ACQUIRE_WAKE_LOCK = "acquireWakeLock"
     const val HIDE_FROM_RECENT_APPS = "hideFromRecentApps"
+    const val CONFIRM_PROFILE_DELETE = "confirmProfileDelete"
+    const val GROUP_LAYOUT_MODE = "groupLayoutMode"
     const val STUN_SERVERS = "stunServers"
     const val FAB_STYLE = "fabStyle"
     const val USE_IEC_UNIT = "useIECUnit"
