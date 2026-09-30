@@ -487,6 +487,12 @@
     <string name="acquire_wake_lock">获取唤醒锁</string>
     <string name="hide_from_recent_apps">从最近任务中隐藏</string>
     <string name="hide_from_recent_apps_summary">应用在后台运行时，在最近任务中隐藏</string>
+    <string name="layout">布局</string>
+    <string name="layout_single_column">单列</string>
+    <string name="layout_double_column">双列</string>
+    <string name="sort_and_layout">排序与布局</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
     <string name="log_level">日志级别</string>
     <string name="fab_style">悬浮操作按钮样式</string>
     <string name="wireguard_keepalive_interval">连接保活间隔（秒）</string>
