@@ -206,8 +206,7 @@
     <string name="action_ssh" translatable="false">SSH</string>
     <string name="action_wireguard" translatable="false">WireGuard</string>
     <string name="action_mieru" translatable="false">mieru</string>
-    <string name="action_tuic" translatable="false">TUIC v4</string>
-    <string name="action_tuic5" translatable="false">TUIC v5</string>
+    <string name="action_tuic5" translatable="false">TUIC</string>
     <string name="action_http3" translatable="false">HTTP/3</string>
     <string name="action_anytls" translatable="false">AnyTLS</string>
     <string name="proxy_chain">Proxy chain</string>
