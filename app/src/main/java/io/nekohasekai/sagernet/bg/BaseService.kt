@@ -26,6 +26,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.*
+import androidx.core.content.ContextCompat
 import io.nekohasekai.sagernet.Action
 import io.nekohasekai.sagernet.BootReceiver
 import io.nekohasekai.sagernet.R
@@ -36,6 +37,7 @@ import io.nekohasekai.sagernet.aidl.TrafficStats
 import io.nekohasekai.sagernet.bg.proto.ProxyInstance
 import io.nekohasekai.sagernet.bg.test.V2RayTestInstance
 import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.database.ProxyEntity
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.fmt.Alerts
 import io.nekohasekai.sagernet.fmt.TAG_SOCKS
@@ -52,6 +54,8 @@ import libexclavecore.AppStats
 import libexclavecore.Libexclavecore
 import libexclavecore.TrafficListener
 import java.net.UnknownHostException
+import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.time.Duration.Companion.milliseconds
 import com.github.shadowsocks.plugin.PluginManager as ShadowsocksPluginPluginManager
 import io.nekohasekai.sagernet.aidl.AppStats as AidlAppStats
 
@@ -69,6 +73,7 @@ class BaseService {
     }
 
     interface ExpectedException
+    @Suppress("Unused")
     class ExpectedExceptionWrapper(e: Exception) : Exception(e.localizedMessage, e),
         ExpectedException
 
@@ -131,7 +136,7 @@ class BaseService {
                         try {
                             work(callbacks.getBroadcastItem(it))
                         } catch (_: RemoteException) {
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                         }
                     }
                 } finally {
@@ -145,7 +150,7 @@ class BaseService {
             val showDirectSpeed = DataStore.showDirectSpeed
             while (true) {
                 val delayMs = bandwidthListeners.values.minOrNull()
-                delay(delayMs ?: return)
+                delay((delayMs ?: return).milliseconds)
                 if (delayMs == 0L) return
                 val queryTime = System.currentTimeMillis()
                 val sinceLastQueryInSeconds = (queryTime - lastQueryTime).toDouble() / 1000L
@@ -224,7 +229,7 @@ class BaseService {
                         }
                     }
                 }
-                delay(delayMs ?: return)
+                delay((delayMs ?: return).milliseconds)
             }
 
         }
@@ -399,24 +404,27 @@ class BaseService {
                 while (isActive) {
                     val now = System.currentTimeMillis()
                     val timeoutSeconds = DataStore.autoSwitchTimeoutDuration.toLong().coerceAtLeast(5)
-                    val activeIntervalSeconds = DataStore.autoSwitchActiveInterval.toLong()
+                    val activeIntervalSeconds = DataStore.autoSwitchActiveInterval.toLong().coerceAtLeast(30)
 
-                    // 1. 周期性主动探测 (Periodic Active Check - Like Mihomo url-test)
+                    // 1. 周期性主动探测 (Periodic Active Check)
                     if (DataStore.enableAutoSwitchActive && (now - lastActiveTest) >= activeIntervalSeconds * 1000) {
                         Logs.d("Timeout monitor: Starting periodic active URL test")
+                        var switched = false
                         try {
-                            autoSwitchProxy(forceTestAll = true)
+                            switched = autoSwitchProxy()
                         } catch (e: Exception) {
                             Logs.d("Active test error: ${e.readableMessage}")
                         }
                         lastActiveTest = System.currentTimeMillis()
                         failureCount = 0
+                        if (switched) break // 服务重新启动，结束当前 Job
                     }
 
                     // 2. 被动超时检查 (Passive Timeout Check)
                     if (DataStore.enableAutoSwitchTimeout) {
                         // 初始等待设定间隔，如果已失败一次则快速重试确认
-                        delay(if (failureCount == 0) timeoutSeconds * 1000 else 2000)
+                        val checkDelay = if (failureCount == 0) timeoutSeconds * 1000 else 2000L
+                        delay(checkDelay.milliseconds)
                         if (!isActive) break
 
                         var result = -1
@@ -424,7 +432,7 @@ class BaseService {
                             if (data.proxy?.v2rayPoint != null) {
                                 // 利用当前运行的进程探测，不启动新进程，极度省电
                                 result = Libexclavecore.urlTest(
-                                    data.proxy!!.v2rayPoint, TAG_SOCKS, DataStore.connectionTestURL, 5000
+                                    data.proxy!!.v2rayPoint, TAG_SOCKS, DataStore.connectionTestURL, 3000
                                 )
                             }
                         } catch (e: Exception) {
@@ -437,33 +445,45 @@ class BaseService {
                             failureCount++
                             Logs.d("Health check: failure count $failureCount")
                             if (failureCount >= 2) {
-                                // 连续两次失败才触发切换，防止网络波动误切
+                                // 连续两次失败触发自动故障转移
+                                var switched = false
                                 try {
-                                    autoSwitchProxy(forceTestAll = false)
+                                    switched = autoSwitchProxy()
                                 } catch (e: Exception) {
                                     Logs.d("Switch error: ${e.readableMessage}")
                                 }
-                                break
+                                if (switched) {
+                                    break // 服务重新启动，结束当前 Job
+                                } else {
+                                    // 切换失败（无可用节点或网络离线），退避 15 秒继续监听，不终止 Job
+                                    Logs.d("Auto switch did not find working node, backing off...")
+                                    delay(15000.milliseconds)
+                                    failureCount = 1
+                                }
                             }
                         }
                     } else {
-                        delay(2000) // 仅开启主动探测时，降低循环频率
+                        // 仅开启主动探测时，计算到下一次主动探测的时间进行休眠，避免频繁唤醒 CPU
+                        val timeUntilNextActive = (activeIntervalSeconds * 1000) - (System.currentTimeMillis() - lastActiveTest)
+                        val sleepMs = timeUntilNextActive.coerceIn(2000L, 60000L)
+                        delay(sleepMs.milliseconds)
                     }
                 }
             }
         }
 
-        suspend fun autoSwitchProxy(forceTestAll: Boolean = false) {
-            val currentProfile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy) ?: return
+        suspend fun autoSwitchProxy(): Boolean {
+            val currentProfile = SagerDatabase.proxyDao.getById(DataStore.selectedProxy) ?: return false
             val groupProxies = SagerDatabase.proxyDao.getByGroup(currentProfile.groupId)
 
-            if (groupProxies.size <= 1) return
+            if (groupProxies.size <= 1) return false
 
-            var targetProxyId: Long = 0L
+            var targetProxyId: Long
 
             if (DataStore.autoSwitchStrategy == AutoSwitchStrategy.URL_TEST) {
-                // 智能测试集：全量探测或精简集（当前+最优5个+随机5个）
-                val testList = if (forceTestAll || groupProxies.size <= 20) {
+                // 精简探测集：限制后台探测候选数量（当前节点 + 5个历史最优 + 5个随机节点，最多12个），防止 CPU 发热和耗电
+                val maxCandidates = 12
+                val testList = if (groupProxies.size <= maxCandidates) {
                     groupProxies
                 } else {
                     val current = groupProxies.filter { it.id == currentProfile.id }
@@ -471,10 +491,12 @@ class BaseService {
                     val sortedOthers = others.sortedBy { if (it.ping > 0) it.ping else Int.MAX_VALUE }
                     val bestOthers = sortedOthers.take(5)
                     val randomOthers = (sortedOthers - bestOthers.toSet()).shuffled().take(5)
-                    current + bestOthers + randomOthers
+                    (current + bestOthers + randomOthers).distinctBy { it.id }
                 }
 
-                val semaphore = Semaphore(3) // 限制并发，防止发热
+                val semaphore = Semaphore(2) // 限制并发为 2，减轻 CPU 负担
+                val updatedProxies = ConcurrentLinkedQueue<ProxyEntity>()
+
                 val results = coroutineScope {
                     testList.map { proxy ->
                         async {
@@ -484,9 +506,14 @@ class BaseService {
                                     val delay = Libexclavecore.urlTest(data.proxy!!.v2rayPoint, TAG_SOCKS, DataStore.connectionTestURL, 3000)
                                     proxy.ping = if (delay > 0) delay else -1
                                     proxy.status = if (delay > 0) 1 else 3
-                                    SagerDatabase.proxyDao.updateProxy(proxy)
+                                    updatedProxies.add(proxy)
                                     if (delay > 0) proxy.id to delay.toLong() else null
-                                } catch (e: Exception) { null }
+                                } catch (_: Exception) {
+                                    proxy.ping = -1
+                                    proxy.status = 3
+                                    updatedProxies.add(proxy)
+                                    null
+                                }
                             } else {
                                 semaphore.withPermit {
                                     val testInstance = V2RayTestInstance(proxy, DataStore.connectionTestURL, 3000)
@@ -494,12 +521,12 @@ class BaseService {
                                         val delay = testInstance.doTest()
                                         proxy.ping = if (delay > 0) delay else -1
                                         proxy.status = if (delay > 0) 1 else 3
-                                        SagerDatabase.proxyDao.updateProxy(proxy)
+                                        updatedProxies.add(proxy)
                                         if (delay > 0) proxy.id to delay.toLong() else null
-                                    } catch (e: Exception) {
+                                    } catch (_: Exception) {
                                         proxy.ping = -1
                                         proxy.status = 3
-                                        SagerDatabase.proxyDao.updateProxy(proxy)
+                                        updatedProxies.add(proxy)
                                         null
                                     } finally {
                                         testInstance.close()
@@ -508,6 +535,11 @@ class BaseService {
                             }
                         }
                     }.awaitAll().filterNotNull()
+                }
+
+                // 批量更新数据库，避免在 async 内部频繁单条写入锁住 SQLite
+                if (updatedProxies.isNotEmpty()) {
+                    SagerDatabase.proxyDao.updateProxy(updatedProxies.toList())
                 }
 
                 // 通知 UI 更新延迟显示
@@ -544,7 +576,9 @@ class BaseService {
                 runOnMainDispatcher {
                     stopRunner(true)
                 }
+                return true
             }
+            return false
         }
 
         suspend fun startProcesses() {
@@ -635,19 +669,18 @@ class BaseService {
             data.proxy = proxy
             BootReceiver.enabled = DataStore.persistAcrossReboot
             if (!data.closeReceiverRegistered) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    registerReceiver(data.receiver, IntentFilter().apply {
+                ContextCompat.registerReceiver(
+                    this,
+                    data.receiver,
+                    IntentFilter().apply {
                         addAction(Action.RELOAD)
                         addAction(Intent.ACTION_SHUTDOWN)
                         addAction(Action.CLOSE)
-                    }, "$packageName.SERVICE", null, Context.RECEIVER_EXPORTED)
-                } else {
-                    registerReceiver(data.receiver, IntentFilter().apply {
-                        addAction(Action.RELOAD)
-                        addAction(Intent.ACTION_SHUTDOWN)
-                        addAction(Action.CLOSE)
-                    }, "$packageName.SERVICE", null)
-                }
+                    },
+                    "$packageName.SERVICE",
+                    null,
+                    ContextCompat.RECEIVER_EXPORTED
+                )
                 data.closeReceiverRegistered = true
             }
 
