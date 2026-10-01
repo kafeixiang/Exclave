@@ -645,14 +645,39 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         }
 
         val enableAutoSwitchTimeout = findPreference<SwitchPreference>(Key.ENABLE_AUTO_SWITCH_TIMEOUT)!!
+        val autoSwitchStrategy = findPreference<Preference>(Key.AUTO_SWITCH_STRATEGY)!!
         val autoSwitchTimeoutDuration = findPreference<Preference>(Key.AUTO_SWITCH_TIMEOUT_DURATION)!!
+        val enableAutoSwitchActive = findPreference<SwitchPreference>(Key.ENABLE_AUTO_SWITCH_ACTIVE)!!
+        val autoSwitchActiveInterval = findPreference<Preference>(Key.AUTO_SWITCH_ACTIVE_INTERVAL)!!
 
-        fun updateAutoSwitchTimeoutVisibility() {
-            autoSwitchTimeoutDuration.isVisible = enableAutoSwitchTimeout.isChecked
+        fun updateAutoSwitchTimeoutVisibility(
+            timeoutEnabled: Boolean = enableAutoSwitchTimeout.isChecked,
+            activeEnabled: Boolean = enableAutoSwitchActive.isChecked
+        ) {
+            autoSwitchStrategy.isVisible = timeoutEnabled || activeEnabled
+            autoSwitchTimeoutDuration.isVisible = timeoutEnabled
+            autoSwitchActiveInterval.isVisible = activeEnabled
         }
 
         enableAutoSwitchTimeout.setOnPreferenceChangeListener { _, newValue ->
-            autoSwitchTimeoutDuration.isVisible = newValue as Boolean
+            updateAutoSwitchTimeoutVisibility(timeoutEnabled = newValue as Boolean)
+            needReload()
+            true
+        }
+        enableAutoSwitchActive.setOnPreferenceChangeListener { _, newValue ->
+            updateAutoSwitchTimeoutVisibility(activeEnabled = newValue as Boolean)
+            needReload()
+            true
+        }
+        autoSwitchStrategy.setOnPreferenceChangeListener { _, _ ->
+            needReload()
+            true
+        }
+        autoSwitchTimeoutDuration.setOnPreferenceChangeListener { _, _ ->
+            needReload()
+            true
+        }
+        autoSwitchActiveInterval.setOnPreferenceChangeListener { _, _ ->
             needReload()
             true
         }
