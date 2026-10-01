@@ -1444,6 +1444,7 @@ fun buildV2RayConfig(
                                         udpRelayMode = bean.udpRelayMode
                                         if (bean.heartbeat != null && bean.heartbeat > 0) heartbeat = bean.heartbeat
                                         if (bean.reduceRTT) zeroRTTHandshake = bean.reduceRTT
+                                        if (bean.mtu != null && bean.mtu > 0) mtu = bean.mtu
                                     }
                                 )
                                 streamSettings = StreamSettingsObject().apply {
