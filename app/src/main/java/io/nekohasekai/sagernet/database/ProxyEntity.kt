@@ -537,7 +537,7 @@ data class ProxyEntity(
             TYPE_SSH -> SSHSettingsActivity::class.java
             TYPE_WG -> WireGuardSettingsActivity::class.java
             TYPE_MIERU -> MieruSettingsActivity::class.java
-            TYPE_TUIC -> TuicSettingsActivity::class.java
+            TYPE_TUIC -> Tuic5SettingsActivity::class.java
             TYPE_TUIC5 -> Tuic5SettingsActivity::class.java
             TYPE_JUICITY -> JuicitySettingsActivity::class.java
             TYPE_HTTP3 -> Http3SettingsActivity::class.java

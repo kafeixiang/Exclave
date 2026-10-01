@@ -992,6 +992,11 @@
         <item>6</item>
     </string-array>
 
+    <string-array name="tuic_version_value">
+        <item>5</item>
+        <item>4</item>
+    </string-array>
+
     <string-array name="snell_obfs_value">
         <item>none</item>
         <item>http</item>
