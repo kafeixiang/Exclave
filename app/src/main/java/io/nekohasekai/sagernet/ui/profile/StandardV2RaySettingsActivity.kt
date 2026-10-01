@@ -495,6 +495,8 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
                 }
             }
             is HttpBean -> {
+                encryption.isVisible = false
+                vlessEncryption.isVisible = false
                 uriTemplate.isEnabled = connectUDP.isChecked
                 connectUDP.setOnPreferenceChangeListener { _, newValue ->
                     uriTemplate.isEnabled = newValue as Boolean
