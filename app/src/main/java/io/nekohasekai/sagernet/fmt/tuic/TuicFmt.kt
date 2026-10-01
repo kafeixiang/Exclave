@@ -128,6 +128,9 @@ fun TuicBean.toUri(): String {
     if (heartbeat != 10) {
         builder.addQueryParameter("heartbeat", "$heartbeat")
     }
+    if (mtu != 1400) {
+        builder.addQueryParameter("mtu", "$mtu")
+    }
     return builder.string
 }
 

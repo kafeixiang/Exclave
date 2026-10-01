@@ -207,6 +207,10 @@ open class Tuic5SettingsActivity : ProfileSettingsActivity<AbstractBean>() {
             setOnBindEditTextListener(EditTextPreferenceModifiers.Number)
         }
 
+        findPreference<EditTextPreference>(Key.SERVER_MTU)?.apply {
+            setOnBindEditTextListener(EditTextPreferenceModifiers.Number)
+        }
+
         findPreference<EditTextPreference>(Key.SERVER_PASSWORD)!!.apply {
             summaryProvider = PasswordSummaryProvider
         }

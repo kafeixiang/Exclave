@@ -970,6 +970,7 @@ public class V2RayConfig {
         public Integer heartbeat;
         public Boolean zeroRTTHandshake;
         public Boolean udpOverStream;
+        public Integer mtu;
 
     }
 
