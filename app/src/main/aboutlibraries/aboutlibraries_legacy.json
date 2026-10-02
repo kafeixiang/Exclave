@@ -74,11 +74,11 @@
         },
         {
             "uniqueId": "androidx.constraintlayout:constraintlayout",
-            "artifactVersion": "2.1.0"
+            "artifactVersion": "2.2.2"
         },
         {
             "uniqueId": "androidx.constraintlayout:constraintlayout-core",
-            "artifactVersion": "1.0.0"
+            "artifactVersion": "1.1.2"
         },
         {
             "uniqueId": "androidx.coordinatorlayout:coordinatorlayout",

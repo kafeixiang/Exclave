@@ -73,7 +73,6 @@ import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.noties.markwon.Markwon
 import libexclavecore.Libexclavecore
-import jp.wasabeef.blurry.Blurry
 import android.widget.ImageView
 
 class MainActivity : ThemedActivity(),

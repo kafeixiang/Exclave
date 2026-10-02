@@ -74,7 +74,6 @@ dependencies {
     }
     implementation(libs.editorkit)
     implementation(libs.editorkit.language.json)
-    implementation(libs.blurry)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     "legacyImplementation"(libs.core.ktx.minSdk21)
