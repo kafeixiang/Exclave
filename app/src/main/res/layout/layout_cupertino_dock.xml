@@ -35,7 +35,7 @@
         android:alpha="0.8" />
 
     <!-- 3. Foreground Interactive Layer (Sharp) -->
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
         android:id="@+id/content_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -47,15 +47,15 @@
             android:id="@+id/speed_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
             android:layout_marginStart="20dp"
             android:layout_marginTop="16dp"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true"
             android:orientation="vertical"
-            android:padding="4dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:padding="4dp">
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/up_speed"
@@ -89,29 +89,23 @@
             android:id="@+id/fab_glow"
             android:layout_width="64dp"
             android:layout_height="64dp"
+            android:layout_centerInParent="true"
             android:alpha="0"
             android:background="@drawable/bg_ambient_glow"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="@+id/fab"
-            app:layout_constraintEnd_toEndOf="@+id/fab"
-            app:layout_constraintStart_toStartOf="@+id/fab"
-            app:layout_constraintTop_toTopOf="@+id/fab" />
+            android:visibility="visible" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
             android:contentDescription="@null"
             app:backgroundTint="@android:color/white"
             app:elevation="4dp"
             app:fabSize="normal"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_service_idle"
             app:tint="?colorAccent" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </RelativeLayout>
 
 </merge>
