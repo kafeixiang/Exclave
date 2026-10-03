@@ -43,6 +43,7 @@ import io.nekohasekai.sagernet.databinding.*
 import io.nekohasekai.sagernet.group.GroupUpdater
 import io.nekohasekai.sagernet.group.RawUpdater
 import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.widget.QRCodeDialog
 import kotlinx.coroutines.Dispatchers
@@ -161,6 +162,9 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         }
 
         recyclerView?.layoutManager = gridLayoutManager
+        if (!Theme.isCupertino()) {
+            recyclerView?.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         recyclerView?.applyGlassBlur()
         recyclerView?.adapter = adapter
         recyclerView?.addOnScrollListener(object : RecyclerView.OnScrollListener() {

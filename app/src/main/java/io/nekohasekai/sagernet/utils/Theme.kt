@@ -21,6 +21,7 @@ package io.nekohasekai.sagernet.utils
 
 import android.content.Context
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import io.nekohasekai.sagernet.R
@@ -226,6 +227,18 @@ object Theme {
 
     fun applyNightTheme() {
         AppCompatDelegate.setDefaultNightMode(getNightMode())
+    }
+
+    fun isCupertino(theme: Int = DataStore.appTheme): Boolean {
+        return theme in CUPERTINO_PINK..CUPERTINO_UNICORN
+    }
+
+    fun getClassicListBackgroundColor(): Int {
+        return if (usingNightMode()) {
+            Color.BLACK
+        } else {
+            Color.rgb(0xEF, 0xEF, 0xEF)
+        }
     }
 
 }

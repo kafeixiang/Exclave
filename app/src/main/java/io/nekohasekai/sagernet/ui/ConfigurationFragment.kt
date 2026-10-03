@@ -79,6 +79,7 @@ import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
 import io.nekohasekai.sagernet.plugin.PluginManager
 import io.nekohasekai.sagernet.ui.profile.*
 import io.nekohasekai.sagernet.utils.PackageCache
+import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.widget.QRCodeDialog
 import io.nekohasekai.sagernet.widget.UndoSnackbarManager
 import kotlinx.coroutines.*
@@ -1412,6 +1413,9 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
             setupLayoutManager()
             configurationListView.layoutManager = layoutManager
+            if (!Theme.isCupertino()) {
+                configurationListView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+            }
             configurationListView.applyGlassBlur()
             adapter = ConfigurationAdapter()
             ProfileManager.addListener(adapter)
