@@ -39,51 +39,56 @@
         android:id="@+id/content_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/transparent"
-        android:clickable="true"
-        android:focusable="true">
+        android:background="@android:color/transparent">
 
-        <LinearLayout
+        <!-- Full panel click target for speed / latency test -->
+        <RelativeLayout
             android:id="@+id/speed_layout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
-            android:focusable="true"
-            android:orientation="vertical"
-            android:padding="4dp">
+            android:focusable="true">
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/up_speed"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:drawablePadding="2dp"
-                android:fontFamily="monospace"
-                android:text="@string/speed_zero"
-                android:textColor="#3C3C43"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_up_24"
-                app:drawableTint="@color/material_red_500" />
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:padding="4dp">
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/down_speed"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:drawablePadding="2dp"
-                android:fontFamily="monospace"
-                android:text="@string/speed_zero"
-                android:textColor="#3C3C43"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_down_24"
-                app:drawableTint="@color/material_green_500" />
-        </LinearLayout>
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/up_speed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="2dp"
+                    android:fontFamily="monospace"
+                    android:text="@string/speed_zero"
+                    android:textColor="#3C3C43"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_up_24"
+                    app:drawableTint="@color/material_red_500" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/down_speed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:drawablePadding="2dp"
+                    android:fontFamily="monospace"
+                    android:text="@string/speed_zero"
+                    android:textColor="#3C3C43"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_down_24"
+                    app:drawableTint="@color/material_green_500" />
+            </LinearLayout>
+
+        </RelativeLayout>
 
         <View
             android:id="@+id/fab_glow"
