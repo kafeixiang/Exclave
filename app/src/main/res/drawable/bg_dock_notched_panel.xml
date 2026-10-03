@@ -5,15 +5,15 @@
     android:viewportWidth="1000"
     android:viewportHeight="100">
 
-    <!-- Glass Fill with Notch -->
+    <!-- Dock Panel Solid/Glass Body Fill -->
     <path
-        android:fillColor="@color/surface_glass"
-        android:pathData="M 0,28 L 440,28 C 455,28 465,36 470,48 C 478,66 488,72 500,72 C 512,72 522,66 530,48 C 535,36 545,28 560,28 L 1000,28 L 1000,100 L 0,100 Z" />
+        android:fillColor="@color/dock_panel_bg"
+        android:pathData="M 0,36 L 430,36 C 450,36 462,44 470,54 C 480,68 488,74 500,74 C 512,74 520,68 530,54 C 538,44 550,36 570,36 L 1000,36 L 1000,100 L 0,100 Z" />
 
-    <!-- Top Metallic Glass Highlight Edge -->
+    <!-- Top iOS-style High-Contrast Border/Highlight Line -->
     <path
-        android:strokeColor="#B3FFFFFF"
-        android:strokeWidth="1.5"
-        android:pathData="M 0,28 L 440,28 C 455,28 465,36 470,48 C 478,66 488,72 500,72 C 512,72 522,66 530,48 C 535,36 545,28 560,28 L 1000,28" />
+        android:strokeColor="@color/dock_panel_stroke"
+        android:strokeWidth="2.5"
+        android:pathData="M 0,36 L 430,36 C 450,36 462,44 470,54 C 480,68 488,74 500,74 C 512,74 520,68 530,54 C 538,44 550,36 570,36 L 1000,36" />
 
 </vector>

@@ -45,6 +45,8 @@ class CupertinoDock @JvmOverloads constructor(
     private var colorAnimator: ValueAnimator? = null
 
     init {
+        clipChildren = false
+        clipToPadding = false
         LayoutInflater.from(context).inflate(R.layout.layout_cupertino_dock, this, true)
         waveView = findViewById(R.id.wave_view)
         upSpeedText = findViewById(R.id.up_speed)
