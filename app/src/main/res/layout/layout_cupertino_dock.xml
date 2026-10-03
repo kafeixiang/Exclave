@@ -3,90 +3,103 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="104dp"
+    android:layout_height="100dp"
     tools:parentTag="android.widget.FrameLayout">
 
-    <!-- 1. Background Blur Container -->
+    <!-- 1. Dock Panel Container (Background + Wave + Speed Click Target) -->
     <FrameLayout
-        android:id="@+id/blur_container"
+        android:id="@+id/dock_panel"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="72dp"
+        android:layout_gravity="bottom">
 
-        <View
-            android:id="@+id/blur_bg"
+        <!-- Background Blur Container with Notched Top Edge -->
+        <FrameLayout
+            android:id="@+id/blur_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <View
+                android:id="@+id/blur_bg"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_dock_notched_panel" />
+
+        </FrameLayout>
+
+        <!-- Animated Wave Layer -->
+        <io.nekohasekai.sagernet.widget.WaveView
+            android:id="@+id/wave_view"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_gravity="bottom"
+            android:alpha="0.8" />
+
+        <!-- Speed Display & Full Panel Latency Test Click Target -->
+        <RelativeLayout
+            android:id="@+id/speed_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/surface_glass" />
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
 
-        <!-- Apple-style Top Highlight Edge (Metallic Glass look) -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#B3FFFFFF" />
+            <LinearLayout
+                android:id="@+id/speed_text_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="20dp"
+                android:orientation="vertical"
+                android:padding="4dp">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/up_speed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="2dp"
+                    android:fontFamily="monospace"
+                    android:text="@string/speed_zero"
+                    android:textColor="#3C3C43"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_up_24"
+                    app:drawableTint="@color/material_red_500" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/down_speed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:drawablePadding="2dp"
+                    android:fontFamily="monospace"
+                    android:text="@string/speed_zero"
+                    android:textColor="#3C3C43"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_down_24"
+                    app:drawableTint="@color/material_green_500" />
+            </LinearLayout>
+
+        </RelativeLayout>
 
     </FrameLayout>
 
-    <!-- 2. Animated Wave Layer (Above blur, below buttons) -->
-    <io.nekohasekai.sagernet.widget.WaveView
-        android:id="@+id/wave_view"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:layout_gravity="bottom"
-        android:alpha="0.8" />
-
-    <!-- 3. Foreground Interactive Layer & Full Panel Click Target (Sharp) -->
+    <!-- 2. FAB Floating Layer (Protrudes half above the Dock panel) -->
     <RelativeLayout
-        android:id="@+id/speed_layout"
+        android:id="@+id/fab_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true">
-
-        <LinearLayout
-            android:id="@+id/speed_text_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="16dp"
-            android:orientation="vertical"
-            android:padding="4dp">
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/up_speed"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawablePadding="2dp"
-                android:fontFamily="monospace"
-                android:text="@string/speed_zero"
-                android:textColor="#3C3C43"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_up_24"
-                app:drawableTint="@color/material_red_500" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/down_speed"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:drawablePadding="2dp"
-                android:fontFamily="monospace"
-                android:text="@string/speed_zero"
-                android:textColor="#3C3C43"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_down_24"
-                app:drawableTint="@color/material_green_500" />
-        </LinearLayout>
+        android:layout_height="100dp"
+        android:clickable="false">
 
         <View
             android:id="@+id/fab_glow"
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:layout_centerInParent="true"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="0dp"
             android:alpha="0"
             android:background="@drawable/bg_ambient_glow"
             android:visibility="visible" />
@@ -95,7 +108,9 @@
             android:id="@+id/fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="4dp"
             android:contentDescription="@null"
             app:backgroundTint="@android:color/white"
             app:elevation="4dp"

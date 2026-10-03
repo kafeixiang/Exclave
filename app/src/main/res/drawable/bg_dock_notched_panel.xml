@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="20dp"
+    android:viewportWidth="1000"
+    android:viewportHeight="100">
+
+    <!-- Glass Fill with Notch -->
+    <path
+        android:fillColor="@color/surface_glass"
+        android:pathData="M 0,28 L 440,28 C 455,28 465,36 470,48 C 478,66 488,72 500,72 C 512,72 522,66 530,48 C 535,36 545,28 560,28 L 1000,28 L 1000,100 L 0,100 Z" />
+
+    <!-- Top Metallic Glass Highlight Edge -->
+    <path
+        android:strokeColor="#B3FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M 0,28 L 440,28 C 455,28 465,36 470,48 C 478,66 488,72 500,72 C 512,72 522,66 530,48 C 535,36 545,28 560,28 L 1000,28" />
+
+</vector>

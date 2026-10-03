@@ -32,10 +32,13 @@ class CupertinoDock @JvmOverloads constructor(
     private val downSpeedText: TextView
     private val fabGlow: View
     private val blurContainer: View
+    val dockPanel: View
+    val fabContainer: View
     val speedLayout: View
     val fab: FloatingActionButton
     private var isConnected = false
     private var accentColor = Color.RED
+    private var isPanelHidden = false
 
     private var pulseAnimator: ObjectAnimator
     private var fabScaleAnimator: ObjectAnimator
@@ -48,6 +51,8 @@ class CupertinoDock @JvmOverloads constructor(
         downSpeedText = findViewById(R.id.down_speed)
         fabGlow = findViewById(R.id.fab_glow)
         blurContainer = findViewById(R.id.blur_container)
+        dockPanel = findViewById(R.id.dock_panel)
+        fabContainer = findViewById(R.id.fab_container)
         speedLayout = findViewById(R.id.speed_layout)
         fab = findViewById(R.id.fab)
 
@@ -68,6 +73,32 @@ class CupertinoDock @JvmOverloads constructor(
         }
 
         applyFrostedEffect()
+    }
+
+    fun hidePanel() {
+        if (isPanelHidden) return
+        isPanelHidden = true
+        dockPanel.animate()
+            .translationY(dockPanel.height.toFloat().coerceAtLeast(200f))
+            .setDuration(220)
+            .start()
+        fabContainer.animate()
+            .translationY(30f)
+            .setDuration(220)
+            .start()
+    }
+
+    fun showPanel() {
+        if (!isPanelHidden) return
+        isPanelHidden = false
+        dockPanel.animate()
+            .translationY(0f)
+            .setDuration(220)
+            .start()
+        fabContainer.animate()
+            .translationY(0f)
+            .setDuration(220)
+            .start()
     }
 
     private fun applyFrostedEffect() {

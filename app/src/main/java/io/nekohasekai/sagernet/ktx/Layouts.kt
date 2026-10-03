@@ -75,10 +75,19 @@ class FixedLinearLayoutManager(val recyclerView: RecyclerView) :
     private var listenerDisabled = false
 
     override fun scrollVerticallyBy(
-        dx: Int, recycler: RecyclerView.Recycler,
+        dy: Int, recycler: RecyclerView.Recycler,
         state: RecyclerView.State
     ): Int {
-        return super.scrollVerticallyBy(dx, recycler, state)
+        val scrollRange = super.scrollVerticallyBy(dy, recycler, state)
+        val activity = recyclerView.context as? MainActivity
+        if (activity != null) {
+            if (dy > 6) {
+                activity.binding.cupertinoDock.hidePanel()
+            } else if (dy < -6) {
+                activity.binding.cupertinoDock.showPanel()
+            }
+        }
+        return scrollRange
     }
 
 }
@@ -100,10 +109,19 @@ class FixedGridLayoutManager(val recyclerView: RecyclerView, spanCount: Int) :
     }
 
     override fun scrollVerticallyBy(
-        dx: Int, recycler: RecyclerView.Recycler,
+        dy: Int, recycler: RecyclerView.Recycler,
         state: RecyclerView.State
     ): Int {
-        return super.scrollVerticallyBy(dx, recycler, state)
+        val scrollRange = super.scrollVerticallyBy(dy, recycler, state)
+        val activity = recyclerView.context as? MainActivity
+        if (activity != null) {
+            if (dy > 6) {
+                activity.binding.cupertinoDock.hidePanel()
+            } else if (dy < -6) {
+                activity.binding.cupertinoDock.showPanel()
+            }
+        }
+        return scrollRange
     }
 
 }
