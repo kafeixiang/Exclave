@@ -350,6 +350,8 @@
     <!-- Cupertino Dock Panel Colors (Light) -->
     <color name="dock_panel_bg">#F2FFFFFF</color>
     <color name="dock_panel_stroke">#26000000</color>
+    <color name="glass_dock_bg">#D8FFFFFF</color>
+    <color name="glass_dock_stroke">#E6FFFFFF</color>
 
     <!-- Segmented Control Bar Colors (iOS 厚重磨砂质感) -->
     <color name="segmented_control_bg">#E6E3E3E8</color> <!-- 90% 厚重苹果高斯磨砂槽底 -->

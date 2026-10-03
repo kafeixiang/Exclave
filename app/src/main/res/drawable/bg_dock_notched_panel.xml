@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="200dp"
-    android:height="20dp"
+    android:height="40dp"
     android:viewportWidth="1000"
-    android:viewportHeight="100">
+    android:viewportHeight="200">
 
-    <!-- Dock Panel Solid/Glass Body Fill -->
+    <!-- iOS Frosted Glass Fill with Top Center Notch -->
     <path
-        android:fillColor="@color/dock_panel_bg"
-        android:pathData="M 0,36 L 430,36 C 450,36 462,44 470,54 C 480,68 488,74 500,74 C 512,74 520,68 530,54 C 538,44 550,36 570,36 L 1000,36 L 1000,100 L 0,100 Z" />
+        android:fillColor="@color/glass_dock_bg"
+        android:pathData="M 0,0 L 410,0 C 435,0 452,10 462,26 C 475,54 485,78 500,78 C 515,78 525,54 538,26 C 548,10 565,0 590,0 L 1000,0 L 1000,200 L 0,200 Z" />
 
-    <!-- Top iOS-style High-Contrast Border/Highlight Line -->
+    <!-- Top Metallic Glass Highlight Edge Line -->
     <path
-        android:strokeColor="@color/dock_panel_stroke"
-        android:strokeWidth="2.5"
-        android:pathData="M 0,36 L 430,36 C 450,36 462,44 470,54 C 480,68 488,74 500,74 C 512,74 520,68 530,54 C 538,44 550,36 570,36 L 1000,36" />
+        android:strokeColor="@color/glass_dock_stroke"
+        android:strokeWidth="3"
+        android:pathData="M 0,0 L 410,0 C 435,0 452,10 462,26 C 475,54 485,78 500,78 C 515,78 525,54 538,26 C 548,10 565,0 590,0 L 1000,0" />
 
 </vector>
