@@ -347,6 +347,12 @@
     <color name="cupertino_window_bg">#F2F2F7</color> <!-- 完全不透明背景，防止窗口半透明导致渲染闪屏和拖影 -->
     <color name="card_stroke">#F2FFFFFF</color> <!-- 极其明亮的边缘高光 -->
 
+    <!-- Cupertino Dock Panel Colors (Light) -->
+    <color name="dock_panel_bg">#F2FFFFFF</color>
+    <color name="dock_panel_stroke">#26000000</color>
+    <color name="glass_dock_bg">#D8FFFFFF</color>
+    <color name="glass_dock_stroke">#E6FFFFFF</color>
+
     <!-- Segmented Control Bar Colors (iOS 厚重磨砂质感) -->
     <color name="segmented_control_bg">#E6E3E3E8</color> <!-- 90% 厚重苹果高斯磨砂槽底 -->
     <color name="segmented_pill_bg">#FFFFFF</color> <!-- 选中的纯白立体滑块 -->

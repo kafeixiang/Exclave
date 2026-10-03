@@ -19,4 +19,10 @@
     <!-- Segmented Control Bar Colors (Night - iOS 厚重深色磨砂) -->
     <color name="segmented_control_bg">#D91C1C1E</color>
     <color name="segmented_pill_bg">#636366</color>
+
+    <!-- Cupertino Dock Panel Colors (Night) -->
+    <color name="dock_panel_bg">#F21C1C1E</color>
+    <color name="dock_panel_stroke">#4DFFFFFF</color>
+    <color name="glass_dock_bg">#C81C1C1E</color>
+    <color name="glass_dock_stroke">#66FFFFFF</color>
 </resources>

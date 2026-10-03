@@ -38,6 +38,7 @@ import android.provider.Settings
 import android.text.util.Linkify
 import android.view.KeyEvent
 import android.view.MenuItem
+import android.view.WindowManager
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -93,6 +94,11 @@ class MainActivity : ThemedActivity(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+            window.attributes.blurBehindRadius = 60
+        }
 
         binding = LayoutMainBinding.inflate(layoutInflater)
 

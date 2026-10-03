@@ -41,9 +41,8 @@
         <io.nekohasekai.sagernet.widget.CupertinoDock
             android:id="@+id/cupertino_dock"
             android:layout_width="match_parent"
-            android:layout_height="104dp"
-            android:layout_gravity="bottom"
-            app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
+            android:layout_height="100dp"
+            android:layout_gravity="bottom" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
