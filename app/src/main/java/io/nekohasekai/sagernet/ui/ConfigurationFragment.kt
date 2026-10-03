@@ -95,12 +95,12 @@ import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 
 @android.annotation.SuppressLint("ClickableViewAccessibility")
 fun View.suppressDragWhilePressed(setPressed: (Boolean) -> Unit) {
-    setOnTouchListener { _, event ->
+    setOnTouchListener { v, event ->
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> setPressed(true)
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> setPressed(false)
         }
-        false
+        v.onTouchEvent(event)
     }
 }
 
