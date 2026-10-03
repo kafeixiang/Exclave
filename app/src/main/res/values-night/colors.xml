@@ -23,6 +23,6 @@
     <!-- Cupertino Dock Panel Colors (Night) -->
     <color name="dock_panel_bg">#F21C1C1E</color>
     <color name="dock_panel_stroke">#4DFFFFFF</color>
-    <color name="glass_dock_bg">#C81C1C1E</color>
-    <color name="glass_dock_stroke">#66FFFFFF</color>
+    <color name="glass_dock_bg">#661C1C1E</color>
+    <color name="glass_dock_stroke">#80FFFFFF</color>
 </resources>
