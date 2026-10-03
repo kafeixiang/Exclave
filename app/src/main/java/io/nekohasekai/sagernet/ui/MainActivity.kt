@@ -38,7 +38,6 @@ import android.provider.Settings
 import android.text.util.Linkify
 import android.view.KeyEvent
 import android.view.MenuItem
-import android.view.MotionEvent
 import android.view.WindowManager
 import android.view.View
 import android.widget.TextView
@@ -728,18 +727,6 @@ class MainActivity : ThemedActivity(),
 
         val fragment = supportFragmentManager.findFragmentById(R.id.fragment_holder) as? ToolbarFragment
         return fragment != null && fragment.onKeyDown(keyCode, event)
-    }
-
-    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        return try {
-            super.dispatchTouchEvent(ev)
-        } catch (e: IllegalStateException) {
-            if (e.message?.contains("already recycled") == true) {
-                true
-            } else {
-                throw e
-            }
-        }
     }
 
 }
