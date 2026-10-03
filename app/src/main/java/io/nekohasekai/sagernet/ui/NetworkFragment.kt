@@ -27,6 +27,7 @@ import androidx.core.view.updatePadding
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.databinding.LayoutNetworkBinding
 import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.utils.Theme
 
 class NetworkFragment : NamedFragment(R.layout.layout_network) {
 
@@ -34,6 +35,9 @@ class NetworkFragment : NamedFragment(R.layout.layout_network) {
         super.onViewCreated(view, savedInstanceState)
 
         val binding = LayoutNetworkBinding.bind(view)
+        if (!Theme.isCupertino()) {
+            binding.root.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         binding.stunCard.applyGlassBlur()
         binding.probeCard.applyGlassBlur()
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->

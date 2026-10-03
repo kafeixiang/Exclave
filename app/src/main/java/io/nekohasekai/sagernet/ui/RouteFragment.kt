@@ -42,6 +42,7 @@ import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.ProfileManager
 import io.nekohasekai.sagernet.database.RuleEntity
 import io.nekohasekai.sagernet.database.SagerDatabase
+import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.databinding.LayoutEmptyRouteBinding
 import io.nekohasekai.sagernet.databinding.LayoutRouteItemBinding
 import io.nekohasekai.sagernet.ktx.*
@@ -61,6 +62,9 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
         toolbar.setOnMenuItemClickListener(this)
 
         ruleListView = view.findViewById(R.id.route_list)
+        if (!Theme.isCupertino()) {
+            ruleListView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         ruleListView.layoutManager = FixedLinearLayoutManager(ruleListView)
         ruleListView.applyGlassBlur()
         ViewCompat.setOnApplyWindowInsetsListener(ruleListView) { v, insets ->
