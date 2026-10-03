@@ -6,8 +6,6 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.RenderEffect
-import android.graphics.Shader
 import android.os.Build
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -73,8 +71,6 @@ class CupertinoDock @JvmOverloads constructor(
             repeatMode = ValueAnimator.REVERSE
             repeatCount = ValueAnimator.INFINITE
         }
-
-        applyFrostedEffect()
     }
 
     fun hidePanel() {
@@ -101,16 +97,6 @@ class CupertinoDock @JvmOverloads constructor(
             .translationY(0f)
             .setDuration(220)
             .start()
-    }
-
-    private fun applyFrostedEffect() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            blurContainer.setRenderEffect(
-                RenderEffect.createBlurEffect(
-                    30f, 30f, Shader.TileMode.DECAL
-                )
-            )
-        }
     }
 
     private fun startColorCycling() {
