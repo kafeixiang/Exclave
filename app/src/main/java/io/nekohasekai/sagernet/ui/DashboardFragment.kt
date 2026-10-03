@@ -163,6 +163,17 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         recyclerView?.layoutManager = gridLayoutManager
         recyclerView?.applyGlassBlur()
         recyclerView?.adapter = adapter
+        recyclerView?.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(rv, dx, dy)
+                val mainActivity = activity as? MainActivity ?: return
+                if (dy > 6) {
+                    mainActivity.binding.cupertinoDock.hidePanel()
+                } else if (dy < -6) {
+                    mainActivity.binding.cupertinoDock.showPanel()
+                }
+            }
+        })
 
         setupTouchHelper()
 
