@@ -314,7 +314,7 @@
         },
         {
             "uniqueId": "com.esotericsoftware:kryo",
-            "artifactVersion": "5.6.2"
+            "artifactVersion": "5.7.0"
         },
         {
             "uniqueId": "com.esotericsoftware:minlog",
@@ -426,7 +426,7 @@
         },
         {
             "uniqueId": "org.objenesis:objenesis",
-            "artifactVersion": "3.4"
+            "artifactVersion": "3.6"
         },
         {
             "uniqueId": "org.yaml:snakeyaml",
