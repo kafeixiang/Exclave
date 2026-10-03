@@ -5,15 +5,15 @@
     android:viewportWidth="1000"
     android:viewportHeight="200">
 
-    <!-- iOS Frosted Glass Fill with Top Center Notch (Slightly larger than FAB for visible clearance) -->
+    <!-- iOS Frosted Glass Fill with Large Top Center Notch Cutout -->
     <path
         android:fillColor="@color/glass_dock_bg"
-        android:pathData="M 0,0 L 390,0 C 420,0 440,12 452,28 C 468,58 480,86 500,86 C 520,86 532,58 548,28 C 560,12 580,0 610,0 L 1000,0 L 1000,200 L 0,200 Z" />
+        android:pathData="M 0,0 L 350,0 C 390,0 415,15 435,35 C 455,70 472,105 500,105 C 528,105 545,70 565,35 C 585,15 610,0 650,0 L 1000,0 L 1000,200 L 0,200 Z" />
 
     <!-- Top Metallic Glass Highlight Edge Line -->
     <path
         android:strokeColor="@color/glass_dock_stroke"
         android:strokeWidth="3.5"
-        android:pathData="M 0,0 L 390,0 C 420,0 440,12 452,28 C 468,58 480,86 500,86 C 520,86 532,58 548,28 C 560,12 580,0 610,0 L 1000,0" />
+        android:pathData="M 0,0 L 350,0 C 390,0 415,15 435,35 C 455,70 472,105 500,105 C 528,105 545,70 565,35 C 585,15 610,0 650,0 L 1000,0" />
 
 </vector>
