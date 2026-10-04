@@ -178,6 +178,9 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (!Theme.isCupertino()) {
+            view.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         if (!select) {
             toolbar.inflateMenu(R.menu.add_profile_menu)
             toolbar.setOnMenuItemClickListener(this)
