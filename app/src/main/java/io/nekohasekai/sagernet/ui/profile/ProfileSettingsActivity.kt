@@ -53,6 +53,7 @@ import io.nekohasekai.sagernet.database.preference.OnPreferenceDataStoreChangeLi
 import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.applyDefaultValues
+import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.byteBuffer
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
@@ -283,6 +284,8 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
             super.onViewCreated(view, savedInstanceState)
             if (!Theme.isCupertino()) {
                 listView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+            } else {
+                listView.applyGlassBlur()
             }
 
             // 【关键修改点】监听并去掉 Preference 弹窗外部的灰色遮罩
