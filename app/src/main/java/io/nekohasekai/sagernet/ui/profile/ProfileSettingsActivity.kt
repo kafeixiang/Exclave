@@ -57,6 +57,7 @@ import io.nekohasekai.sagernet.ktx.byteBuffer
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.ui.ThemedActivity
+import io.nekohasekai.sagernet.utils.Theme
 import java.io.ByteArrayOutputStream
 import kotlin.properties.Delegates
 
@@ -280,6 +281,9 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+            if (!Theme.isCupertino()) {
+                listView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+            }
 
             // 【关键修改点】监听并去掉 Preference 弹窗外部的灰色遮罩
             parentFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
