@@ -283,8 +283,11 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
             if (!Theme.isCupertino()) {
+                view.setBackgroundColor(Theme.getClassicListBackgroundColor())
                 listView.setBackgroundColor(Theme.getClassicListBackgroundColor())
             } else {
+                view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
                 listView.applyGlassBlur()
             }
 

@@ -31,6 +31,7 @@ import io.nekohasekai.sagernet.FabStyle
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ui.MainActivity
+import io.nekohasekai.sagernet.utils.Theme
 
 fun RecyclerView.applyGlassBlur() {
     // 动态应用玻璃质感：监听 View 挂载并注入样式
@@ -45,13 +46,37 @@ fun RecyclerView.applyGlassBlur() {
 private fun applyFrostedStyle(view: View) {
     if (view is com.google.android.material.card.MaterialCardView) {
         if (view.getTag(R.id.tag_custom_style) == true) return
+        view.setTag(R.id.tag_custom_style, true)
         // 强制应用半透明背景、精致描边和圆角，并去掉阴影以保持玻璃通透感
         view.setCardBackgroundColor(androidx.core.content.ContextCompat.getColor(view.context, R.color.surface_glass))
         view.strokeColor = androidx.core.content.ContextCompat.getColor(view.context, R.color.card_stroke)
         view.strokeWidth = dp2px(1) 
-        view.radius = dp2px(28).toFloat()
+        view.radius = dp2px(20).toFloat()
         view.cardElevation = 0f
     } else if (view is android.view.ViewGroup) {
+        if (view.getTag(R.id.tag_custom_style) != true) {
+            view.setTag(R.id.tag_custom_style, true)
+            val ctx = view.context
+            if (Theme.isCupertino()) {
+                val glassDrawable = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(androidx.core.content.ContextCompat.getColor(ctx, R.color.surface_glass))
+                    cornerRadius = dp2px(16).toFloat()
+                    setStroke(dp2px(1), androidx.core.content.ContextCompat.getColor(ctx, R.color.card_stroke))
+                }
+                view.background = glassDrawable
+            } else {
+                val bgDrawable = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(Theme.getClassicListBackgroundColor())
+                    cornerRadius = dp2px(12).toFloat()
+                }
+                view.background = bgDrawable
+            }
+            val params = view.layoutParams
+            if (params is android.view.ViewGroup.MarginLayoutParams) {
+                params.setMargins(dp2px(12), dp2px(4), dp2px(12), dp2px(4))
+                view.layoutParams = params
+            }
+        }
         for (i in 0 until view.childCount) {
             applyFrostedStyle(view.getChildAt(i))
         }
