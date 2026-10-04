@@ -47,6 +47,7 @@ import io.nekohasekai.sagernet.ktx.applyDefaultValues
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.ui.profile.ProfileSettingsActivity.PasswordSummaryProvider
+import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.widget.UserAgentPreference
 
 @Suppress("UNCHECKED_CAST")
@@ -396,6 +397,9 @@ class GroupSettingsActivity(
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+            if (!Theme.isCupertino()) {
+                listView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+            }
 
             ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
                 val bars = insets.getInsets(

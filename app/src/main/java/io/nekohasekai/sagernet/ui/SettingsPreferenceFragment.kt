@@ -83,6 +83,9 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         }, false)
 
         listView.layoutManager = FixedLinearLayoutManager(listView)
+        if (!Theme.isCupertino()) {
+            listView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         listView.setPadding(0,0,0,dp2px(112))
         ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
             val bars = insets.getInsets(

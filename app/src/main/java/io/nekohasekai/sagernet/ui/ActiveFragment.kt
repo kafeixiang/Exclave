@@ -71,6 +71,7 @@ class ActiveFragment : Fragment(R.layout.layout_traffic_list) {
         }
         binding = LayoutTrafficListBinding.bind(view)
         if (!Theme.isCupertino()) {
+            view.setBackgroundColor(Theme.getClassicListBackgroundColor())
             binding.trafficList.setBackgroundColor(Theme.getClassicListBackgroundColor())
         }
         adapter = ActiveAdapter()
