@@ -151,8 +151,6 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
         }
     }
-        }
-    }
 
     val updateSelectedCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageScrolled(
@@ -1919,6 +1917,42 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                 }
 
+                editButton.setOnClickListener {
+                    entity.settingIntent(it.context, proxyGroup.type == GroupType.SUBSCRIPTION)?.let { intent ->
+                        editProfileLauncher.launch(intent)
+                    }
+                }
+
+                deleteButton.setOnClickListener { view ->
+                    view.post {
+                        adapter.let { adapter ->
+                            val profile = entity
+                            val index = adapter.configurationIdList.indexOf(profile.id)
+                            if (index >= 0) {
+                                if (DataStore.confirmProfileDelete) {
+                                    AlertDialog.Builder(requireContext())
+                                        .setTitle(R.string.delete_confirm_prompt)
+                                        .setPositiveButton(R.string.yes) { dialog: DialogInterface, which: Int ->
+                                            adapter.remove(index)
+                                            adapter.pendingDeletedIds.add(profile.id)
+                                            undoManager.remove(index to profile)
+                                        }
+                                        .setNegativeButton(R.string.no, null)
+                                        .show()
+                                } else {
+                                    adapter.remove(index)
+                                    adapter.pendingDeletedIds.add(profile.id)
+                                    undoManager.remove(index to profile)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                deleteButton.suppressDragWhilePressed { actionButtonPressed = it }
+                editButton.suppressDragWhilePressed { actionButtonPressed = it }
+                shareLayout.suppressDragWhilePressed { actionButtonPressed = it }
+
                 doubleColumnMenuButton.setOnClickListener {
                     val popup = PopupMenu(requireContext(), it)
                     popup.menuInflater.inflate(R.menu.double_column_item_menu, popup.menu)
@@ -1967,7 +2001,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 val isSelected = entityId == adapter.activeSelectionId
                 val isStarted = SagerNet.started && DataStore.startedProfile == entityId
 
-                selectedView.visibility = if (isSelected) View.VISIBLE else View.INVISIBLE
+                applySelected(isSelected)
                 deleteButton.isEnabled = !isStarted
             }
 
