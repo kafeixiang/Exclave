@@ -2,7 +2,7 @@ module libexclavecore
 
 go 1.26.0
 
-require github.com/exclavenetwork/libexclavecore v0.0.0-20261005142630-4ed66b04d3d6
+require github.com/exclavenetwork/libexclavecore v0.0.0-20261008161255-db17de431fff
 
 require (
 	filippo.io/age v1.3.2 // indirect
@@ -16,11 +16,11 @@ require (
 	github.com/dgryski/go-camellia v0.0.0-20191119043421-69a8a13fb23d // indirect
 	github.com/dgryski/go-metro v0.0.0-20250106013310-edb8663e5e33 // indirect
 	github.com/enfein/mieru/v3 v3.38.0 // indirect
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261005142542-ff3c6e4d52f0 // indirect
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261008160952-384e6aea719e // indirect
 	github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065 // indirect
 	github.com/exclavenetwork/hysteria/core/v2 v2.13.0-1 // indirect
 	github.com/exclavenetwork/hysteria/extras/v2 v2.13.0-1 // indirect
-	github.com/exclavenetwork/reality v0.0.0-20260921174136-96fe685b8ce9 // indirect
+	github.com/exclavenetwork/reality v0.0.0-20261008155612-cc902fba9d14 // indirect
 	github.com/exclavenetwork/sing-juicity v0.3.1 // indirect
 	github.com/exclavenetwork/sing-shadowquic v0.0.0-20261003180916-bfda7e07df34 // indirect
 	github.com/gofrs/uuid/v5 v5.5.1 // indirect
@@ -61,15 +61,15 @@ require (
 	github.com/xtaci/smux v1.5.57 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go4.org/netipx v0.0.0-20260823151212-3075585bcbeb // indirect
-	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/crypto v0.57.1-0.20261005185213-c3db4df58582 // indirect
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621 // indirect
 	golang.org/x/mobile v0.0.0-20260908204917-8b95e45f8d3e // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.59.1-0.20261006191956-01e3d0338c22 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
-	golang.zx2c4.com/wireguard v0.0.0-20260522210424-ecfc5a8d5446 // indirect
+	golang.zx2c4.com/wireguard v0.0.0-20261006164505-2631ce99a06f // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect
 	google.golang.org/grpc v1.84.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
