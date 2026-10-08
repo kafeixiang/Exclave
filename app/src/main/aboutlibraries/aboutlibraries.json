@@ -458,11 +458,11 @@
         },
         {
             "uniqueId": "org.jetbrains.kotlin:kotlin-parcelize-runtime",
-            "artifactVersion": "2.4.20"
+            "artifactVersion": "2.4.21"
         },
         {
             "uniqueId": "org.jetbrains.kotlin:kotlin-stdlib",
-            "artifactVersion": "2.4.20"
+            "artifactVersion": "2.4.21"
         },
         {
             "uniqueId": "org.jetbrains.kotlin:kotlin-stdlib-jdk7",
