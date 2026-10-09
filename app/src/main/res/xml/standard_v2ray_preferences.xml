@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <EditTextPreference
         app:icon="@drawable/ic_social_emoji_symbols"
@@ -6,7 +7,10 @@
         app:title="@string/profile_name"
         app:useSimpleSummaryProvider="true" />
 
-    <PreferenceCategory app:title="@string/proxy_cat">
+    <PreferenceCategory
+        android:key="serverProxyCat"
+        app:key="serverProxyCat"
+        app:title="@string/proxy_cat">
 
         <EditTextPreference
             app:icon="@drawable/ic_hardware_router"
@@ -163,6 +167,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverSecurityCategory"
         app:key="serverSecurityCategory"
         app:title="@string/security_settings">
         <EditTextPreference
@@ -274,6 +279,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverWsCategory"
         app:key="serverWsCategory"
         app:title="@string/cag_ws">
         <EditTextPreference
@@ -297,6 +303,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverShCategory"
         app:key="serverShCategory"
         app:title="@string/cag_splithttp">
         <SwitchPreference
@@ -320,6 +327,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverGrpcCategory"
         app:key="serverGrpcCategory"
         app:title="@string/cag_grpc">
         <SwitchPreference
@@ -334,6 +342,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverVMessExperimentsCategory"
         app:key="serverVMessExperimentsCategory"
         app:title="@string/experimental_settings">
         <SwitchPreference
@@ -349,6 +358,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverPluginCategory"
         app:key="serverPluginCategory"
         app:title="@string/plugin">
         <com.github.shadowsocks.preference.PluginPreference
@@ -366,6 +376,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverSsExperimentsCategory"
         app:key="serverSsExperimentsCategory"
         app:title="@string/experimental_settings">
         <SwitchPreference
@@ -377,6 +388,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverHTTPConnectUDPCategory"
         app:key="serverHTTPConnectUDPCategory"
         app:title="@string/experimental_settings">
         <SwitchPreference
@@ -391,6 +403,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverSingUotCategory"
         app:key="serverSingUotCategory"
         app:title="sing-uot settings">
         <SwitchPreference
@@ -400,6 +413,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverMuxCategory"
         app:key="serverMuxCategory"
         app:title="@string/mux_settings">
         <SwitchPreference
@@ -424,6 +438,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverSingMuxCategory"
         app:key="serverSingMuxCategory"
         app:title="sing-mux settings">
         <SwitchPreference

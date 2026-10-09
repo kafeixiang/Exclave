@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory app:title="@string/general_settings">
+    <PreferenceCategory
+        android:key="catGeneral"
+        app:key="catGeneral"
+        app:title="@string/general_settings">
         <SwitchPreference
             app:icon="@drawable/ic_communication_phonelink_ring"
             app:key="isAutoConnect"
@@ -116,7 +119,10 @@
             app:title="@string/matsuri_plugins" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/cag_route">
+    <PreferenceCategory
+        android:key="catRoute"
+        app:key="catRoute"
+        app:title="@string/cag_route">
         <SwitchPreference
             app:icon="@drawable/ic_image_looks_6"
             app:key="enableVPNInterfaceIPv6Address"
@@ -223,7 +229,10 @@
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/protocol_settings">
+    <PreferenceCategory
+        android:key="catProtocol"
+        app:key="catProtocol"
+        app:title="@string/protocol_settings">
         <io.nekohasekai.sagernet.widget.LinkPreference
             app:defaultValue="https://www.google.com/generate_204"
             app:icon="@drawable/ic_baseline_cast_connected_24"
@@ -276,7 +285,10 @@
             app:title="@string/insecure_warn" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/cag_dns">
+    <PreferenceCategory
+        android:key="catDns"
+        app:key="catDns"
+        app:title="@string/cag_dns">
         <io.nekohasekai.sagernet.widget.NonBlackEditTextPreference
             app:defaultValue="tcp://1.1.1.1"
             app:icon="@drawable/ic_action_dns"
@@ -346,7 +358,10 @@
             app:title="@string/enable_fakedns" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="@string/inbound_settings">
+    <PreferenceCategory
+        android:key="catInbound"
+        app:key="catInbound"
+        app:title="@string/inbound_settings">
         <SwitchPreference
             app:defaultValue="true"
             app:icon="@drawable/baseline_flight_takeoff_24"
@@ -430,6 +445,8 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="catMisc"
+        app:key="catMisc"
         app:title="@string/cag_misc"
         app:initialExpandedChildrenCount="0">
         <SwitchPreference
