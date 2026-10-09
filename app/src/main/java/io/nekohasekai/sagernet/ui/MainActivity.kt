@@ -158,7 +158,11 @@ class MainActivity : ThemedActivity(),
                     try {
                         val elapsed = urlTest()
                         onMainDispatcher {
-                            snackbar("连接延迟: ${elapsed}ms").show()
+                            if (elapsed > 0) {
+                                snackbar("连接延迟: ${elapsed}ms").show()
+                            } else {
+                                snackbar("测试失败: 连接超时或无效").show()
+                            }
                         }
                     } catch (e: Exception) {
                         onMainDispatcher {
@@ -314,10 +318,11 @@ class MainActivity : ThemedActivity(),
     }
 
     fun urlTest(): Int {
-        if (state != BaseService.State.Connected || connection.service == null) {
+        val service = connection.service ?: error("not started")
+        if (state != BaseService.State.Connected) {
             error("not started")
         }
-        return connection.service!!.urlTest()
+        return service.urlTest()
     }
 
     suspend fun importSubscription(uri: String) {
