@@ -87,7 +87,7 @@
 
                 <!-- Upload Row -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -102,18 +102,22 @@
 
                     <TextView
                         android:id="@+id/traffic_upload_text"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:layout_marginStart="6dp"
                         android:textAppearance="?attr/textAppearanceBody2"
                         android:textColor="@color/cupertino_orange"
                         android:textStyle="bold"
+                        android:singleLine="true"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         tools:text="⬆ 1.2 GB" />
                 </LinearLayout>
 
                 <!-- Download Row -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:gravity="center_vertical"
@@ -129,23 +133,30 @@
 
                     <TextView
                         android:id="@+id/traffic_download_text"
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:layout_marginStart="6dp"
                         android:textAppearance="?attr/textAppearanceBody2"
                         android:textColor="@color/cupertino_blue"
                         android:textStyle="bold"
+                        android:singleLine="true"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         tools:text="⬇ 14.8 GB" />
                 </LinearLayout>
 
                 <!-- Total Usage Info -->
                 <TextView
                     android:id="@+id/traffic_usage"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:textAppearance="?attr/textAppearanceCaption"
                     android:alpha="0.8"
+                    android:singleLine="true"
+                    android:maxLines="1"
+                    android:ellipsize="end"
                     tools:text="已用 16.0 GB / 500 GB" />
 
             </LinearLayout>
