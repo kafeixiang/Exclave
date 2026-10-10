@@ -54,7 +54,9 @@
         <item name="textInputStyle">@style/Widget.SagerNet.TextInputLayout</item>
         <item name="popupMenuStyle">@style/Widget.SagerNet.PopupMenu</item>
         <item name="actionOverflowMenuStyle">@style/Widget.SagerNet.PopupMenu.Overflow</item>
+        <item name="listPopupWindowStyle">@style/Widget.SagerNet.PopupMenu</item>
         <item name="actionBarPopupTheme">@style/ThemeOverlay.SagerNet.PopupMenu</item>
+        <item name="popupTheme">@style/ThemeOverlay.SagerNet.PopupMenu</item>
         <item name="bottomSheetDialogTheme">@style/ThemeOverlay.SagerNet.BottomSheetDialog</item>
         <item name="materialButtonStyle">@style/Widget.SagerNet.Button</item>
         <item name="mal_card_style">@style/mal_CardStyle</item>
@@ -171,14 +173,22 @@
 
     <style name="Widget.SagerNet.PopupMenu" parent="Widget.MaterialComponents.PopupMenu">
         <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+        <item name="popupBackground">@drawable/bg_popup_menu</item>
         <item name="android:popupAnimationStyle">@style/PopupMenuAnimation</item>
         <item name="android:popupElevation">0dp</item>
+        <item name="popupElevation">0dp</item>
+        <item name="android:dropDownVerticalOffset">4dp</item>
+        <item name="dropDownVerticalOffset">4dp</item>
     </style>
 
     <style name="Widget.SagerNet.PopupMenu.Overflow" parent="Widget.MaterialComponents.PopupMenu.Overflow">
         <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+        <item name="popupBackground">@drawable/bg_popup_menu</item>
         <item name="android:popupAnimationStyle">@style/PopupMenuAnimation</item>
         <item name="android:popupElevation">0dp</item>
+        <item name="popupElevation">0dp</item>
+        <item name="android:dropDownVerticalOffset">4dp</item>
+        <item name="dropDownVerticalOffset">4dp</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.SagerNet.BottomSheet" parent="">
@@ -241,6 +251,16 @@
         <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
         <item name="android:windowBlurBehindRadius" tools:targetApi="s">35dp</item>
         <item name="popupMenuStyle">@style/Widget.SagerNet.PopupMenu</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.SagerNet.PopupMenu.Overflow</item>
+        <item name="listPopupWindowStyle">@style/Widget.SagerNet.PopupMenu</item>
+        <item name="android:popupBackground">@drawable/bg_popup_menu</item>
+        <item name="popupBackground">@drawable/bg_popup_menu</item>
+        <item name="android:popupElevation">0dp</item>
+        <item name="popupElevation">0dp</item>
+        <item name="android:colorBackground">@android:color/transparent</item>
+        <item name="colorSurface">@color/popup_glass_bg</item>
+        <item name="android:listSelector">@drawable/bg_popup_menu_item_selector</item>
+        <item name="colorControlHighlight">@color/popup_item_highlight</item>
     </style>
 
     <style name="Theme.SagerNet.Black" parent="Theme.SagerNet">
@@ -671,6 +691,11 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
         <item name="materialCardViewStyle">@style/Widget.SagerNet.CardView.Cupertino</item>
+        <item name="actionBarPopupTheme">@style/ThemeOverlay.SagerNet.PopupMenu</item>
+        <item name="popupTheme">@style/ThemeOverlay.SagerNet.PopupMenu</item>
+        <item name="popupMenuStyle">@style/Widget.SagerNet.PopupMenu</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.SagerNet.PopupMenu.Overflow</item>
+        <item name="listPopupWindowStyle">@style/Widget.SagerNet.PopupMenu</item>
     </style>
 
     <style name="Theme.SagerNet.Dialog.Cupertino" parent="Theme.SagerNet.Dialog">
