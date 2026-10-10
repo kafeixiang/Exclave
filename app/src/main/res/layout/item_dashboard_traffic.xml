@@ -22,19 +22,35 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <!-- 1. Card Header: Title with Icon and Edit Controls -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp">
 
-            <TextView
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:text="@string/dashboard_traffic"
-                android:textAppearance="?attr/textAppearanceSubtitle1"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_baseline_donut_large_24"
+                    app:tint="?attr/colorAccent"
+                    android:contentDescription="@string/dashboard_traffic" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/dashboard_traffic"
+                    android:textAppearance="?attr/textAppearanceSubtitle1"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <!-- Edit Controls Bar -->
             <LinearLayout
@@ -73,7 +89,7 @@
 
         </RelativeLayout>
 
-        <!-- Top Overview: Circular Progress Ring & Usage Text + Linear Progress -->
+        <!-- 2. Chart Section: Donut Ring on Left + Legend & Subscription on Right (Inspired by FlClash) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -82,27 +98,84 @@
 
             <io.nekohasekai.sagernet.ui.widget.TrafficRingView
                 android:id="@+id/traffic_ring_view"
-                android:layout_width="44dp"
-                android:layout_height="44dp" />
+                android:layout_width="56dp"
+                android:layout_height="56dp" />
 
+            <!-- Legend & Overview Info -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="14dp"
                 android:orientation="vertical">
 
+                <!-- Legend Row: Upload & Download pills -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!-- Upload legend pill -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="14dp"
+                            android:layout_height="6dp"
+                            android:background="@drawable/bg_traffic_legend_orange" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:text="@string/upload"
+                            android:textAppearance="?attr/textAppearanceCaption"
+                            android:textColor="?android:attr/textColorSecondary" />
+                    </LinearLayout>
+
+                    <!-- Download legend pill -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_width="14dp"
+                            android:layout_height="6dp"
+                            android:background="@drawable/bg_traffic_legend_blue" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:text="@string/download"
+                            android:textAppearance="?attr/textAppearanceCaption"
+                            android:textColor="?android:attr/textColorSecondary" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Subscription / Total Traffic Usage text -->
                 <TextView
                     android:id="@+id/traffic_usage"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
                     android:textAppearance="?attr/textAppearanceCaption"
-                    android:textColor="?android:attr/textColorSecondary"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textStyle="bold"
                     android:singleLine="true"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    tools:text="已用 16.0 GB / 500 GB" />
+                    tools:text="已用: 16.0 GB / 500 GB" />
 
+                <!-- Slim Progress Bar -->
                 <ProgressBar
                     android:id="@+id/traffic_progress"
                     style="?android:attr/progressBarStyleHorizontal"
@@ -116,72 +189,89 @@
 
         </LinearLayout>
 
-        <!-- Realtime Speeds: Full-width dedicated rows ensuring speed values never truncate or wrap -->
+        <!-- 3. Realtime Speeds: Card-inset Stats Box with Dedicated Upload/Download Rows -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:background="@drawable/bg_traffic_stats_box"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp"
             android:orientation="vertical">
 
-            <!-- Upload Row -->
+            <!-- Upload Row (Icon + Label on start, Speed Value on end) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                tools:ignore="UseCompoundDrawables">
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_file_file_upload"
                     app:tint="@color/cupertino_orange"
-                    android:contentDescription="@string/dashboard_traffic" />
+                    android:contentDescription="@string/upload" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/upload"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="?android:attr/textColorSecondary" />
 
                 <TextView
                     android:id="@+id/traffic_upload_text"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
+                    android:gravity="end"
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textColor="@color/cupertino_orange"
                     android:textStyle="bold"
                     android:singleLine="true"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    tools:text="⬆ 1.2 GB/s" />
+                    tools:text="811 kB/s" />
             </LinearLayout>
 
-            <!-- Download Row -->
+            <!-- Download Row (Icon + Label on start, Speed Value on end) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                tools:ignore="UseCompoundDrawables">
+                android:orientation="horizontal">
 
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_baseline_download_24"
                     app:tint="@color/cupertino_blue"
-                    android:contentDescription="@string/dashboard_traffic" />
+                    android:contentDescription="@string/download" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/download"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="?android:attr/textColorSecondary" />
 
                 <TextView
                     android:id="@+id/traffic_download_text"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
+                    android:gravity="end"
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textColor="@color/cupertino_blue"
                     android:textStyle="bold"
                     android:singleLine="true"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    tools:text="⬇ 14.8 GB/s" />
+                    tools:text="10.43 MB/s" />
             </LinearLayout>
 
         </LinearLayout>
