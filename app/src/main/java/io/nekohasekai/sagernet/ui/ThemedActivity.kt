@@ -159,4 +159,18 @@ abstract class ThemedActivity : AppCompatActivity {
 
     open val onBackPressedCallback: OnBackPressedCallback? get() = null
 
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
+        return try {
+            super.dispatchTouchEvent(ev)
+        } catch (e: IllegalStateException) {
+            if (e.message?.contains("already recycled") == true) {
+                true
+            } else {
+                throw e
+            }
+        } catch (e: IllegalArgumentException) {
+            true
+        }
+    }
+
 }
