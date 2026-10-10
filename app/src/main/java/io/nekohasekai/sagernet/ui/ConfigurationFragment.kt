@@ -1235,7 +1235,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder
                 ): Int {
-                    if (proxyGroup.type != GroupType.BASIC) return 0
+                    if (!isEnabled || actionButtonPressed) return 0
                     val dragFlags = if (DataStore.groupLayoutMode == 1) {
                         ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     } else {
@@ -1255,7 +1255,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder,
                 ): Int {
-                    return if (isEnabled && !actionButtonPressed && proxyGroup.type == GroupType.BASIC) {
+                    return if (isEnabled && !actionButtonPressed) {
                         if (DataStore.groupLayoutMode == 1) {
                             ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                         } else {
@@ -1287,28 +1287,13 @@ class ConfigurationFragment @JvmOverloads constructor(
                     actionState: Int
                 ) {
                     super.onSelectedChanged(viewHolder, actionState)
-                    if (actionState != ItemTouchHelper.ACTION_STATE_IDLE) {
+                    if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
                         viewHolder?.itemView?.let { item ->
-                            item.elevation = 0f
-                            (item as? MaterialCardView)?.cardElevation = 0f
-                            (item as? MaterialCardView)?.maxCardElevation = 0f
-                            item.alpha = 0.85f
+                            item.scaleX = 1.02f
+                            item.scaleY = 1.02f
+                            item.alpha = 0.92f
                         }
                     }
-                }
-
-                override fun onChildDraw(
-                    c: android.graphics.Canvas,
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                    dX: Float,
-                    dY: Float,
-                    actionState: Int,
-                    isCurrentlyActive: Boolean
-                ) {
-                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-                    viewHolder.itemView.elevation = 0f
-                    (viewHolder.itemView as? MaterialCardView)?.cardElevation = 0f
                 }
 
                 override fun clearView(
@@ -1316,8 +1301,8 @@ class ConfigurationFragment @JvmOverloads constructor(
                     viewHolder: RecyclerView.ViewHolder,
                 ) {
                     super.clearView(recyclerView, viewHolder)
-                    viewHolder.itemView.elevation = 0f
-                    (viewHolder.itemView as? MaterialCardView)?.cardElevation = 0f
+                    viewHolder.itemView.scaleX = 1.0f
+                    viewHolder.itemView.scaleY = 1.0f
                     viewHolder.itemView.alpha = 1.0f
                     adapter.commitMove()
                 }
