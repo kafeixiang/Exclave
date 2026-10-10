@@ -79,7 +79,7 @@ abstract class ThemedActivity : AppCompatActivity {
         if (Theme.isCupertino()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-                window.attributes.blurBehindRadius = 60
+                window.attributes = window.attributes.apply { blurBehindRadius = 60 }
             }
             window.setBackgroundDrawableResource(R.color.cupertino_window_bg)
         } else {

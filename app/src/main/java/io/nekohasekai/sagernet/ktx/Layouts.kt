@@ -43,7 +43,7 @@ fun RecyclerView.applyGlassBlur() {
     })
 }
 
-private fun applyFrostedStyle(view: View) {
+private fun applyFrostedStyle(view: View, isDirectItem: Boolean = true) {
     if (view is com.google.android.material.card.MaterialCardView) {
         if (view.getTag(R.id.tag_custom_style) == true) return
         view.setTag(R.id.tag_custom_style, true)
@@ -53,7 +53,7 @@ private fun applyFrostedStyle(view: View) {
         view.strokeWidth = dp2px(1) 
         view.radius = dp2px(20).toFloat()
         view.cardElevation = 0f
-    } else if (view is android.view.ViewGroup) {
+    } else if (view is android.view.ViewGroup && isDirectItem) {
         if (view.getTag(R.id.tag_custom_style) != true) {
             view.setTag(R.id.tag_custom_style, true)
             val ctx = view.context
@@ -73,12 +73,18 @@ private fun applyFrostedStyle(view: View) {
             }
             val params = view.layoutParams
             if (params is android.view.ViewGroup.MarginLayoutParams) {
-                params.setMargins(dp2px(12), dp2px(4), dp2px(12), dp2px(4))
-                view.layoutParams = params
+                val hMargin = dp2px(12)
+                val vMargin = dp2px(4)
+                if (params.leftMargin != hMargin || params.rightMargin != hMargin ||
+                    params.topMargin != vMargin || params.bottomMargin != vMargin) {
+                    params.setMargins(hMargin, vMargin, hMargin, vMargin)
+                    view.post {
+                        if (view.isAttachedToWindow) {
+                            view.layoutParams = params
+                        }
+                    }
+                }
             }
-        }
-        for (i in 0 until view.childCount) {
-            applyFrostedStyle(view.getChildAt(i))
         }
     }
 }

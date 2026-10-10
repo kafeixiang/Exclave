@@ -16,7 +16,7 @@ fun View.applyCardPressAnimation() {
                 v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(120).start()
             }
         }
-        v.onTouchEvent(event)
+        false
     }
 }
 

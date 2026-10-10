@@ -96,12 +96,12 @@ import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 
 @android.annotation.SuppressLint("ClickableViewAccessibility")
 fun View.suppressDragWhilePressed(setPressed: (Boolean) -> Unit) {
-    setOnTouchListener { v, event ->
+    setOnTouchListener { _, event ->
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> setPressed(true)
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> setPressed(false)
         }
-        v.onTouchEvent(event)
+        false
     }
 }
 
@@ -1923,27 +1923,25 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                 }
 
-                deleteButton.setOnClickListener { view ->
-                    view.post {
-                        adapter.let { adapter ->
-                            val profile = entity
-                            val index = adapter.configurationIdList.indexOf(profile.id)
-                            if (index >= 0) {
-                                if (DataStore.confirmProfileDelete) {
-                                    AlertDialog.Builder(requireContext())
-                                        .setTitle(R.string.delete_confirm_prompt)
-                                        .setPositiveButton(R.string.yes) { dialog: DialogInterface, which: Int ->
-                                            adapter.remove(index)
-                                            adapter.pendingDeletedIds.add(profile.id)
-                                            undoManager.remove(index to profile)
-                                        }
-                                        .setNegativeButton(R.string.no, null)
-                                        .show()
-                                } else {
-                                    adapter.remove(index)
-                                    adapter.pendingDeletedIds.add(profile.id)
-                                    undoManager.remove(index to profile)
-                                }
+                deleteButton.setOnClickListener {
+                    val profile = entity
+                    adapter.let { adapter ->
+                        val index = adapter.configurationIdList.indexOf(profile.id)
+                        if (index >= 0) {
+                            if (DataStore.confirmProfileDelete) {
+                                AlertDialog.Builder(requireContext())
+                                    .setTitle(R.string.delete_confirm_prompt)
+                                    .setPositiveButton(R.string.yes) { dialog: DialogInterface, which: Int ->
+                                        adapter.remove(index)
+                                        adapter.pendingDeletedIds.add(profile.id)
+                                        undoManager.remove(index to profile)
+                                    }
+                                    .setNegativeButton(R.string.no, null)
+                                    .show()
+                            } else {
+                                adapter.remove(index)
+                                adapter.pendingDeletedIds.add(profile.id)
+                                undoManager.remove(index to profile)
                             }
                         }
                     }

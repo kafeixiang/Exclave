@@ -31,15 +31,31 @@ class WaveView @JvmOverloads constructor(
     private var isConnected = false
     private var accentColor = Color.RED
 
-    init {
-        setLayerType(LAYER_TYPE_SOFTWARE, null) // For glow effect
-        post(object : Runnable {
-            override fun run() {
+    private val waveRunnable = object : Runnable {
+        override fun run() {
+            if (isAttachedToWindow && isShown) {
                 updateWave()
                 invalidate()
+            }
+            if (isAttachedToWindow) {
                 postDelayed(this, 16)
             }
-        })
+        }
+    }
+
+    init {
+        setLayerType(LAYER_TYPE_SOFTWARE, null) // For glow effect
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        removeCallbacks(waveRunnable)
+        post(waveRunnable)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        removeCallbacks(waveRunnable)
     }
 
     fun setConnected(connected: Boolean) {
