@@ -51,8 +51,11 @@ private fun applyFrostedStyle(view: View, isDirectItem: Boolean = true) {
         view.setCardBackgroundColor(androidx.core.content.ContextCompat.getColor(view.context, R.color.surface_glass))
         view.strokeColor = androidx.core.content.ContextCompat.getColor(view.context, R.color.card_stroke)
         view.strokeWidth = dp2px(1) 
-        view.radius = dp2px(20).toFloat()
+        view.radius = dp2px(24).toFloat()
         view.cardElevation = 0f
+        view.maxCardElevation = 0f
+        view.preventCornerOverlap = false
+        view.useCompatPadding = false
     } else if (view is android.view.ViewGroup && isDirectItem) {
         if (view.getTag(R.id.tag_custom_style) != true) {
             view.setTag(R.id.tag_custom_style, true)

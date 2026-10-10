@@ -1235,6 +1235,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder
                 ): Int {
+                    if (proxyGroup.type != GroupType.BASIC) return 0
                     val dragFlags = if (DataStore.groupLayoutMode == 1) {
                         ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     } else {
@@ -1281,11 +1282,43 @@ class ConfigurationFragment @JvmOverloads constructor(
                     return true
                 }
 
+                override fun onSelectedChanged(
+                    viewHolder: RecyclerView.ViewHolder?,
+                    actionState: Int
+                ) {
+                    super.onSelectedChanged(viewHolder, actionState)
+                    if (actionState != ItemTouchHelper.ACTION_STATE_IDLE) {
+                        viewHolder?.itemView?.let { item ->
+                            item.elevation = 0f
+                            (item as? MaterialCardView)?.cardElevation = 0f
+                            (item as? MaterialCardView)?.maxCardElevation = 0f
+                            item.alpha = 0.85f
+                        }
+                    }
+                }
+
+                override fun onChildDraw(
+                    c: android.graphics.Canvas,
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    dX: Float,
+                    dY: Float,
+                    actionState: Int,
+                    isCurrentlyActive: Boolean
+                ) {
+                    super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+                    viewHolder.itemView.elevation = 0f
+                    (viewHolder.itemView as? MaterialCardView)?.cardElevation = 0f
+                }
+
                 override fun clearView(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder,
                 ) {
                     super.clearView(recyclerView, viewHolder)
+                    viewHolder.itemView.elevation = 0f
+                    (viewHolder.itemView as? MaterialCardView)?.cardElevation = 0f
+                    viewHolder.itemView.alpha = 1.0f
                     adapter.commitMove()
                 }
             })
@@ -1826,6 +1859,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                 card.strokeColor =
                     if (selected) ColorUtils.setAlphaComponent(accent, 180) else ctx.getColour(R.color.card_stroke)
                 card.cardElevation = 0f
+                card.maxCardElevation = 0f
+                card.preventCornerOverlap = false
+                card.useCompatPadding = false
                 card.setCardBackgroundColor(
                     if (selected) {
                         // 稍微加深选中背景色，增强对比度

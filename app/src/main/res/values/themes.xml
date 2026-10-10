@@ -140,12 +140,13 @@
 
     <style name="Widget.SagerNet.CardView" parent="Widget.MaterialComponents.CardView">
         <item name="cardElevation">0dp</item>
+        <item name="cardMaxElevation">0dp</item>
         <item name="cardCornerRadius">@dimen/card_corner_radius</item>
         <item name="strokeColor">@color/card_stroke</item>
         <item name="strokeWidth">1.5dp</item>
         <item name="cardBackgroundColor">@color/surface_glass</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Dialog</item>
-        <item name="cardPreventCornerOverlap">true</item>
+        <item name="cardPreventCornerOverlap">false</item>
         <item name="cardUseCompatPadding">false</item>
     </style>
 
@@ -681,6 +682,16 @@
         <item name="cardBackgroundColor">@color/surface_glass</item>
         <item name="strokeColor">@color/card_stroke</item>
         <item name="strokeWidth">0.5dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardMaxElevation">0dp</item>
+        <item name="cardPreventCornerOverlap">false</item>
+        <item name="cardUseCompatPadding">false</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Card.Cupertino</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.SagerNet.Card.Cupertino" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
     </style>
 
     <!-- Cupertino 23 Themes -->

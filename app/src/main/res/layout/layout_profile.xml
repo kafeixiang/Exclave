@@ -9,7 +9,10 @@
     android:layout_margin="8dp"
     android:clickable="true"
     android:focusable="true"
-    >
+    app:cardElevation="0dp"
+    app:cardMaxElevation="0dp"
+    app:cardPreventCornerOverlap="false"
+    app:cardUseCompatPadding="false">
 
     <LinearLayout
         android:id="@+id/content_lin"
