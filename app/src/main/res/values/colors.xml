@@ -360,7 +360,11 @@
 
     <!-- Segmented Control Bar Colors (iOS 厚重磨砂质感) -->
     <color name="segmented_control_bg">#E6E3E3E8</color> <!-- 90% 厚重苹果高斯磨砂槽底 -->
-    <color name="segmented_pill_bg">#FFFFFF</color> <!-- 选中的纯白立体滑块 -->
+    <color name="segmented_pill_bg">#CCFFFFFF</color> <!-- 80% 水滴磨砂透明滑块 -->
+    <!-- 水滴磨砂透明 Tab 胶囊 -->
+    <color name="tab_glass_pill_start">#E6FFFFFF</color> <!-- 顶部高光 90% 白 -->
+    <color name="tab_glass_pill_end">#B3FFFFFF</color> <!-- 底部通透 70% 白 -->
+    <color name="tab_glass_pill_stroke">#F2FFFFFF</color> <!-- 水滴边缘高亮 95% 白 -->
 
     <!-- Cupertino 23 Themes Colors -->
     <color name="cupertino_pink">#FF2D55</color>

@@ -23,7 +23,11 @@
 
     <!-- Segmented Control Bar Colors (Night - iOS 厚重深色磨砂) -->
     <color name="segmented_control_bg">#D91C1C1E</color>
-    <color name="segmented_pill_bg">#636366</color>
+    <color name="segmented_pill_bg">#4DFFFFFF</color> <!-- 30% 水滴磨砂透明滑块 -->
+    <!-- 水滴磨砂透明 Tab 胶囊 (深色模式) -->
+    <color name="tab_glass_pill_start">#4DFFFFFF</color> <!-- 顶部微光 30% 白 -->
+    <color name="tab_glass_pill_end">#26FFFFFF</color> <!-- 底部通透 15% 白 -->
+    <color name="tab_glass_pill_stroke">#66FFFFFF</color> <!-- 水滴边缘微光 40% 白 -->
 
     <!-- Cupertino Dock Panel Colors (Night) -->
     <color name="dock_panel_bg">#F21C1C1E</color>
