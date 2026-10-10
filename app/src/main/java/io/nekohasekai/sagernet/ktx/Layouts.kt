@@ -56,6 +56,12 @@ private fun applyFrostedStyle(view: View, isDirectItem: Boolean = true) {
         view.maxCardElevation = 0f
         view.preventCornerOverlap = false
         view.useCompatPadding = false
+        view.clipToOutline = true
+        view.outlineProvider = object : android.view.ViewOutlineProvider() {
+            override fun getOutline(v: android.view.View, outline: android.graphics.Outline) {
+                outline.setRoundRect(0, 0, v.width, v.height, dp2px(24).toFloat())
+            }
+        }
     } else if (view is android.view.ViewGroup && isDirectItem) {
         if (view.getTag(R.id.tag_custom_style) != true) {
             view.setTag(R.id.tag_custom_style, true)
