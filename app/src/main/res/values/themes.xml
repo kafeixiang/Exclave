@@ -235,13 +235,12 @@
     </style>
 
     <style name="ThemeOverlay.SagerNet.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog.SagerNet">
-        <!-- 核心：使用泛白叠加层作为窗口背景，支持深浅模式 -->
         <item name="android:windowBackground">@drawable/bg_dialog_window_whitish</item>
         <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
         <item name="android:windowBlurBehindRadius" tools:targetApi="s">80dp</item>
         <item name="colorSurface">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">false</item>
-        <item name="android:backgroundDimAmount">0.0</item> <!-- 完全透亮，去掉灰色遮罩 -->
+        <item name="android:backgroundDimAmount">0.0</item>
         <item name="android:windowElevation" tools:targetApi="o">0dp</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Dialog</item>
     </style>
@@ -250,9 +249,7 @@
         <item name="cardCornerRadius">28dp</item>
         <item name="cardElevation">0dp</item>
         <item name="cardMaxElevation">0dp</item>
-        <!-- 降低到 55% 不透明度，让背景色彩自然透过来 -->
         <item name="cardBackgroundColor">#8CFFFFFF</item>
-        <!-- 增加半透明白色描边，模拟玻璃边缘的高光 -->
         <item name="strokeColor">#4DFFFFFF</item>
         <item name="strokeWidth">1.5dp</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.Dialog</item>
