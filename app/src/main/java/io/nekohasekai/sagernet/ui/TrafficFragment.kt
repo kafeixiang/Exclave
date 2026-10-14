@@ -39,6 +39,7 @@ import io.nekohasekai.sagernet.aidl.AppStats
 import io.nekohasekai.sagernet.databinding.LayoutTrafficBinding
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.PackageCache
+import io.nekohasekai.sagernet.utils.Theme
 
 class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
     Toolbar.OnMenuItemClickListener {
@@ -65,6 +66,9 @@ class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
         }
 
         binding = LayoutTrafficBinding.bind(view)
+        if (!Theme.isCupertino()) {
+            binding.trafficPager.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         adapter = TrafficAdapter()
         binding.trafficPager.adapter = adapter
 

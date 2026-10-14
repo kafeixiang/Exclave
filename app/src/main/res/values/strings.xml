@@ -600,6 +600,8 @@
     <string name="no">No</string>
     <string name="log_level">Log level</string>
     <string name="fab_style">Floating action button style</string>
+    <string name="fab_style_fluid_morph">Apple Fluid Morph (Seamless)</string>
+    <string name="fab_style_floating_island">macOS Floating Island (Detached)</string>
     <string name="wireguard_keepalive_interval">Persistent keepalive (s)</string>
     <string name="language">Language</string>
     <string name="language_system_default">System default</string>

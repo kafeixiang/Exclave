@@ -33,6 +33,7 @@ import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.databinding.LayoutLogcatBinding
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.ColorUtils
+import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.utils.CrashHandler
 import java.io.BufferedReader
 import java.io.File
@@ -48,6 +49,9 @@ class LogcatFragment : ToolbarFragment(R.layout.layout_logcat),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = LayoutLogcatBinding.bind(view)
+        if (!Theme.isCupertino()) {
+            binding.logsScrollView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         toolbar.setTitle(R.string.menu_log)
 
         toolbar.inflateMenu(R.menu.logcat_menu)
