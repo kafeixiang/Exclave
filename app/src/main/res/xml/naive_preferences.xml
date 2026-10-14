@@ -7,7 +7,10 @@
         app:title="@string/profile_name"
         app:useSimpleSummaryProvider="true" />
 
-    <PreferenceCategory app:title="@string/proxy_cat">
+    <PreferenceCategory
+        android:key="serverProxyCat"
+        app:key="serverProxyCat"
+        app:title="@string/proxy_cat">
 
         <EditTextPreference
             app:icon="@drawable/ic_hardware_router"
@@ -79,6 +82,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverSingUotCategory"
         app:key="serverSingUotCategory"
         app:title="sing-uot settings">
         <SwitchPreference
