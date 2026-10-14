@@ -554,7 +554,9 @@
     <string name="yes">是</string>
     <string name="no">否</string>
     <string name="log_level">日志级别</string>
-    <string name="fab_style">悬浮操作按钮样式</string>
+    <string name="fab_style">悬浮操作按钮与底栏样式</string>
+    <string name="fab_style_fluid_morph">灵动微光一体</string>
+    <string name="fab_style_floating_island">macOS 悬浮浮岛</string>
     <string name="wireguard_keepalive_interval">连接保活间隔（秒）</string>
     <string name="language">语言</string>
     <string name="language_system_default">系统默认设置</string>
