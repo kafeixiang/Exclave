@@ -45,6 +45,7 @@ import io.nekohasekai.sagernet.databinding.LayoutBackupBinding
 import io.nekohasekai.sagernet.databinding.LayoutImportBinding
 import io.nekohasekai.sagernet.databinding.LayoutProgressBinding
 import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.utils.Theme
 import kotlinx.coroutines.Job
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
@@ -107,6 +108,9 @@ class BackupFragment : NamedFragment(R.layout.layout_backup) {
         super.onViewCreated(view, savedInstanceState)
 
         val binding = LayoutBackupBinding.bind(view)
+        if (!Theme.isCupertino()) {
+            binding.root.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         binding.card.applyGlassBlur()
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val bars = insets.getInsets(

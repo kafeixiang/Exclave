@@ -439,6 +439,9 @@ object LogLevel {
 }
 
 object FabStyle {
+    const val FluidMorph = 0
+    const val FloatingIsland = 1
+    // Keep legacy aliases for backward compatibility
     const val SagerNet = 0
     const val Shadowsocks = 1
 }
