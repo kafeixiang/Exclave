@@ -226,25 +226,34 @@ object OpenOnlineConfigUpdater : GroupUpdater() {
                         downloadMbps = profile.getLong("downloadMbps") ?: 0L
                     }
                     "tuic" -> {
+                        val ver = profile.getInt("version")
                         val token = profile.getString("token")
-                        if (!token.isNullOrEmpty()) {
+                        val uuid = profile.getString("uuid")
+                        if (ver == 4 || !token.isNullOrEmpty() || (uuid.isNullOrEmpty() && !profile.getString("password").isNullOrEmpty())) {
                             TuicBean().apply {
                                 serverAddress = profile.getString("address") ?: error("missing address")
                                 serverPort = profile.getInt("port") ?: error("missing port")
-                                this.token = token
+                                this.token = token ?: profile.getString("password") ?: ""
                                 sni = profile.getString("sni") ?: ""
+                                alpn = profile.getString("alpn") ?: ""
                                 congestionController = profile.getString("congestionControl") ?: "cubic"
                                 udpRelayMode = profile.getString("udpRelayMode") ?: "native"
                                 allowInsecure = profile.getBoolean("allowInsecure") ?: false
+                                disableSNI = profile.getBoolean("disableSNI") ?: false
+                                reduceRTT = profile.getBoolean("reduceRTT") ?: false
                                 heartbeat = profile.getInt("heartbeat") ?: 10
+                                profile.getInt("mtu")?.takeIf { it > 0 }?.also {
+                                    mtu = it
+                                }
                             }
                         } else {
                             Tuic5Bean().apply {
                                 serverAddress = profile.getString("address") ?: error("missing address")
                                 serverPort = profile.getInt("port") ?: error("missing port")
-                                uuid = profile.getString("uuid") ?: ""
+                                this.uuid = uuid ?: ""
                                 password = profile.getString("password") ?: ""
                                 sni = profile.getString("sni") ?: ""
+                                alpn = profile.getString("alpn") ?: ""
                                 allowInsecure = profile.getBoolean("allowInsecure") ?: false
                                 congestionControl = profile.getString("congestionControl") ?: "cubic"
                                 udpRelayMode = profile.getString("udpRelayMode") ?: "native"
