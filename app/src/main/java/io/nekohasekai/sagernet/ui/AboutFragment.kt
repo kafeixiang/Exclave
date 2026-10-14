@@ -54,6 +54,7 @@ import io.nekohasekai.sagernet.BuildConfig
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.utils.Theme
 import libexclavecore.Libexclavecore
 import android.widget.ImageView
 
@@ -61,6 +62,10 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        if (!Theme.isCupertino()) {
+            view.findViewById<View>(R.id.layout_about)?.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
 
         toolbar.setTitle(R.string.menu_about)
 

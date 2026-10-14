@@ -58,7 +58,6 @@ dependencies {
     "kspOss"(libs.room.compiler)
     "ossImplementation"(libs.room.ktx)
     "ossImplementation"(libs.material)
-    implementation(libs.constraintlayout)
     implementation(libs.gson)
     implementation(libs.bouncycastle)
     implementation(libs.zxing.core)

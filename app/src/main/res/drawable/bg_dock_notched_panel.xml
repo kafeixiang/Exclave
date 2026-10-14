@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="40dp"
+    android:viewportWidth="1000"
+    android:viewportHeight="200">
+
+    <!-- Exact 56dp FAB + 4dp Cradle Clearance (32dp cradle radius, 8dp shoulder radius) -->
+    <path
+        android:fillColor="@color/glass_dock_bg"
+        android:pathData="M 0,0 L 300,0 A 40 40 0 0 1 340 40 A 160 160 0 0 0 660 40 A 40 40 0 0 1 700 0 L 1000,0 L 1000,200 L 0,200 Z" />
+
+    <!-- Top Metallic Glass Highlight Edge Line -->
+    <path
+        android:strokeColor="@color/glass_dock_stroke"
+        android:strokeWidth="3.5"
+        android:pathData="M 0,0 L 300,0 A 40 40 0 0 1 340 40 A 160 160 0 0 0 660 40 A 40 40 0 0 1 700 0 L 1000,0" />
+
+</vector>
