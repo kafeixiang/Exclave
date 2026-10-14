@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
+import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.ProxyEntity
 import io.nekohasekai.sagernet.database.ProxyGroup
@@ -52,8 +53,35 @@ class ProfileNodeBottomSheet(
         binding.sheetRecycler.layoutManager = LinearLayoutManager(context)
 
         binding.btnSheetUrlTest.setOnClickListener {
-            (activity as? MainActivity)?.urlTest()
-            loadData()
+            val mainActivity = activity as? MainActivity ?: return@setOnClickListener
+            if (mainActivity.state != BaseService.State.Connected) {
+                mainActivity.snackbar(getString(R.string.not_connected)).show()
+                return@setOnClickListener
+            }
+            binding.btnSheetUrlTest.isEnabled = false
+            runOnDefaultDispatcher {
+                try {
+                    val elapsed = mainActivity.urlTest()
+                    runOnMainDispatcher {
+                        if (elapsed > 0) {
+                            mainActivity.snackbar(getString(R.string.connection_test_available, elapsed)).show()
+                        } else {
+                            mainActivity.snackbar(getString(R.string.connection_test_error, getString(R.string.connection_test_timeout))).show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    runOnMainDispatcher {
+                        mainActivity.snackbar(getString(R.string.connection_test_error, e.message ?: e.toString())).show()
+                    }
+                } finally {
+                    runOnMainDispatcher {
+                        if (_binding != null) {
+                            binding.btnSheetUrlTest.isEnabled = true
+                        }
+                    }
+                    loadData()
+                }
+            }
         }
 
         loadData()
