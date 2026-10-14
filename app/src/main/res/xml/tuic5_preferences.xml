@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <EditTextPreference
         app:icon="@drawable/ic_social_emoji_symbols"
@@ -6,7 +7,10 @@
         app:title="@string/profile_name"
         app:useSimpleSummaryProvider="true" />
 
-    <PreferenceCategory app:title="@string/proxy_cat">
+    <PreferenceCategory
+        android:key="serverProxyCat"
+        app:key="serverProxyCat"
+        app:title="@string/proxy_cat">
         <EditTextPreference
             app:icon="@drawable/ic_hardware_router"
             app:key="serverAddress"
@@ -143,6 +147,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="serverSingUotCategory"
         app:key="serverSingUotCategory"
         app:title="sing-uot settings">
         <SwitchPreference
