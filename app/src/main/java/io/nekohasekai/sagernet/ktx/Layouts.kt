@@ -41,7 +41,6 @@ import io.nekohasekai.sagernet.ui.MainActivity
 import io.nekohasekai.sagernet.utils.Theme
 
 fun RecyclerView.applyGlassBlur() {
-    // 彻底清除 AndroidX 原生自带的所有分割线装饰，杜绝大卡片末尾的原生分割线残留
     for (i in itemDecorationCount - 1 downTo 0) {
         val deco = getItemDecorationAt(i)
         if (deco::class.java.name.contains("Divider", ignoreCase = true)) {
@@ -51,7 +50,6 @@ fun RecyclerView.applyGlassBlur() {
     if (getTag(R.id.tag_custom_style) != true) {
         setTag(R.id.tag_custom_style, true)
         addItemDecoration(FrostedCardItemDecoration())
-        // 动态应用玻璃质感：监听 View 挂载并注入样式（只添加一次监听）
         addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
             override fun onChildViewAttachedToWindow(view: View) {
                 applyFrostedStyle(view)
@@ -132,7 +130,6 @@ private class FrostedCardItemDecoration : RecyclerView.ItemDecoration() {
                 }
                 val pref = runCatching { adapter.getItem(position) }.getOrNull()
                 if (pref is androidx.preference.PreferenceCategory) {
-                    // 分类标题紧凑贴近上一个卡片，消除脱节感
                     outRect.set(hMargin, dp2px(6), hMargin, dp2px(2))
                     return
                 }
@@ -268,7 +265,6 @@ private fun applyFrostedStyle(view: View?, isDirectItem: Boolean = true) {
         if (ad != null && p in 0 until ad.itemCount) {
             val pref = runCatching { ad.getItem(p) }.getOrNull()
             if (pref is androidx.preference.PreferenceCategory) {
-                // 彻底去除 PreferenceCategory 原生自带的巨大默认间距（原生默认高达 24~32dp）
                 view.setPadding(view.paddingLeft, dp2px(6), view.paddingRight, dp2px(2))
                 (view.layoutParams as? android.view.ViewGroup.MarginLayoutParams)?.let { lp ->
                     lp.topMargin = 0
@@ -291,7 +287,6 @@ private fun applyFrostedStyle(view: View?, isDirectItem: Boolean = true) {
     if (view is com.google.android.material.card.MaterialCardView) {
         if (view.getTag(R.id.tag_custom_style) == true) return
         view.setTag(R.id.tag_custom_style, true)
-        // 强制应用半透明背景、精致描边和圆角，并去掉阴影以保持玻璃通透感
         view.setCardBackgroundColor(ContextCompat.getColor(view.context, R.color.surface_glass))
         view.strokeColor = ContextCompat.getColor(view.context, R.color.card_stroke)
         view.strokeWidth = dp2px(1) 
@@ -356,7 +351,6 @@ private fun applyFrostedStyle(view: View?, isDirectItem: Boolean = true) {
                 }
             }
         } else if (isDirectItem && view.getTag(R.id.tag_custom_style) != true) {
-            // 独立 View（如 BottomSheet 容器），设置独立背景
             view.setTag(R.id.tag_custom_style, true)
             val ctx = view.context
             val glassDrawable = android.graphics.drawable.GradientDrawable().apply {
