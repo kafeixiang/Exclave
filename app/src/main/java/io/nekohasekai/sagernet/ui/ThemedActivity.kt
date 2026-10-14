@@ -20,12 +20,16 @@
 package io.nekohasekai.sagernet.ui
 
 import android.content.res.Configuration
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -74,12 +78,40 @@ abstract class ThemedActivity : AppCompatActivity {
         }
 
         super.onCreate(savedInstanceState)
-        window.setBackgroundDrawableResource(R.color.cupertino_window_bg)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+            window.attributes = window.attributes.apply { blurBehindRadius = 60 }
+        }
+        if (Theme.isCupertino()) {
+            window.setBackgroundDrawableResource(R.color.cupertino_window_bg)
+        } else {
+            window.setBackgroundDrawable(ColorDrawable(Theme.getClassicListBackgroundColor()))
+        }
         uiMode = resources.configuration.uiMode
 
         onBackPressedCallback?.let {
             onBackPressedDispatcher.addCallback(this, it)
         }
+
+        val clearDialogDim = { f: androidx.fragment.app.Fragment ->
+            if (f is DialogFragment) {
+                try {
+                    f.dialog?.window?.let { window ->
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+                        window.setDimAmount(0f)
+                    }
+                } catch (_: Exception) {}
+            }
+        }
+
+        supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
+            override fun onFragmentStarted(fm: FragmentManager, f: androidx.fragment.app.Fragment) {
+                clearDialogDim(f)
+            }
+            override fun onFragmentResumed(fm: FragmentManager, f: androidx.fragment.app.Fragment) {
+                clearDialogDim(f)
+            }
+        }, true)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -148,5 +180,19 @@ abstract class ThemedActivity : AppCompatActivity {
     internal open fun snackbarInternal(text: CharSequence): Snackbar = throw NotImplementedError()
 
     open val onBackPressedCallback: OnBackPressedCallback? get() = null
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
+        return try {
+            super.dispatchTouchEvent(ev)
+        } catch (e: IllegalStateException) {
+            if (e.message?.contains("already recycled") == true) {
+                true
+            } else {
+                throw e
+            }
+        } catch (e: IllegalArgumentException) {
+            true
+        }
+    }
 
 }
