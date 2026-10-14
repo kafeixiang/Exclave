@@ -114,7 +114,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     var isEditMode = false
         private set
 
-    // 缓存状态数据
     private var lastState: BaseService.State = BaseService.State.Stopped
     private var lastProfileName: String? = null
     private var lastTrafficStats: TrafficStats? = null
@@ -127,7 +126,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     private var activeConnectionsSheet: ConnectionsBottomSheet? = null
     private var activeSpeedStatsSheet: SpeedStatsBottomSheet? = null
 
-    // 编辑浮动 Dock 引用
     private var editModeFloatingBar: View? = null
     private var btnAddCard: View? = null
     private var btnDoneEdit: View? = null
@@ -400,7 +398,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         lifecycleScope.launch(Dispatchers.IO) {
             var success = false
 
-            // 尝试 1: api.ip.sb
             try {
                 val url = URL("https://api.ip.sb/geoip")
                 val connection = url.openConnection() as HttpURLConnection
@@ -424,7 +421,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 }
             } catch (_: Exception) {}
 
-            // 尝试 2: ip-api.com (双路线备用)
             if (!success) {
                 try {
                     val url = URL("http://ip-api.com/json")
@@ -466,7 +462,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     private fun testLatency(singleTarget: ServiceTarget? = null) {
         val targetsToTest = singleTarget?.let { listOf(it) } ?: SERVICE_TARGETS
         targetsToTest.forEach { target ->
-            latencyMap[target.id] = -2 // 测试中
+            latencyMap[target.id] = -2
         }
         adapter.updateItem(ItemType.LATENCY)
 

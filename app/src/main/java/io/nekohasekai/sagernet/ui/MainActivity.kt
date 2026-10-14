@@ -200,17 +200,14 @@ class MainActivity : ThemedActivity(),
 
         setContentView(binding.root)
 
-        // 全局磨砂背景初始化：使用高质量渐变背景，营造高级感
         val bgImage = findViewById<ImageView>(R.id.global_bg_image)
         if (bgImage != null) {
             bgImage.setImageResource(R.drawable.bg_mesh_gradient)
             bgImage.alpha = if (io.nekohasekai.sagernet.utils.Theme.usingNightMode()) 0f else 0.5f
         }
         
-        // 初始化 Cupertino 主题色和背景光
         updateCupertinoTheme()
 
-        // 按照用户需求移除主界面遮罩模糊与暗色蒙层，直接清晰露出右侧主界面卡片
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             binding.coordinator.setRenderEffect(null)
         }
@@ -423,10 +420,8 @@ class MainActivity : ThemedActivity(),
 
 
     fun displayFragment(fragment: ToolbarFragment) {
-        // Ensure dock is visible when switching fragments
         binding.cupertinoDock.animate().translationY(0f).setDuration(225).start()
         
-        // 全局苹果风：进入主要页面应用模糊，但夜间模式需保持纯黑
         val bgImage = findViewById<ImageView>(R.id.global_bg_image)
         if (bgImage != null) {
             val isNight = io.nekohasekai.sagernet.utils.Theme.usingNightMode()
@@ -486,7 +481,6 @@ class MainActivity : ThemedActivity(),
         
         val isNight = io.nekohasekai.sagernet.utils.Theme.usingNightMode()
         
-        // 设置背景光颜色与极大的模糊效果
         binding.ambientGlow.backgroundTintList = ColorStateList.valueOf(colorAccent)
         binding.ambientGlow.alpha = if (isNight) 0f else 0.1f
         binding.ambientGlow.visibility = if (isNight) View.GONE else View.VISIBLE

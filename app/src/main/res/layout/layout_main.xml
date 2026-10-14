@@ -15,7 +15,6 @@
         android:background="@color/cupertino_window_bg"
         android:clipChildren="false">
 
-        <!-- 全局背景模糊层 -->
         <ImageView
             android:id="@+id/global_bg_image"
             android:layout_width="match_parent"
@@ -24,7 +23,6 @@
             android:contentDescription="@null"
             android:alpha="0.2" />
 
-        <!-- 背景霓虹灯影：改用圆形并增加尺寸 -->
         <View
             android:id="@+id/ambient_glow"
             android:layout_width="400dp"
