@@ -1436,6 +1436,7 @@ fun buildV2RayConfig(
                                 protocol = "tuic"
                                 settings = LazyOutboundConfigurationObject(this,
                                     V2RayConfig.TUICOutboundConfigurationObject().apply {
+                                        version = 4
                                         address = bean.serverAddress
                                         port = bean.serverPort
                                         token = bean.token
@@ -1453,14 +1454,16 @@ fun buildV2RayConfig(
                                         if (bean.sni.isNotEmpty()) {
                                             serverName = bean.sni
                                         }
-                                        if (bean.alpn.isNotEmpty()) {
-                                            alpn = bean.alpn.listByLineOrComma()
+                                        alpn = if (bean.alpn.isNotEmpty()) {
+                                            bean.alpn.listByLineOrComma()
+                                        } else {
+                                            listOf("h3")
                                         }
                                         if (bean.allowInsecure) {
                                             allowInsecure = true
                                         }
                                         if (bean.disableSNI) {
-                                            serverName = "127.0.0.1"
+                                            serverName = ""
                                             if (serverNameToVerify.isNullOrEmpty()) {
                                                 serverNameToVerify = listOf(bean.sni.ifEmpty { bean.serverAddress })
                                             }

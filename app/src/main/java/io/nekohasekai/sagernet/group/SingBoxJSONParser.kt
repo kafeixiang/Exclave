@@ -541,11 +541,12 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
             return listOf(hysteria2Bean)
         }
         "tuic" -> {
+            val ver = outbound.getInt("version") ?: outbound.getString("version")?.toIntOrNull()
             val tokenStr = outbound.getString("token")
             val uuidStr = outbound.getString("uuid")
             val parsedUuid = uuidStr?.let { parseUUID(it) }
 
-            if (!tokenStr.isNullOrEmpty() || parsedUuid == null) {
+            if (ver == 4 || !tokenStr.isNullOrEmpty() || parsedUuid == null) {
                 val tuicBean = TuicBean().apply {
                     outbound.getString("tag", ignoreCase = false)?.also {
                         name = it
@@ -565,6 +566,12 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                     }
                     outbound.getBoolean("zero_rtt_handshake")?.also {
                         reduceRTT = it
+                    }
+                    outbound.getInt("heartbeat")?.takeIf { it > 0 }?.also {
+                        heartbeat = it
+                    }
+                    outbound.getInt("mtu")?.takeIf { it > 0 }?.also {
+                        mtu = it
                     }
                     outbound.getObject("tls")?.also { tls ->
                         if (tls.getBoolean("enabled") != true) {
