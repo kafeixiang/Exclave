@@ -40,6 +40,7 @@ import io.nekohasekai.sagernet.databinding.LayoutTrafficListBinding
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.utils.PackageCache
+import io.nekohasekai.sagernet.utils.Theme
 
 class StatsFragment : Fragment(R.layout.layout_traffic_list) {
 
@@ -70,6 +71,10 @@ class StatsFragment : Fragment(R.layout.layout_traffic_list) {
             insets
         }
         binding = LayoutTrafficListBinding.bind(view)
+        if (!Theme.isCupertino()) {
+            view.setBackgroundColor(Theme.getClassicListBackgroundColor())
+            binding.trafficList.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         adapter = ActiveAdapter()
         binding.trafficList.layoutManager = FixedLinearLayoutManager(binding.trafficList)
         binding.trafficList.applyGlassBlur()

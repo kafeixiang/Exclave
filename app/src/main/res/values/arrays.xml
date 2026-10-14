@@ -826,8 +826,8 @@
     </string-array>
 
     <string-array name="fab_style_entry">
-        <item>SagerNet</item>
-        <item>Shadowsocks</item>
+        <item>@string/fab_style_fluid_morph</item>
+        <item>@string/fab_style_floating_island</item>
     </string-array>
 
     <string-array name="language_entry">
