@@ -74,7 +74,6 @@ class DnsQueriesBottomSheet(
         runOnDefaultDispatcher {
             val list = mutableListOf<ListItem>()
 
-            // 1. 核心 DNS 服务器与策略配置 (完全取自真实 DataStore 配置)
             list.add(ListItem.Header("核心 DNS 服务器与策略配置"))
 
             val remote = DataStore.remoteDns.ifEmpty { "tcp://1.1.1.1" }
@@ -97,7 +96,6 @@ class DnsQueriesBottomSheet(
                 list.add(ListItem.DnsConfigItem("本地 DNS 监听端口", "127.0.0.1:$localPort"))
             }
 
-            // 2. 真实数据库中的节点/服务器域名与 IP 解析映射
             list.add(ListItem.Header("活跃节点与常规解析目标"))
 
             val currentGroupId = DataStore.selectedGroup.takeIf { it > 0L } ?: 1L
