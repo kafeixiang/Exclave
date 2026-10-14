@@ -962,6 +962,7 @@ public class V2RayConfig {
 
     public static class TUICOutboundConfigurationObject implements OutboundConfigurationObject {
 
+        public Integer version;
         public String address;
         public Integer port;
         public String uuid;
