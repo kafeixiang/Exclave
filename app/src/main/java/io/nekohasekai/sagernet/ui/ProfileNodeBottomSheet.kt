@@ -97,13 +97,11 @@ class ProfileNodeBottomSheet(
 
             val items = mutableListOf<ListItem>()
 
-            // 1. 分类一：配置 (Profiles/Groups)
             items.add(ListItem.Header(getString(R.string.menu_group)))
             groups.forEach { group ->
                 items.add(ListItem.GroupItem(group, group.id == currentGroupId))
             }
 
-            // 2. 分类二：节点 (Proxies/Nodes)
             items.add(ListItem.Header(getString(R.string.menu_configuration)))
             proxies.forEach { proxy ->
                 items.add(ListItem.ProxyItem(proxy, proxy.id == selectedProxyId))

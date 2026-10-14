@@ -70,19 +70,19 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 【关键修改点】监听并去掉 Preference 弹窗外部的灰色遮罩
-        parentFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
-                if (f is DialogFragment) {
-                    f.dialog?.window?.let { window ->
-                        window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-                        window.setDimAmount(0f)
-                    }
-                }
-            }
-        }, false)
+
 
         listView.layoutManager = FixedLinearLayoutManager(listView)
+        if (!Theme.isCupertino()) {
+            view.setBackgroundColor(Theme.getClassicListBackgroundColor())
+            listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        } else {
+            view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        }
+        setDivider(null)
+        setDividerHeight(0)
+        listView.applyGlassBlur()
         listView.setPadding(0,0,0,dp2px(112))
         ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
             val bars = insets.getInsets(

@@ -106,8 +106,8 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                 }
                 return MaterialAboutList.Builder()
                     .addCard(MaterialAboutCard.Builder()
-                        .title(R.string.app_version) // 【卡片 1】 标题：版本
-                        .addItem(MaterialAboutTitleItem.Builder() // 恢复突出的图标项
+                        .title(R.string.app_version)
+                        .addItem(MaterialAboutTitleItem.Builder()
                             .icon(R.mipmap.ic_launcher)
                             .text(R.string.app_name)
                             .setOnLongClickAction {
@@ -201,7 +201,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                         }
                         .build())
                     .addCard(MaterialAboutCard.Builder()
-                        .title(R.string.license) // 【卡片 2】 标题：许可证
+                        .title(R.string.license)
                         .addItem(MaterialAboutActionItem.Builder()
                             .icon(R.drawable.ic_action_copyleft)
                             .text(R.string.license)
@@ -300,7 +300,6 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
 
             view.setBackgroundColor(Color.TRANSPARENT)
 
-            // 使用全局统一的高斯模糊磨砂样式注入
             val recyclerView = view.findViewById<RecyclerView>(com.danielstone.materialaboutlibrary.R.id.mal_recyclerview)
             recyclerView.apply {
                 overScrollMode = RecyclerView.OVER_SCROLL_ALWAYS
@@ -310,7 +309,6 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
                 applyGlassBlur()
             }
 
-            // 还原苹果风背景模糊：应用于 MainActivity 的背景图，从而透过透明卡片显示出来
             (requireActivity() as? MainActivity)?.findViewById<ImageView>(R.id.global_bg_image)?.let { bg ->
                 bg.alpha = 0.5f 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

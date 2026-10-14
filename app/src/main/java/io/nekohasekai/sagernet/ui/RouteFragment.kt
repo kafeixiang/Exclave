@@ -42,6 +42,7 @@ import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.ProfileManager
 import io.nekohasekai.sagernet.database.RuleEntity
 import io.nekohasekai.sagernet.database.SagerDatabase
+import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.databinding.LayoutEmptyRouteBinding
 import io.nekohasekai.sagernet.databinding.LayoutRouteItemBinding
 import io.nekohasekai.sagernet.ktx.*
@@ -61,6 +62,9 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
         toolbar.setOnMenuItemClickListener(this)
 
         ruleListView = view.findViewById(R.id.route_list)
+        if (!Theme.isCupertino()) {
+            ruleListView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         ruleListView.layoutManager = FixedLinearLayoutManager(ruleListView)
         ruleListView.applyGlassBlur()
         ViewCompat.setOnApplyWindowInsetsListener(ruleListView) { v, insets ->
@@ -119,11 +123,28 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
                 }
             }
 
+            override fun onSelectedChanged(
+                viewHolder: RecyclerView.ViewHolder?,
+                actionState: Int
+            ) {
+                super.onSelectedChanged(viewHolder, actionState)
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                    viewHolder?.itemView?.let { item ->
+                        item.scaleX = 1.02f
+                        item.scaleY = 1.02f
+                        item.alpha = 0.92f
+                    }
+                }
+            }
+
             override fun clearView(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
             ) {
                 super.clearView(recyclerView, viewHolder)
+                viewHolder.itemView.scaleX = 1.0f
+                viewHolder.itemView.scaleY = 1.0f
+                viewHolder.itemView.alpha = 1.0f
                 ruleAdapter.commitMove()
             }
         }).attachToRecyclerView(ruleListView)
