@@ -321,7 +321,6 @@ class ConfigurationFragment @JvmOverloads constructor(
     private fun updateToolbarForPosition(position: Int) {
         val isDashboard = position == 0
         toolbar.menu.findItem(R.id.action_full_test)?.isVisible = isDashboard
-        // 仪表盘也应当支持搜索和添加功能
         toolbar.menu.findItem(R.id.action_add)?.isVisible = true
         toolbar.menu.findItem(R.id.action_search)?.isVisible = true
         toolbar.menu.findItem(R.id.action_misc)?.isVisible = !isDashboard
@@ -1840,7 +1839,6 @@ class ConfigurationFragment @JvmOverloads constructor(
                 card.strokeWidth = ctx.resources.getDimensionPixelSize(
                     if (selected) R.dimen.card_stroke_width_selected else R.dimen.card_stroke_width
                 )
-                // 还原苹果风：选中状态使用半透明的主题色边框，避免过于突兀，保持玻璃精致感
                 card.strokeColor =
                     if (selected) ColorUtils.setAlphaComponent(accent, 180) else ctx.getColour(R.color.card_stroke)
                 card.cardElevation = 0f
@@ -1849,7 +1847,6 @@ class ConfigurationFragment @JvmOverloads constructor(
                 card.useCompatPadding = false
                 card.setCardBackgroundColor(
                     if (selected) {
-                        // 稍微加深选中背景色，增强对比度
                         ColorUtils.compositeColors(
                             ColorUtils.setAlphaComponent(accent, 48), surface
                         )
@@ -2112,7 +2109,6 @@ class ConfigurationFragment @JvmOverloads constructor(
                     address = ""
                 }
                 profileAddress.text = address
-                // 还原苹果风：不再彻底移除中间行，而是保留布局空间或根据内容动态调整，配合 XML 的 minHeight 确保条目高度统一
                 val middleLineVisible = showTraffic || address.isNotEmpty()
                 (trafficText.parent as View).isVisible = middleLineVisible
 

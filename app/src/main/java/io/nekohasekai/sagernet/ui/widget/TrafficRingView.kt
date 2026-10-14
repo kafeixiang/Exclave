@@ -109,7 +109,6 @@ class TrafficRingView @JvmOverloads constructor(
     ) {
         val totalBytes = uploadBytes + downloadBytes
 
-        // 计算圆环总体进度占 360 度的角度 (0f .. 360f)
         val overallSweep: Float = if (totalQuotaBytes != null && totalQuotaBytes > 0) {
             val progress = (totalUsedBytes.toFloat() / totalQuotaBytes.toFloat()).coerceIn(0f, 1f)
             centerText = "${(progress * 100).toInt()}%"
@@ -131,15 +130,12 @@ class TrafficRingView @JvmOverloads constructor(
             targetDownloadAngle = 0f
             targetUploadAngle = 0f
         } else if (totalBytes <= 0L) {
-            // 如果仅有订阅已用数据但无本地分项统计，默认 85% 下行、15% 上行比例展示
             targetDownloadAngle = overallSweep * 0.85f
             targetUploadAngle = overallSweep * 0.15f
         } else {
-            // 真实分项统计比例
             val dlRatio = downloadBytes.toFloat() / totalBytes.toFloat()
             val ulRatio = uploadBytes.toFloat() / totalBytes.toFloat()
 
-            // 为极小的值保留保底可见角度 (至少 6 度)
             val minVisibleAngle = 6f
             var dlAngle = dlRatio * overallSweep
             var ulAngle = ulRatio * overallSweep
@@ -238,7 +234,6 @@ class TrafficRingView @JvmOverloads constructor(
 
         rectF.set(centerX - baseRadius, centerY - baseRadius, centerX + baseRadius, centerY + baseRadius)
 
-        // 1. 绘制底层灰色轨道圆环
         canvas.drawCircle(centerX, centerY, baseRadius, trackPaint)
 
         val dl = currentDownloadAngle
@@ -246,20 +241,17 @@ class TrafficRingView @JvmOverloads constructor(
         val hasBoth = dl > 4f && ul > 4f
         val gap = if (hasBoth) 4f else 0f
 
-        // 2. 绘制下载流量弧（蓝色，顺时针从顶部 -90° 开始）
         if (dl > 0f) {
             val sweepDl = if (hasBoth) (dl - gap).coerceAtLeast(1f) else dl
             canvas.drawArc(rectF, -90f, sweepDl, false, downloadPaint)
         }
 
-        // 3. 绘制上传流量弧（橙色，接在下载弧之后）
         if (ul > 0f) {
             val startUl = if (hasBoth) -90f + dl else -90f + dl
             val sweepUl = if (hasBoth) (ul - gap).coerceAtLeast(1f) else ul
             canvas.drawArc(rectF, startUl, sweepUl, false, uploadPaint)
         }
 
-        // 4. 连接/断开脉冲波
         if (isPulsing && pulseFraction < 1f) {
             val pulseRadius = baseRadius + pulseFraction * dpToPx(8f)
             val alpha = ((1.0f - pulseFraction) * 160).toInt().coerceIn(0, 255)
@@ -267,7 +259,6 @@ class TrafficRingView @JvmOverloads constructor(
             canvas.drawCircle(centerX, centerY, pulseRadius, pulsePaint)
         }
 
-        // 5. 绘制中心百分比文本
         val textY = centerY - ((textPaint.descent() + textPaint.ascent()) / 2f)
         canvas.drawText(centerText, centerX, textY, textPaint)
     }
