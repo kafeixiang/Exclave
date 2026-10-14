@@ -53,10 +53,12 @@ import io.nekohasekai.sagernet.database.preference.OnPreferenceDataStoreChangeLi
 import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.applyDefaultValues
+import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.byteBuffer
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.ui.ThemedActivity
+import io.nekohasekai.sagernet.utils.Theme
 import java.io.ByteArrayOutputStream
 import kotlin.properties.Delegates
 
@@ -280,18 +282,17 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+            if (!Theme.isCupertino()) {
+                view.setBackgroundColor(Theme.getClassicListBackgroundColor())
+                listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            } else {
+                view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            }
+            setDivider(null)
+            setDividerHeight(0)
+            listView.applyGlassBlur()
 
-            // 【关键修改点】监听并去掉 Preference 弹窗外部的灰色遮罩
-            parentFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
-                override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
-                    if (f is DialogFragment) {
-                        f.dialog?.window?.let { window ->
-                            window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-                            window.setDimAmount(0f)
-                        }
-                    }
-                }
-            }, false)
 
             ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
                 val bars = insets.getInsets(

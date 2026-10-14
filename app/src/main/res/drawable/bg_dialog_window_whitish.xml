@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 第一层：全局遮罩，使用主题属性动态切换 -->
-    <item>
-        <color android:color="?attr/glassWindowTint" />
-    </item>
-    <!-- 第二层：中间的圆角卡片 -->
+    <!-- 中间的圆角卡片 -->
     <item
         android:insetLeft="22dp"
         android:insetRight="22dp"
