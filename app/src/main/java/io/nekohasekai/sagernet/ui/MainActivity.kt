@@ -21,12 +21,15 @@
 
 package io.nekohasekai.sagernet.ui
 
+import android.graphics.Color
+import android.graphics.Outline
 import android.graphics.Rect
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.view.ViewOutlineProvider
 import android.util.TypedValue
 import android.Manifest
 import android.app.ActivityManager
@@ -38,6 +41,7 @@ import android.provider.Settings
 import android.text.util.Linkify
 import android.view.KeyEvent
 import android.view.MenuItem
+import android.view.WindowManager
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
@@ -107,34 +111,57 @@ class MainActivity : ThemedActivity(),
             binding.drawerLayout.removeView(binding.navView)
         }
         navigation.setNavigationItemSelectedListener(this)
-        
-        // ... (skipping some lines for brevity in multi_replace if possible, but I'll replace the block)
-        if (resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
-            ViewCompat.setOnApplyWindowInsetsListener(navigation) { v, insets ->
-                val bars = insets.getInsets(
-                    WindowInsetsCompat.Type.systemBars()
-                            or WindowInsetsCompat.Type.displayCutout()
-                )
-                v.updatePadding(
-                    top = bars.top,
-                    right = bars.right,
-                    bottom = bars.bottom,
-                )
-                insets
+        binding.drawerLayout.setDrawerElevation(0f)
+        binding.drawerLayout.setScrimColor(Color.TRANSPARENT)
+        navigation.backgroundTintList = null
+
+        val isRtl = resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
+        val insetPx = dp2px(12)
+        val cornerRadiusPx = dp2pxf(24)
+
+        navigation.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                if (isRtl) {
+                    outline.setRoundRect(0, 0, view.width - insetPx, view.height, cornerRadiusPx)
+                } else {
+                    outline.setRoundRect(insetPx, 0, view.width, view.height, cornerRadiusPx)
+                }
             }
+        }
+        navigation.clipToOutline = true
+        navigation.elevation = dp2pxf(8)
+
+        val initLp = navigation.layoutParams as? androidx.drawerlayout.widget.DrawerLayout.LayoutParams
+        if (initLp != null) {
+            initLp.topMargin = dp2px(64)
+            initLp.bottomMargin = dp2px(36)
+            navigation.layoutParams = initLp
+        }
+        if (isRtl) {
+            navigation.setPadding(0, dp2px(12), insetPx, dp2px(12))
         } else {
-            ViewCompat.setOnApplyWindowInsetsListener(navigation) { v, insets ->
-                val bars = insets.getInsets(
-                    WindowInsetsCompat.Type.systemBars()
-                            or WindowInsetsCompat.Type.displayCutout()
-                )
-                v.updatePadding(
-                    top = bars.top,
-                    left = bars.left,
-                    bottom = bars.bottom,
-                )
-                insets
+            navigation.setPadding(insetPx, dp2px(12), 0, dp2px(12))
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(navigation) { v, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars()
+                        or WindowInsetsCompat.Type.displayCutout()
+            )
+            val topMargin = bars.top + dp2px(12)
+            val bottomMargin = bars.bottom + dp2px(12)
+            val lp = v.layoutParams as? androidx.drawerlayout.widget.DrawerLayout.LayoutParams
+            if (lp != null && (lp.topMargin != topMargin || lp.bottomMargin != bottomMargin)) {
+                lp.topMargin = topMargin
+                lp.bottomMargin = bottomMargin
+                v.layoutParams = lp
             }
+            if (isRtl) {
+                v.setPadding(0, dp2px(12), insetPx, dp2px(12))
+            } else {
+                v.setPadding(insetPx, dp2px(12), 0, dp2px(12))
+            }
+            insets
         }
 
         if (savedInstanceState == null) {
@@ -152,7 +179,11 @@ class MainActivity : ThemedActivity(),
                     try {
                         val elapsed = urlTest()
                         onMainDispatcher {
-                            snackbar("连接延迟: ${elapsed}ms").show()
+                            if (elapsed > 0) {
+                                snackbar("连接延迟: ${elapsed}ms").show()
+                            } else {
+                                snackbar("测试失败: 连接超时或无效").show()
+                            }
                         }
                     } catch (e: Exception) {
                         onMainDispatcher {
@@ -179,24 +210,10 @@ class MainActivity : ThemedActivity(),
         // 初始化 Cupertino 主题色和背景光
         updateCupertinoTheme()
 
-        binding.drawerLayout.addDrawerListener(object : androidx.drawerlayout.widget.DrawerLayout.SimpleDrawerListener() {
-            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (slideOffset > 0.01f) {
-                        // 增大模糊半径，配合 98% 白色的侧边栏背景，达到“磨砂白”效果
-                        val radius = slideOffset * 40f 
-                        val blurEffect = RenderEffect.createBlurEffect(
-                            radius,
-                            radius,
-                            Shader.TileMode.DECAL
-                        )
-                        binding.coordinator.setRenderEffect(blurEffect)
-                    } else {
-                        binding.coordinator.setRenderEffect(null)
-                    }
-                }
-            }
-        })
+        // 按照用户需求移除主界面遮罩模糊与暗色蒙层，直接清晰露出右侧主界面卡片
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            binding.coordinator.setRenderEffect(null)
+        }
 
         changeState(BaseService.State.Idle)
         connection.connect(this, this)
@@ -308,10 +325,11 @@ class MainActivity : ThemedActivity(),
     }
 
     fun urlTest(): Int {
-        if (state != BaseService.State.Connected || connection.service == null) {
+        val service = connection.service ?: error("not started")
+        if (state != BaseService.State.Connected) {
             error("not started")
         }
-        return connection.service!!.urlTest()
+        return service.urlTest()
     }
 
     suspend fun importSubscription(uri: String) {
