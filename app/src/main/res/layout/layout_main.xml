@@ -12,6 +12,7 @@
         android:id="@+id/coordinator"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/cupertino_window_bg"
         android:clipChildren="false">
 
         <!-- 全局背景模糊层 -->
@@ -41,9 +42,8 @@
         <io.nekohasekai.sagernet.widget.CupertinoDock
             android:id="@+id/cupertino_dock"
             android:layout_width="match_parent"
-            android:layout_height="104dp"
-            android:layout_gravity="bottom"
-            app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
+            android:layout_height="100dp"
+            android:layout_gravity="bottom" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
@@ -51,8 +51,10 @@
         android:id="@+id/nav_view"
         style="@style/Widget.Design.NavigationView"
         app:insetForeground="@android:color/transparent"
-        android:background="@color/surface_glass_heavy"
-        android:layout_width="wrap_content"
+        app:elevation="0dp"
+        android:elevation="0dp"
+        android:background="@drawable/bg_floating_drawer_card"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         app:itemIconTint="@color/navigation_icon"
@@ -70,8 +72,10 @@
         android:id="@+id/nav_view_black"
         style="@style/Widget.Design.NavigationView"
         app:insetForeground="@android:color/transparent"
-        android:background="@color/surface_glass_heavy"
-        android:layout_width="wrap_content"
+        app:elevation="0dp"
+        android:elevation="0dp"
+        android:background="@drawable/bg_floating_drawer_card"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         app:itemIconTint="@color/navigation_icon"
