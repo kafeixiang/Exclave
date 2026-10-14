@@ -79,6 +79,7 @@ import io.nekohasekai.sagernet.plugin.MatsuriPluginManager
 import io.nekohasekai.sagernet.plugin.PluginManager
 import io.nekohasekai.sagernet.ui.profile.*
 import io.nekohasekai.sagernet.utils.PackageCache
+import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.widget.QRCodeDialog
 import io.nekohasekai.sagernet.widget.UndoSnackbarManager
 import kotlinx.coroutines.*
@@ -150,8 +151,6 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
         }
     }
-        }
-    }
 
     val updateSelectedCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageScrolled(
@@ -177,6 +176,9 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (!Theme.isCupertino()) {
+            view.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         if (!select) {
             toolbar.inflateMenu(R.menu.add_profile_menu)
             toolbar.setOnMenuItemClickListener(this)
@@ -1233,6 +1235,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder
                 ): Int {
+                    if (!isEnabled || actionButtonPressed) return 0
                     val dragFlags = if (DataStore.groupLayoutMode == 1) {
                         ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                     } else {
@@ -1252,7 +1255,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder,
                 ): Int {
-                    return if (isEnabled && !actionButtonPressed && proxyGroup.type == GroupType.BASIC) {
+                    return if (isEnabled && !actionButtonPressed) {
                         if (DataStore.groupLayoutMode == 1) {
                             ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
                         } else {
@@ -1279,11 +1282,28 @@ class ConfigurationFragment @JvmOverloads constructor(
                     return true
                 }
 
+                override fun onSelectedChanged(
+                    viewHolder: RecyclerView.ViewHolder?,
+                    actionState: Int
+                ) {
+                    super.onSelectedChanged(viewHolder, actionState)
+                    if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                        viewHolder?.itemView?.let { item ->
+                            item.scaleX = 1.02f
+                            item.scaleY = 1.02f
+                            item.alpha = 0.92f
+                        }
+                    }
+                }
+
                 override fun clearView(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder,
                 ) {
                     super.clearView(recyclerView, viewHolder)
+                    viewHolder.itemView.scaleX = 1.0f
+                    viewHolder.itemView.scaleY = 1.0f
+                    viewHolder.itemView.alpha = 1.0f
                     adapter.commitMove()
                 }
             })
@@ -1425,6 +1445,9 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
             setupLayoutManager()
             configurationListView.layoutManager = layoutManager
+            if (!Theme.isCupertino()) {
+                configurationListView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+            }
             configurationListView.applyGlassBlur()
             adapter = ConfigurationAdapter()
             ProfileManager.addListener(adapter)
@@ -1821,6 +1844,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                 card.strokeColor =
                     if (selected) ColorUtils.setAlphaComponent(accent, 180) else ctx.getColour(R.color.card_stroke)
                 card.cardElevation = 0f
+                card.maxCardElevation = 0f
+                card.preventCornerOverlap = false
+                card.useCompatPadding = false
                 card.setCardBackgroundColor(
                     if (selected) {
                         // 稍微加深选中背景色，增强对比度
@@ -1912,6 +1938,40 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                 }
 
+                editButton.setOnClickListener {
+                    entity.settingIntent(it.context, proxyGroup.type == GroupType.SUBSCRIPTION)?.let { intent ->
+                        editProfileLauncher.launch(intent)
+                    }
+                }
+
+                deleteButton.setOnClickListener {
+                    val profile = entity
+                    adapter.let { adapter ->
+                        val index = adapter.configurationIdList.indexOf(profile.id)
+                        if (index >= 0) {
+                            if (DataStore.confirmProfileDelete) {
+                                AlertDialog.Builder(requireContext())
+                                    .setTitle(R.string.delete_confirm_prompt)
+                                    .setPositiveButton(R.string.yes) { dialog: DialogInterface, which: Int ->
+                                        adapter.remove(index)
+                                        adapter.pendingDeletedIds.add(profile.id)
+                                        undoManager.remove(index to profile)
+                                    }
+                                    .setNegativeButton(R.string.no, null)
+                                    .show()
+                            } else {
+                                adapter.remove(index)
+                                adapter.pendingDeletedIds.add(profile.id)
+                                undoManager.remove(index to profile)
+                            }
+                        }
+                    }
+                }
+
+                deleteButton.suppressDragWhilePressed { actionButtonPressed = it }
+                editButton.suppressDragWhilePressed { actionButtonPressed = it }
+                shareLayout.suppressDragWhilePressed { actionButtonPressed = it }
+
                 doubleColumnMenuButton.setOnClickListener {
                     val popup = PopupMenu(requireContext(), it)
                     popup.menuInflater.inflate(R.menu.double_column_item_menu, popup.menu)
@@ -1960,7 +2020,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 val isSelected = entityId == adapter.activeSelectionId
                 val isStarted = SagerNet.started && DataStore.startedProfile == entityId
 
-                selectedView.visibility = if (isSelected) View.VISIBLE else View.INVISIBLE
+                applySelected(isSelected)
                 deleteButton.isEnabled = !isStarted
             }
 
