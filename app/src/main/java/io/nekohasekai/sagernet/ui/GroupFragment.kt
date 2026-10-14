@@ -127,11 +127,28 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
                 return true
             }
 
+            override fun onSelectedChanged(
+                viewHolder: RecyclerView.ViewHolder?,
+                actionState: Int
+            ) {
+                super.onSelectedChanged(viewHolder, actionState)
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                    viewHolder?.itemView?.let { item ->
+                        item.scaleX = 1.02f
+                        item.scaleY = 1.02f
+                        item.alpha = 0.92f
+                    }
+                }
+            }
+
             override fun clearView(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
             ) {
                 super.clearView(recyclerView, viewHolder)
+                viewHolder.itemView.scaleX = 1.0f
+                viewHolder.itemView.scaleY = 1.0f
+                viewHolder.itemView.alpha = 1.0f
                 groupAdapter.commitMove()
             }
         }).attachToRecyclerView(groupListView)

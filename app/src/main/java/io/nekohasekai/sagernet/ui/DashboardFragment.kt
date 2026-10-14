@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import io.nekohasekai.sagernet.GroupType
@@ -43,6 +44,7 @@ import io.nekohasekai.sagernet.databinding.*
 import io.nekohasekai.sagernet.group.GroupUpdater
 import io.nekohasekai.sagernet.group.RawUpdater
 import io.nekohasekai.sagernet.ktx.*
+import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.widget.QRCodeDialog
 import kotlinx.coroutines.Dispatchers
@@ -112,7 +114,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     var isEditMode = false
         private set
 
-    // 缓存状态数据
     private var lastState: BaseService.State = BaseService.State.Stopped
     private var lastProfileName: String? = null
     private var lastTrafficStats: TrafficStats? = null
@@ -125,7 +126,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     private var activeConnectionsSheet: ConnectionsBottomSheet? = null
     private var activeSpeedStatsSheet: SpeedStatsBottomSheet? = null
 
-    // 编辑浮动 Dock 引用
     private var editModeFloatingBar: View? = null
     private var btnAddCard: View? = null
     private var btnDoneEdit: View? = null
@@ -161,8 +161,23 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         }
 
         recyclerView?.layoutManager = gridLayoutManager
+        if (!Theme.isCupertino()) {
+            recyclerView?.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         recyclerView?.applyGlassBlur()
         recyclerView?.adapter = adapter
+        (recyclerView?.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        recyclerView?.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(rv, dx, dy)
+                val mainActivity = activity as? MainActivity ?: return
+                if (dy > 6) {
+                    mainActivity.binding.cupertinoDock.hidePanel()
+                } else if (dy < -6) {
+                    mainActivity.binding.cupertinoDock.showPanel()
+                }
+            }
+        })
 
         setupTouchHelper()
 
@@ -331,8 +346,25 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
 
+            override fun onSelectedChanged(
+                viewHolder: RecyclerView.ViewHolder?,
+                actionState: Int
+            ) {
+                super.onSelectedChanged(viewHolder, actionState)
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                    viewHolder?.itemView?.let { item ->
+                        item.scaleX = 1.02f
+                        item.scaleY = 1.02f
+                        item.alpha = 0.92f
+                    }
+                }
+            }
+
             override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
                 super.clearView(recyclerView, viewHolder)
+                viewHolder.itemView.scaleX = 1.0f
+                viewHolder.itemView.scaleY = 1.0f
+                viewHolder.itemView.alpha = 1.0f
                 saveDashboardOrder()
             }
         })
@@ -366,7 +398,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         lifecycleScope.launch(Dispatchers.IO) {
             var success = false
 
-            // 尝试 1: api.ip.sb
             try {
                 val url = URL("https://api.ip.sb/geoip")
                 val connection = url.openConnection() as HttpURLConnection
@@ -390,7 +421,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 }
             } catch (_: Exception) {}
 
-            // 尝试 2: ip-api.com (双路线备用)
             if (!success) {
                 try {
                     val url = URL("http://ip-api.com/json")
@@ -432,7 +462,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     private fun testLatency(singleTarget: ServiceTarget? = null) {
         val targetsToTest = singleTarget?.let { listOf(it) } ?: SERVICE_TARGETS
         targetsToTest.forEach { target ->
-            latencyMap[target.id] = -2 // 测试中
+            latencyMap[target.id] = -2
         }
         adapter.updateItem(ItemType.LATENCY)
 
@@ -653,11 +683,19 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             }
         }
 
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
+            if (payloads.isNotEmpty()) {
+                onBindViewHolder(holder, position)
+            } else {
+                super.onBindViewHolder(holder, position, payloads)
+            }
+        }
+
         override fun getItemCount(): Int = items.size
 
         fun updateItem(type: ItemType) {
             val index = items.indexOf(type)
-            if (index != -1) notifyItemChanged(index)
+            if (index != -1) notifyItemChanged(index, Unit)
         }
 
         private fun setupEditControls(
@@ -742,6 +780,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
+                        if (!DataStore.appTrafficStatistics) return@setOnClickListener
                         if (parentFragmentManager.findFragmentByTag("SpeedStatsSheet") != null) return@setOnClickListener
                         val sheet = SpeedStatsBottomSheet()
                         activeSpeedStatsSheet = sheet
@@ -772,6 +811,15 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 val group = if (profile != null) SagerDatabase.groupDao.getById(profile.groupId) else null
                 val sub = group?.subscription
 
+                val profiles = if (group != null) SagerDatabase.proxyDao.getByGroup(group.id) else emptyList()
+                val groupTx = profiles.sumOf { it.tx }
+                val groupRx = profiles.sumOf { it.rx }
+                val sessionTx = lastTrafficStats?.txTotal ?: 0L
+                val sessionRx = lastTrafficStats?.rxTotal ?: 0L
+
+                val uploadBytes = (groupTx + sessionTx).coerceAtLeast(0L)
+                val downloadBytes = (groupRx + sessionRx).coerceAtLeast(0L)
+
                 if (sub != null) {
                     val used = sub.bytesUsed ?: 0L
                     val remaining = sub.bytesRemaining ?: 0L
@@ -782,24 +830,33 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         binding.trafficUsage.text = "已用: $usedStr / $totalStr"
                         val percent = (used.toFloat() / total.toFloat()).coerceIn(0f, 1f)
                         binding.trafficProgress.progress = (percent * 100).toInt()
-                        binding.trafficRingView.setProgressPercent(percent)
+                        binding.trafficRingView.setTrafficData(
+                            uploadBytes = uploadBytes,
+                            downloadBytes = downloadBytes,
+                            totalUsedBytes = used,
+                            totalQuotaBytes = total,
+                            animate = false
+                        )
                         return
                     }
                 }
 
                 if (group != null) {
-                    val profiles = SagerDatabase.proxyDao.getByGroup(group.id)
-                    val groupTx = profiles.sumOf { it.tx }
-                    val groupRx = profiles.sumOf { it.rx }
-                    val totalTraffic = groupTx + groupRx
+                    val totalTraffic = uploadBytes + downloadBytes
                     val totalStr = FormatFileSizeCompat.formatFileSize(context, totalTraffic, DataStore.useIECUnit)
                     binding.trafficUsage.text = "总计使用: $totalStr"
                     binding.trafficProgress.progress = 100
-                    binding.trafficRingView.setProgressPercent(1.0f)
+                    binding.trafficRingView.setTrafficData(
+                        uploadBytes = uploadBytes,
+                        downloadBytes = downloadBytes,
+                        totalUsedBytes = totalTraffic,
+                        totalQuotaBytes = null,
+                        animate = false
+                    )
                 } else {
                     binding.trafficUsage.setText(R.string.unavailable)
                     binding.trafficProgress.progress = 0
-                    binding.trafficRingView.setProgressPercent(0f)
+                    binding.trafficRingView.setTrafficData(0L, 0L, 0L, null, animate = false)
                 }
             }
         }
@@ -1055,6 +1112,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
+                        if (!DataStore.appTrafficStatistics) return@setOnClickListener
                         if (parentFragmentManager.findFragmentByTag("ConnectionsSheet") != null) return@setOnClickListener
                         val sheet = ConnectionsBottomSheet()
                         activeConnectionsSheet = sheet
