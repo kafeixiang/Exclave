@@ -6,8 +6,6 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.RenderEffect
-import android.graphics.Shader
 import android.os.Build
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -32,22 +30,31 @@ class CupertinoDock @JvmOverloads constructor(
     private val downSpeedText: TextView
     private val fabGlow: View
     private val blurContainer: View
+    val blurBg: NotchedDockView
+    val dockPanel: View
+    val fabContainer: View
     val speedLayout: View
     val fab: FloatingActionButton
     private var isConnected = false
     private var accentColor = Color.RED
+    private var isPanelHidden = false
 
     private var pulseAnimator: ObjectAnimator
     private var fabScaleAnimator: ObjectAnimator
     private var colorAnimator: ValueAnimator? = null
 
     init {
+        clipChildren = false
+        clipToPadding = false
         LayoutInflater.from(context).inflate(R.layout.layout_cupertino_dock, this, true)
         waveView = findViewById(R.id.wave_view)
         upSpeedText = findViewById(R.id.up_speed)
         downSpeedText = findViewById(R.id.down_speed)
         fabGlow = findViewById(R.id.fab_glow)
         blurContainer = findViewById(R.id.blur_container)
+        blurBg = findViewById(R.id.blur_bg)
+        dockPanel = findViewById(R.id.dock_panel)
+        fabContainer = findViewById(R.id.fab_container)
         speedLayout = findViewById(R.id.speed_layout)
         fab = findViewById(R.id.fab)
 
@@ -67,17 +74,105 @@ class CupertinoDock @JvmOverloads constructor(
             repeatCount = ValueAnimator.INFINITE
         }
 
-        applyFrostedEffect()
+        applyDockMode()
     }
 
-    private fun applyFrostedEffect() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            blurContainer.setRenderEffect(
-                RenderEffect.createBlurEffect(
-                    30f, 30f, Shader.TileMode.DECAL
-                )
-            )
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (isConnected) {
+            pulseAnimator.start()
+            fabScaleAnimator.start()
+            startColorCycling()
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        pulseAnimator.cancel()
+        fabScaleAnimator.cancel()
+        colorAnimator?.cancel()
+    }
+
+    private fun applyDockMode() {
+        try {
+            val isIsland = DataStore.fabStyle == 1 // 1: Floating Island, 0: Fluid Morph
+            blurBg.setIslandMode(isIsland)
+
+            val density = context.resources.displayMetrics.density
+            val dockLp = dockPanel.layoutParams as? MarginLayoutParams
+            if (dockLp != null) {
+                if (isIsland) {
+                    // Option 2 (macOS Floating Island): Suspended above navigation bar with side & bottom margins
+                    dockLp.leftMargin = (16 * density).toInt()
+                    dockLp.rightMargin = (16 * density).toInt()
+                    dockLp.bottomMargin = (10 * density).toInt()
+                    dockPanel.elevation = 8 * density
+                } else {
+                    // Option 1 (Apple Fluid Morph): Edge-to-edge seamless bottom dock
+                    dockLp.leftMargin = 0
+                    dockLp.rightMargin = 0
+                    dockLp.bottomMargin = 0
+                    dockPanel.elevation = 0f
+                }
+                dockPanel.layoutParams = dockLp
+            }
+
+            val fabLp = fab.layoutParams as? MarginLayoutParams
+            if (fabLp != null) {
+                fabLp.topMargin = (if (isIsland) 6 * density else 8 * density).toInt()
+                fab.layoutParams = fabLp
+            }
+            val glowLp = fabGlow.layoutParams as? MarginLayoutParams
+            if (glowLp != null) {
+                glowLp.topMargin = (if (isIsland) 2 * density else 4 * density).toInt()
+                fabGlow.layoutParams = glowLp
+            }
+
+            // Guarantee FAB layer renders visually on top of the elevated dockPanel
+            fabContainer.elevation = if (isIsland) 12 * density else 0f
+        } catch (_: Exception) {}
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        try {
+            if (fab.width > 0 && dockPanel.height > 0) {
+                val fabCenterX = fabContainer.left + (fab.left + fab.right) / 2f
+                val fabCenterY = fabContainer.top + (fab.top + fab.bottom) / 2f
+                val cx = fabCenterX - dockPanel.left
+                val cy = fabCenterY - dockPanel.top
+                val r = fab.width / 2f
+                if (cx.isFinite() && cy.isFinite() && r.isFinite() && r > 0f) {
+                    blurBg.setFabParams(cx, cy, r)
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    fun hidePanel() {
+        if (isPanelHidden) return
+        isPanelHidden = true
+        dockPanel.animate()
+            .translationY(dockPanel.height.toFloat().coerceAtLeast(200f))
+            .setDuration(220)
+            .start()
+        fabContainer.animate()
+            .translationY(30f)
+            .setDuration(220)
+            .start()
+    }
+
+    fun showPanel() {
+        if (!isPanelHidden) return
+        isPanelHidden = false
+        dockPanel.animate()
+            .translationY(0f)
+            .setDuration(220)
+            .start()
+        fabContainer.animate()
+            .translationY(0f)
+            .setDuration(220)
+            .start()
     }
 
     private fun startColorCycling() {
