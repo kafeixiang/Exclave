@@ -350,10 +350,13 @@
     <color name="popup_item_highlight">#14000000</color>
 
     <!-- Cupertino Dock Panel Colors (Light) -->
-    <color name="dock_panel_bg">#EBD4D4DC</color>
-    <color name="dock_panel_stroke">#26000000</color>
-    <color name="glass_dock_bg">#EBD4D4DC</color>
-    <color name="glass_dock_stroke">#26000000</color>
+    <color name="dock_panel_bg">#EEFFFFFF</color>
+    <color name="dock_panel_stroke">#14000000</color>
+    <color name="glass_dock_bg">#EEFFFFFF</color>
+    <color name="glass_dock_stroke">#33FFFFFF</color>
+    <color name="dock_status_connected">#34C759</color>
+    <color name="dock_status_connecting">#FF9500</color>
+    <color name="dock_status_idle">#8E8E93</color>
 
     <!-- Segmented Control Bar Colors -->
     <color name="segmented_control_bg">#E6E3E3E8</color>

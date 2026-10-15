@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -28,6 +29,9 @@ class CupertinoDock @JvmOverloads constructor(
     private val waveView: WaveView
     private val upSpeedText: TextView
     private val downSpeedText: TextView
+    private val dockStatusDot: View
+    private val dockStatusTitle: TextView
+    private val dockStatusSubtitle: TextView
     private val fabGlow: View
     private val blurContainer: View
     val blurBg: NotchedDockView
@@ -50,6 +54,9 @@ class CupertinoDock @JvmOverloads constructor(
         waveView = findViewById(R.id.wave_view)
         upSpeedText = findViewById(R.id.up_speed)
         downSpeedText = findViewById(R.id.down_speed)
+        dockStatusDot = findViewById(R.id.dock_status_dot)
+        dockStatusTitle = findViewById(R.id.dock_status_title)
+        dockStatusSubtitle = findViewById(R.id.dock_status_subtitle)
         fabGlow = findViewById(R.id.fab_glow)
         blurContainer = findViewById(R.id.blur_container)
         blurBg = findViewById(R.id.blur_bg)
@@ -201,6 +208,18 @@ class CupertinoDock @JvmOverloads constructor(
         downSpeedText.text = context.getString(
             R.string.speed, FormatFileSizeCompat.formatFileSize(context, rxRate, DataStore.useIECUnit)
         )
+        val activeDotColor = ContextCompat.getColor(context, R.color.dock_status_connected)
+        val idleDotColor = ContextCompat.getColor(context, R.color.dock_status_idle)
+        upSpeedText.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            ContextCompat.getDrawable(context, R.drawable.ic_baseline_arrow_drop_up_24)?.apply {
+                setTint(if (txRate > 0) ContextCompat.getColor(context, R.color.material_red_500) else idleDotColor)
+            }, null, null, null
+        )
+        downSpeedText.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            ContextCompat.getDrawable(context, R.drawable.ic_baseline_arrow_drop_down_24)?.apply {
+                setTint(if (rxRate > 0) activeDotColor else idleDotColor)
+            }, null, null, null
+        )
         // Convert Bytes/sec to KB/s for WaveView
         val combinedRateKB = (txRate + rxRate).toFloat() / 1024f
         waveView.updateSpeed(combinedRateKB)
@@ -220,6 +239,28 @@ class CupertinoDock @JvmOverloads constructor(
         }
         isConnected = newState
         waveView.setConnected(isConnected)
+
+        val statusDotColor = when (state) {
+            BaseService.State.Connected -> ContextCompat.getColor(context, R.color.dock_status_connected)
+            BaseService.State.Connecting -> ContextCompat.getColor(context, R.color.dock_status_connecting)
+            else -> ContextCompat.getColor(context, R.color.dock_status_idle)
+        }
+        dockStatusDot.backgroundTintList = ColorStateList.valueOf(statusDotColor)
+
+        when (state) {
+            BaseService.State.Connected -> {
+                dockStatusTitle.setText(R.string.connected)
+                dockStatusSubtitle.setText(R.string.tap_to_check_connection)
+            }
+            BaseService.State.Connecting -> {
+                dockStatusTitle.setText(R.string.connecting)
+                dockStatusSubtitle.setText(R.string.tap_to_check_connection)
+            }
+            else -> {
+                dockStatusTitle.setText(R.string.not_connected)
+                dockStatusSubtitle.setText(R.string.tap_to_check_connection)
+            }
+        }
 
         updateFabColors()
 

@@ -54,34 +54,79 @@
                 android:layout_centerVertical="true"
                 android:layout_marginStart="20dp"
                 android:orientation="vertical"
-                android:padding="4dp">
+                android:padding="2dp">
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/up_speed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:drawablePadding="2dp"
-                    android:fontFamily="monospace"
+                    android:drawablePadding="3dp"
                     android:text="@string/speed_zero"
                     android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
                     app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_up_24"
-                    app:drawableTint="@color/material_red_500" />
+                    app:drawableTint="@color/dock_status_idle" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/down_speed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:drawablePadding="2dp"
-                    android:fontFamily="monospace"
+                    android:drawablePadding="3dp"
                     android:text="@string/speed_zero"
                     android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
                     app:drawableStartCompat="@drawable/ic_baseline_arrow_drop_down_24"
-                    app:drawableTint="@color/material_green_500" />
+                    app:drawableTint="@color/dock_status_idle" />
+            </LinearLayout>
+
+            <!-- Right-aligned Status Pill & Latency Check Prompt -->
+            <LinearLayout
+                android:id="@+id/dock_status_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="20dp"
+                android:gravity="end"
+                android:orientation="vertical"
+                android:padding="2dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/dock_status_dot"
+                        android:layout_width="7dp"
+                        android:layout_height="7dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/bg_segmented_pill"
+                        android:backgroundTint="@color/dock_status_idle" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/dock_status_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/not_connected"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/dock_status_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/tap_to_check_connection"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="10sp"
+                    android:alpha="0.85" />
             </LinearLayout>
 
         </RelativeLayout>
@@ -117,7 +162,7 @@
             android:layout_marginTop="8dp"
             android:contentDescription="@null"
             app:backgroundTint="@android:color/white"
-            app:elevation="4dp"
+            app:elevation="2dp"
             app:fabSize="normal"
             app:srcCompat="@drawable/ic_service_idle"
             app:tint="?colorAccent" />
