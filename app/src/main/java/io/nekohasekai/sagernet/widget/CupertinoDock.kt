@@ -75,10 +75,10 @@ class CupertinoDock @JvmOverloads constructor(
 
         fabScaleAnimator = ObjectAnimator.ofPropertyValuesHolder(
             fab,
-            PropertyValuesHolder.ofFloat("scaleX", 1.0f, 1.25f),
-            PropertyValuesHolder.ofFloat("scaleY", 1.0f, 1.25f)
+            PropertyValuesHolder.ofFloat("scaleX", 1.0f, 1.06f),
+            PropertyValuesHolder.ofFloat("scaleY", 1.0f, 1.06f)
         ).apply {
-            duration = 1200
+            duration = 1400
             repeatMode = ValueAnimator.REVERSE
             repeatCount = ValueAnimator.INFINITE
         }
