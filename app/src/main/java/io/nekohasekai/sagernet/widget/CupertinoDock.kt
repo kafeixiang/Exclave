@@ -296,9 +296,11 @@ class CupertinoDock @JvmOverloads constructor(
             Color.WHITE
         }
 
-        val iconRes = if (isConnected) R.drawable.ic_service_connected else R.drawable.ic_service_connecting
+        val iconRes = if (isConnected) R.drawable.ic_service_connected else R.drawable.ic_service_idle
         fab.setImageResource(iconRes)
-        (fab.drawable as? Animatable)?.start()
+        if (isConnected) {
+            (fab.drawable as? Animatable)?.start()
+        }
 
         fab.backgroundTintList = ColorStateList.valueOf(accentColor)
         fab.supportBackgroundTintList = ColorStateList.valueOf(accentColor)
