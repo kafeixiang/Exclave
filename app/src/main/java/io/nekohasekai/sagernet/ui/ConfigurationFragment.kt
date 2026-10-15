@@ -1441,7 +1441,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 v.updatePadding(
                     left = bars.left + dp2px(4),
                     right = bars.right + dp2px(4),
-                    bottom = bars.bottom + dp2px(64),
+                    bottom = bars.bottom + dp2px(112),
                 )
                 insets
             }
@@ -2127,7 +2127,12 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                     proxyEntity.status == 1 -> {
                         profileStatus.text = getString(R.string.available, proxyEntity.ping)
-                        profileStatus.setTextColor(requireContext().getColour(R.color.material_green_500))
+                        val pingColor = when {
+                            proxyEntity.ping <= 200 -> requireContext().getColour(R.color.material_green_500)
+                            proxyEntity.ping <= 600 -> requireContext().getColour(R.color.material_orange_500)
+                            else -> requireContext().getColour(R.color.material_red_500)
+                        }
+                        profileStatus.setTextColor(pingColor)
                     }
                     proxyEntity.status == 2 -> {
                         profileStatus.text = proxyEntity.error
