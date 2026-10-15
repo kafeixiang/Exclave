@@ -6,6 +6,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.Animatable
 import android.os.Build
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -19,6 +20,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.ktx.getColorAttr
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.utils.Theme
 
@@ -81,6 +83,10 @@ class CupertinoDock @JvmOverloads constructor(
             repeatCount = ValueAnimator.INFINITE
         }
 
+        try {
+            accentColor = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+        } catch (_: Exception) {}
+        updateFabColors()
         applyDockMode()
     }
 
@@ -283,21 +289,25 @@ class CupertinoDock @JvmOverloads constructor(
     }
 
     private fun updateFabColors() {
-        val isNight = Theme.usingNightMode()
-        val isAccentLight = ColorUtils.calculateLuminance(accentColor) > 0.65
+        val luminance = ColorUtils.calculateLuminance(accentColor)
+        val iconColor = if (luminance > 0.60) {
+            Color.argb(255, 28, 28, 30)
+        } else {
+            Color.WHITE
+        }
+
+        val iconRes = if (isConnected) R.drawable.ic_service_connected else R.drawable.ic_service_connecting
+        fab.setImageResource(iconRes)
+        (fab.drawable as? Animatable)?.start()
+
+        fab.backgroundTintList = ColorStateList.valueOf(accentColor)
+        fab.supportBackgroundTintList = ColorStateList.valueOf(accentColor)
+        fab.imageTintList = ColorStateList.valueOf(iconColor)
+        fab.supportImageTintList = ColorStateList.valueOf(iconColor)
 
         if (isConnected) {
-            fab.setImageResource(R.drawable.ic_service_connected)
-            fab.supportBackgroundTintList = ColorStateList.valueOf(accentColor)
-            val iconColor = if (isAccentLight) Color.BLACK else Color.WHITE
-            fab.supportImageTintList = ColorStateList.valueOf(iconColor)
             fabGlow.visibility = VISIBLE
         } else {
-            fab.setImageResource(R.drawable.ic_service_idle)
-            val bgTint = if (isNight) Color.argb(255, 44, 44, 46) else Color.WHITE
-            val iconColor = if (!isNight && isAccentLight) Color.argb(255, 28, 28, 30) else accentColor
-            fab.supportBackgroundTintList = ColorStateList.valueOf(bgTint)
-            fab.supportImageTintList = ColorStateList.valueOf(iconColor)
             fabGlow.visibility = GONE
         }
         ViewCompat.setBackgroundTintList(
