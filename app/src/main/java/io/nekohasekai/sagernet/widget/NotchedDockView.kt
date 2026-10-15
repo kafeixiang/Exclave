@@ -45,8 +45,8 @@ class NotchedDockView @JvmOverloads constructor(
     private var customFabCenterY = Float.MIN_VALUE
     private var customFabRadius = -1f
 
-    private val cradleMargin = dp2pxf(4)
-    private val rShoulder = dp2pxf(8)
+    private val cradleMargin = dp2pxf(6)
+    private val rShoulder = dp2pxf(18)
     private val cornerRadius = dp2pxf(24)
 
     private var isIslandMode = false
@@ -182,20 +182,24 @@ class NotchedDockView @JvmOverloads constructor(
                 fillPath.reset()
                 fillPath.set(strokePath)
             } else {
+                val r = cornerRadius.coerceAtMost(minOf(w / 4f, h / 2f))
                 strokePath.reset()
-                strokePath.moveTo(0f, 0f)
-                strokePath.lineTo(sxLeft.coerceIn(0f, w), 0f)
+                strokePath.moveTo(0f, h)
+                strokePath.lineTo(0f, r)
+                strokePath.quadTo(0f, 0f, r, 0f)
+                strokePath.lineTo(sxLeft.coerceIn(r, w - r), 0f)
                 strokePath.arcTo(rectLeftShoulder, 270f, sweepLeft, false)
                 strokePath.arcTo(rectCradle, aCradleStart, sweepCradle, false)
                 strokePath.arcTo(rectRightShoulder, aRightT, sweepRight, false)
-                strokePath.lineTo(w, 0f)
+                strokePath.lineTo(w - r, 0f)
+                strokePath.quadTo(w, 0f, w, r)
+                strokePath.lineTo(w, h)
 
                 cradlePath.reset()
                 cradlePath.arcTo(rectCradle, aCradleStart, sweepCradle, false)
 
                 fillPath.reset()
                 fillPath.set(strokePath)
-                fillPath.lineTo(w, h)
                 fillPath.lineTo(0f, h)
                 fillPath.close()
             }
@@ -209,21 +213,15 @@ class NotchedDockView @JvmOverloads constructor(
         if (width == 0 || height == 0) return
 
         try {
-            val isDark = (context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-            shadowPaint.color = if (isDark) 0x40000000.toInt() else 0x18000000.toInt()
-
             if (isIslandMode) {
                 fillPaint.color = ContextCompat.getColor(context, R.color.surface_glass_heavy)
                 strokePaint.color = ContextCompat.getColor(context, R.color.card_stroke)
                 canvas.drawPath(fillPath, fillPaint)
-                canvas.drawPath(cradlePath, shadowPaint)
                 canvas.drawPath(strokePath, strokePaint)
             } else {
                 fillPaint.color = ContextCompat.getColor(context, R.color.glass_dock_bg)
                 strokePaint.color = ContextCompat.getColor(context, R.color.glass_dock_stroke)
-
                 canvas.drawPath(fillPath, fillPaint)
-                canvas.drawPath(cradlePath, shadowPaint)
                 canvas.drawPath(strokePath, strokePaint)
             }
         } catch (_: Exception) {}
