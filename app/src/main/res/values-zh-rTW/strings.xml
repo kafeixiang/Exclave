@@ -132,6 +132,7 @@
     <string name="connecting">連線中……</string>
     <string name="vpn_connected">已連線，輕觸以檢查連線能力</string>
     <string name="not_connected">未連線</string>
+    <string name="tap_to_check_connection">輕觸測速</string>
     <!-- subscriptions -->
     <string name="subscriptions">訂閱</string>
     <string name="cleartext_http_warning">純文字 HTTP 流量並不安全</string>
