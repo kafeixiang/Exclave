@@ -47,6 +47,7 @@ import io.nekohasekai.sagernet.fmt.hysteria2.Hysteria2Bean
 import io.nekohasekai.sagernet.fmt.internal.BalancerBean
 import io.nekohasekai.sagernet.fmt.internal.ConfigBean
 import io.nekohasekai.sagernet.fmt.juicity.JuicityBean
+import io.nekohasekai.sagernet.fmt.masque.MASQUEBean
 import io.nekohasekai.sagernet.fmt.mieru.MieruBean
 import io.nekohasekai.sagernet.fmt.shadowquic.ShadowQUICBean
 import io.nekohasekai.sagernet.fmt.shadowsocks.ShadowsocksBean
@@ -1941,6 +1942,98 @@ fun buildV2RayConfig(
                                         alpn = bean.alpn.listByLineOrComma()
                                     }
                                 })
+                            } else if (bean is MASQUEBean) {
+                                protocol = "masque"
+                                settings = LazyOutboundConfigurationObject(this,
+                                    V2RayConfig.MASQUEOutboundConfigurationObject().apply {
+                                        address = bean.serverAddress
+                                        port = bean.serverPort
+                                        if (bean.username.isNotEmpty()) username = bean.username
+                                        if (bean.password.isNotEmpty()) password = bean.password
+                                        if (bean.uriTemplate.isNotEmpty()) uriTemplate = bean.uriTemplate
+                                        if (bean.http3) http3 = true
+                                        if (bean.mtu != 0) mtu = bean.mtu
+                                    }
+                                )
+                                streamSettings = StreamSettingsObject().apply {
+                                    security = "tls"
+                                    tlsSettings = TLSObject().apply {
+                                        if (bean.sni.isNotEmpty()) {
+                                            serverName = bean.sni
+                                        }
+                                        if (bean.certificates.isNotEmpty() || bean.mtlsCertificate.isNotEmpty() || bean.mtlsCertificatePrivateKey.isNotEmpty()) {
+                                            certificates = mutableListOf()
+                                            if (bean.certificates.isNotEmpty()) {
+                                                disableSystemRoot = true
+                                                certificates.add(TLSObject.CertificateObject().apply {
+                                                    usage = "verify"
+                                                    certificate = bean.certificates.lines()
+                                                })
+                                            }
+                                            if (bean.mtlsCertificate.isNotEmpty() || bean.mtlsCertificatePrivateKey.isNotEmpty()) {
+                                                certificates.add(TLSObject.CertificateObject().apply {
+                                                    usage = "encipherment"
+                                                    certificate = bean.mtlsCertificate.lines()
+                                                    key = bean.mtlsCertificatePrivateKey.lines()
+                                                })
+                                            }
+                                        }
+                                        if (bean.pinnedPeerCertificateSha256.isNotEmpty()) {
+                                            pinnedPeerCertificateSha256 = mutableListOf()
+                                            bean.pinnedPeerCertificateSha256.listByLineOrComma().forEach {
+                                                pinnedPeerCertificateSha256.add(it.replace(":", ""))
+                                            }
+                                        }
+                                        if (bean.pinnedPeerCertificatePublicKeySha256.isNotEmpty()) {
+                                            pinnedPeerCertificatePublicKeySha256 = bean.pinnedPeerCertificatePublicKeySha256.listByLineOrComma()
+                                        }
+                                        if (bean.pinnedPeerCertificateChainSha256.isNotEmpty()) {
+                                            pinnedPeerCertificateChainSha256 = bean.pinnedPeerCertificateChainSha256.listByLineOrComma()
+                                        }
+                                        if (bean.allowInsecure) {
+                                            allowInsecure = true
+                                        }
+                                        if (!bean.http3) {
+                                            val overrideFingerprint = DataStore.experimentalFlagsProperties.getProperty("overrideUTLSFingerprintForTLS")
+                                            if (!overrideFingerprint.isNullOrEmpty()) {
+                                                fingerprint = overrideFingerprint
+                                            } else if (bean.utlsFingerprint.isNotEmpty()) {
+                                                fingerprint = bean.utlsFingerprint
+                                            }
+                                        }
+                                        if (bean.echEnabled) {
+                                            ech = TLSObject.ECHObject().apply {
+                                                enabled = bean.echEnabled
+                                                if (bean.echConfigList.isNotEmpty()) {
+                                                    config = bean.echConfigList
+                                                } else if (bean.echQueryName.isNotEmpty()) {
+                                                    queryDomain = bean.echQueryName
+                                                }
+                                            }
+                                        }
+                                        if (bean.serverNameToVerify.isNotEmpty()) {
+                                            serverNameToVerify = bean.serverNameToVerify.listByLineOrComma()
+                                        }
+                                    }
+                                    if (!bean.http3 && DataStore.enableFragment) {
+                                        sockopt = StreamSettingsObject.SockoptObject().apply {
+                                            tlsFragmentation = StreamSettingsObject.SockoptObject.TLSFragmentationObject().apply {
+                                                when (DataStore.fragmentMethod) {
+                                                    TLS_FRAGMENTATION_METHOD.TLS_RECORD_FRAGMENTATION -> {
+                                                        tlsRecordFragmentation = true
+                                                    }
+                                                    TLS_FRAGMENTATION_METHOD.TCP_SEGMENTATION -> {
+                                                        tcpSegmentation = true
+                                                    }
+                                                    TLS_FRAGMENTATION_METHOD.TLS_RECORD_FRAGMENTATION_AND_TCP_SEGMENTATION -> {
+                                                        tlsRecordFragmentation = true
+                                                        tcpSegmentation = true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             if (bean is StandardV2RayBean && bean.mux) {
                                 mux = OutboundObject.MuxObject().apply {

@@ -974,4 +974,14 @@
         <item>@string/tcp</item>
     </string-array>
 
+    <string-array name="masque_protocol_entry">
+        <item>HTTP/2</item>
+        <item>HTTP/3</item>
+    </string-array>
+
+    <string-array name="masque_protocol_value">
+        <item>http2</item>
+        <item>http3</item>
+    </string-array>
+
 </resources>
