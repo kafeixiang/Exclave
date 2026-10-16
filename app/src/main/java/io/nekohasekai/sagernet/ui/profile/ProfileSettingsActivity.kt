@@ -87,6 +87,7 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
     companion object {
         const val EXTRA_PROFILE_ID = "id"
         const val EXTRA_IS_SUBSCRIPTION = "sub"
+        const val KEY_EDITING_GROUP = "editing_group"
         const val KEY_TEMP_BEAN_BYTES = "temp_bean_bytes"
         const val KEY_DIRTY = "dirty"
     }
@@ -97,12 +98,19 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
 
     protected var dirty = false
     protected var bean: T? = null
-    protected var isSubscription by Delegates.notNull<Boolean>()
+    protected var isSubscription: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        savedInstanceState?.getByteArray(KEY_TEMP_BEAN_BYTES)?.let {
-            bean = createEntity().apply {
-                deserialize(ByteBufferInput(it))
+        if (savedInstanceState != null) {
+            val editingId = savedInstanceState.getLong(EXTRA_PROFILE_ID, intent.getLongExtra(EXTRA_PROFILE_ID, 0L))
+            isSubscription = savedInstanceState.getBoolean(EXTRA_IS_SUBSCRIPTION, intent.getBooleanExtra(EXTRA_IS_SUBSCRIPTION, false))
+            DataStore.editingId = editingId
+            DataStore.editingGroup = savedInstanceState.getLong(KEY_EDITING_GROUP, DataStore.editingGroup)
+            savedInstanceState.getByteArray(KEY_TEMP_BEAN_BYTES)?.let {
+                bean = createEntity().apply {
+                    deserialize(ByteBufferInput(it))
+                    init()
+                }
             }
         }
         super.onCreate(savedInstanceState)
@@ -150,6 +158,9 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        outState.putLong(EXTRA_PROFILE_ID, DataStore.editingId)
+        outState.putBoolean(EXTRA_IS_SUBSCRIPTION, isSubscription)
+        outState.putLong(KEY_EDITING_GROUP, DataStore.editingGroup)
         bean?.let {
             val output = ByteArrayOutputStream()
             val buffer = output.byteBuffer()
