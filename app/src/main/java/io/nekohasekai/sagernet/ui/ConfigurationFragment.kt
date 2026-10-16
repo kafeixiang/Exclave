@@ -1448,6 +1448,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             setupLayoutManager()
             configurationListView.layoutManager = layoutManager
             if (!Theme.isCupertino()) {
+                view.setBackgroundColor(Theme.getClassicListBackgroundColor())
                 configurationListView.setBackgroundColor(Theme.getClassicListBackgroundColor())
             }
             configurationListView.applyGlassBlur()
