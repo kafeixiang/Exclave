@@ -43,6 +43,7 @@ import io.nekohasekai.sagernet.database.ProxyGroup
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.databinding.LayoutGroupItemBinding
 import io.nekohasekai.sagernet.fmt.exportBackup
+import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.group.GroupUpdater
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
@@ -61,12 +62,18 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        if (!Theme.isCupertino()) {
+            view.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
 
         toolbar.setTitle(R.string.menu_group)
         toolbar.inflateMenu(R.menu.add_group_menu)
         toolbar.setOnMenuItemClickListener(this)
 
         groupListView = view.findViewById(R.id.group_list)
+        if (!Theme.isCupertino()) {
+            groupListView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+        }
         ViewCompat.setOnApplyWindowInsetsListener(groupListView) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
