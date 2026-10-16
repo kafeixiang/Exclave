@@ -15,9 +15,11 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.USER_AGENT
+import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.ui.profile.ProfileSettingsActivity
+import io.nekohasekai.sagernet.utils.Theme
 import java.net.HttpURLConnection
 import java.net.InetSocketAddress
 import java.net.ProtocolException
@@ -77,6 +79,16 @@ class WebDAVSettingsActivity : ThemedActivity() {
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+            if (!Theme.isCupertino()) {
+                view.setBackgroundColor(Theme.getClassicListBackgroundColor())
+                listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            } else {
+                view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            }
+            setDivider(null)
+            setDividerHeight(0)
+            listView.applyGlassBlur()
 
             // 处理底部导航栏高度，避免设置项被遮挡
             ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->

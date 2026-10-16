@@ -66,7 +66,7 @@ class LogcatFragment : ToolbarFragment(R.layout.layout_logcat),
                 top = dp2px(8),
                 left = bars.left + dp2px(8),
                 right = bars.right + dp2px(8),
-                bottom = bars.bottom + dp2px(64),
+                bottom = bars.bottom + dp2px(112),
             )
             insets
         }

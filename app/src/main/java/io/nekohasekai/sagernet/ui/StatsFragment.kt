@@ -54,7 +54,7 @@ class StatsFragment : Fragment(R.layout.layout_traffic_list) {
                         or WindowInsetsCompat.Type.displayCutout()
             )
             v.updatePadding(
-                bottom = bars.bottom + dp2px(64),
+                bottom = bars.bottom + dp2px(112),
             )
             insets
         }
@@ -66,7 +66,7 @@ class StatsFragment : Fragment(R.layout.layout_traffic_list) {
             v.updatePadding(
                 left = bars.left + dp2px(4),
                 right = bars.right + dp2px(4),
-                bottom = bars.bottom + dp2px(64),
+                bottom = bars.bottom + dp2px(112),
             )
             insets
         }

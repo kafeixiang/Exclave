@@ -75,7 +75,7 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
             v.updatePadding(
                 left = bars.left + dp2px(4),
                 right = bars.right + dp2px(4),
-                bottom = bars.bottom + dp2px(64),
+                bottom = bars.bottom + dp2px(112),
             )
             insets
         }

@@ -25,8 +25,11 @@
     <color name="tab_glass_pill_stroke">#66FFFFFF</color>
 
     <!-- Cupertino Dock Panel Colors (Night) -->
-    <color name="dock_panel_bg">#F50C0C0E</color>
-    <color name="dock_panel_stroke">#26FFFFFF</color>
-    <color name="glass_dock_bg">#F50C0C0E</color>
-    <color name="glass_dock_stroke">#26FFFFFF</color>
+    <color name="dock_panel_bg">#E61C1C1E</color>
+    <color name="dock_panel_stroke">#33FFFFFF</color>
+    <color name="glass_dock_bg">#E61C1C1E</color>
+    <color name="glass_dock_stroke">#33FFFFFF</color>
+    <color name="dock_status_connected">#30D158</color>
+    <color name="dock_status_connecting">#FF9F0A</color>
+    <color name="dock_status_idle">#98989D</color>
 </resources>

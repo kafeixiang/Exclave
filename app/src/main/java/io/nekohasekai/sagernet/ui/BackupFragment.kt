@@ -120,7 +120,7 @@ class BackupFragment : NamedFragment(R.layout.layout_backup) {
             v.updatePadding(
                 left = bars.left + dp2px(16),
                 right = bars.right + dp2px(16),
-                bottom = bars.bottom + dp2px(64),
+                bottom = bars.bottom + dp2px(112),
             )
             insets
         }
