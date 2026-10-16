@@ -1883,7 +1883,7 @@ fun buildV2RayConfig(
                                         if (bean.allowInsecure) {
                                             allowInsecure = true
                                         }
-                                        if (protocol == "https") {
+                                        if (bean.protocol == "https") {
                                             val overrideFingerprint = DataStore.experimentalFlagsProperties.getProperty("overrideUTLSFingerprintForTLS")
                                             if (!overrideFingerprint.isNullOrEmpty()) {
                                                 fingerprint = overrideFingerprint
@@ -1903,6 +1903,24 @@ fun buildV2RayConfig(
                                         }
                                         if (bean.serverNameToVerify.isNotEmpty()) {
                                             serverNameToVerify = bean.serverNameToVerify.listByLineOrComma()
+                                        }
+                                    }
+                                    if (bean.protocol == "https" && DataStore.enableFragment) {
+                                        sockopt = StreamSettingsObject.SockoptObject().apply {
+                                            tlsFragmentation = StreamSettingsObject.SockoptObject.TLSFragmentationObject().apply {
+                                                when (DataStore.fragmentMethod) {
+                                                    TLS_FRAGMENTATION_METHOD.TLS_RECORD_FRAGMENTATION -> {
+                                                        tlsRecordFragmentation = true
+                                                    }
+                                                    TLS_FRAGMENTATION_METHOD.TCP_SEGMENTATION -> {
+                                                        tcpSegmentation = true
+                                                    }
+                                                    TLS_FRAGMENTATION_METHOD.TLS_RECORD_FRAGMENTATION_AND_TCP_SEGMENTATION -> {
+                                                        tlsRecordFragmentation = true
+                                                        tcpSegmentation = true
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
