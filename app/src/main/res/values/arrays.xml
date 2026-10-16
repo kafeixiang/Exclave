@@ -1021,4 +1021,6 @@
         <item>tls</item>
     </string-array>
 
+    <string-array name="empty_string_array" />
+
 </resources>
