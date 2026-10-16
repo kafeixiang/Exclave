@@ -31,6 +31,7 @@ import android.graphics.Shader
 import android.os.Build
 import android.view.View
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -148,10 +149,21 @@ private class FrostedCardItemDecoration : RecyclerView.ItemDecoration() {
     override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
         try {
             val context = parent.context
-            // 经典主题与 Cupertino 主题均应用苹果级通透高斯磨砂玻璃质感与高光描边
-            fillPaint.color = ContextCompat.getColor(context, R.color.surface_glass)
-            strokePaint.color = ContextCompat.getColor(context, R.color.card_stroke)
-            dividerPaint.color = if (Theme.usingNightMode()) 0x26FFFFFF.toInt() else 0x14000000.toInt()
+            if (Theme.isCupertino()) {
+                val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+                val baseSurface = ContextCompat.getColor(context, R.color.surface_glass)
+                val tintAlpha = if (Theme.usingNightMode()) 18 else 24
+                fillPaint.color = ColorUtils.compositeColors(ColorUtils.setAlphaComponent(accent, tintAlpha), baseSurface)
+                strokePaint.color = ColorUtils.compositeColors(
+                    ColorUtils.setAlphaComponent(accent, 35),
+                    ContextCompat.getColor(context, R.color.card_stroke)
+                )
+                dividerPaint.color = if (Theme.usingNightMode()) 0x26FFFFFF.toInt() else 0x14000000.toInt()
+            } else {
+                fillPaint.color = ContextCompat.getColor(context, R.color.surface_glass)
+                strokePaint.color = ContextCompat.getColor(context, R.color.card_stroke)
+                dividerPaint.color = if (Theme.usingNightMode()) 0x26FFFFFF.toInt() else 0x14000000.toInt()
+            }
 
             val adapter = parent.adapter as? androidx.preference.PreferenceGroupAdapter
             val childCount = parent.childCount

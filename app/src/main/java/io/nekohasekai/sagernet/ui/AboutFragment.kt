@@ -77,7 +77,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
             v.updatePadding(
                 left = bars.left,
                 right = bars.right,
-                bottom = bars.bottom + dp2px(64),
+                bottom = bars.bottom + dp2px(112),
             )
             insets
         }

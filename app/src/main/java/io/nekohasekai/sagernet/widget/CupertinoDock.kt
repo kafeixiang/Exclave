@@ -6,18 +6,21 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.Animatable
 import android.os.Build
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.bg.BaseService
 import io.nekohasekai.sagernet.database.DataStore
+import io.nekohasekai.sagernet.ktx.getColorAttr
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.utils.Theme
 
@@ -28,6 +31,9 @@ class CupertinoDock @JvmOverloads constructor(
     private val waveView: WaveView
     private val upSpeedText: TextView
     private val downSpeedText: TextView
+    private val dockStatusDot: View
+    private val dockStatusTitle: TextView
+    private val dockStatusSubtitle: TextView
     private val fabGlow: View
     private val blurContainer: View
     val blurBg: NotchedDockView
@@ -50,6 +56,9 @@ class CupertinoDock @JvmOverloads constructor(
         waveView = findViewById(R.id.wave_view)
         upSpeedText = findViewById(R.id.up_speed)
         downSpeedText = findViewById(R.id.down_speed)
+        dockStatusDot = findViewById(R.id.dock_status_dot)
+        dockStatusTitle = findViewById(R.id.dock_status_title)
+        dockStatusSubtitle = findViewById(R.id.dock_status_subtitle)
         fabGlow = findViewById(R.id.fab_glow)
         blurContainer = findViewById(R.id.blur_container)
         blurBg = findViewById(R.id.blur_bg)
@@ -66,14 +75,18 @@ class CupertinoDock @JvmOverloads constructor(
 
         fabScaleAnimator = ObjectAnimator.ofPropertyValuesHolder(
             fab,
-            PropertyValuesHolder.ofFloat("scaleX", 1.0f, 1.25f),
-            PropertyValuesHolder.ofFloat("scaleY", 1.0f, 1.25f)
+            PropertyValuesHolder.ofFloat("scaleX", 1.0f, 1.06f),
+            PropertyValuesHolder.ofFloat("scaleY", 1.0f, 1.06f)
         ).apply {
-            duration = 1200
+            duration = 1400
             repeatMode = ValueAnimator.REVERSE
             repeatCount = ValueAnimator.INFINITE
         }
 
+        try {
+            accentColor = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+        } catch (_: Exception) {}
+        updateFabColors()
         applyDockMode()
     }
 
@@ -201,6 +214,18 @@ class CupertinoDock @JvmOverloads constructor(
         downSpeedText.text = context.getString(
             R.string.speed, FormatFileSizeCompat.formatFileSize(context, rxRate, DataStore.useIECUnit)
         )
+        val activeDotColor = ContextCompat.getColor(context, R.color.dock_status_connected)
+        val idleDotColor = ContextCompat.getColor(context, R.color.dock_status_idle)
+        upSpeedText.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            ContextCompat.getDrawable(context, R.drawable.ic_baseline_arrow_drop_up_24)?.apply {
+                setTint(if (txRate > 0) ContextCompat.getColor(context, R.color.material_red_500) else idleDotColor)
+            }, null, null, null
+        )
+        downSpeedText.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            ContextCompat.getDrawable(context, R.drawable.ic_baseline_arrow_drop_down_24)?.apply {
+                setTint(if (rxRate > 0) activeDotColor else idleDotColor)
+            }, null, null, null
+        )
         // Convert Bytes/sec to KB/s for WaveView
         val combinedRateKB = (txRate + rxRate).toFloat() / 1024f
         waveView.updateSpeed(combinedRateKB)
@@ -220,6 +245,28 @@ class CupertinoDock @JvmOverloads constructor(
         }
         isConnected = newState
         waveView.setConnected(isConnected)
+
+        val statusDotColor = when (state) {
+            BaseService.State.Connected -> ContextCompat.getColor(context, R.color.dock_status_connected)
+            BaseService.State.Connecting -> ContextCompat.getColor(context, R.color.dock_status_connecting)
+            else -> ContextCompat.getColor(context, R.color.dock_status_idle)
+        }
+        dockStatusDot.backgroundTintList = ColorStateList.valueOf(statusDotColor)
+
+        when (state) {
+            BaseService.State.Connected -> {
+                dockStatusTitle.setText(R.string.connected)
+                dockStatusSubtitle.setText(R.string.tap_to_check_connection)
+            }
+            BaseService.State.Connecting -> {
+                dockStatusTitle.setText(R.string.connecting)
+                dockStatusSubtitle.setText(R.string.tap_to_check_connection)
+            }
+            else -> {
+                dockStatusTitle.setText(R.string.not_connected)
+                dockStatusSubtitle.setText(R.string.tap_to_check_connection)
+            }
+        }
 
         updateFabColors()
 
@@ -242,21 +289,27 @@ class CupertinoDock @JvmOverloads constructor(
     }
 
     private fun updateFabColors() {
-        val isNight = Theme.usingNightMode()
-        val isAccentLight = ColorUtils.calculateLuminance(accentColor) > 0.65
+        val luminance = ColorUtils.calculateLuminance(accentColor)
+        val iconColor = if (luminance > 0.60) {
+            Color.argb(255, 28, 28, 30)
+        } else {
+            Color.WHITE
+        }
+
+        val iconRes = if (isConnected) R.drawable.ic_service_connected else R.drawable.ic_service_idle
+        fab.setImageResource(iconRes)
+        if (isConnected) {
+            (fab.drawable as? Animatable)?.start()
+        }
+
+        fab.backgroundTintList = ColorStateList.valueOf(accentColor)
+        fab.supportBackgroundTintList = ColorStateList.valueOf(accentColor)
+        fab.imageTintList = ColorStateList.valueOf(iconColor)
+        fab.supportImageTintList = ColorStateList.valueOf(iconColor)
 
         if (isConnected) {
-            fab.setImageResource(R.drawable.ic_service_connected)
-            fab.supportBackgroundTintList = ColorStateList.valueOf(accentColor)
-            val iconColor = if (isAccentLight) Color.BLACK else Color.WHITE
-            fab.supportImageTintList = ColorStateList.valueOf(iconColor)
             fabGlow.visibility = VISIBLE
         } else {
-            fab.setImageResource(R.drawable.ic_service_idle)
-            val bgTint = if (isNight) Color.argb(255, 44, 44, 46) else Color.WHITE
-            val iconColor = if (!isNight && isAccentLight) Color.argb(255, 28, 28, 30) else accentColor
-            fab.supportBackgroundTintList = ColorStateList.valueOf(bgTint)
-            fab.supportImageTintList = ColorStateList.valueOf(iconColor)
             fabGlow.visibility = GONE
         }
         ViewCompat.setBackgroundTintList(
