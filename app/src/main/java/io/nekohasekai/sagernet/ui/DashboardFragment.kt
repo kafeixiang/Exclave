@@ -162,6 +162,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
         recyclerView?.layoutManager = gridLayoutManager
         if (!Theme.isCupertino()) {
+            view.setBackgroundColor(Theme.getClassicListBackgroundColor())
             recyclerView?.setBackgroundColor(Theme.getClassicListBackgroundColor())
         }
         recyclerView?.applyGlassBlur()
