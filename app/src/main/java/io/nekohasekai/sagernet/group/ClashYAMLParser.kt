@@ -709,7 +709,7 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
             val ver = proxy.getInt("version") ?: proxy.getString("version")?.toIntOrNull()
             val token = proxy.getString("token")
             val uuid = proxy.getString("uuid")
-            val isV4 = ver == 4 || token != null || (uuid == null && proxy.getString("password") != null)
+            val isV4 = ver == 4 || (token != null && uuid == null && proxy.getString("password") == null)
             if (isV4) {
                 return listOf(TuicBean().apply {
                     serverAddress = proxy.getString("ip") ?: proxy.getString("server") ?: return listOf()

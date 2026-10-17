@@ -30,6 +30,7 @@ import io.nekohasekai.sagernet.database.ProxyGroup
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.database.SubscriptionBean
 import io.nekohasekai.sagernet.fmt.AbstractBean
+import io.nekohasekai.sagernet.fmt.v2ray.StandardV2RayBean
 import io.nekohasekai.sagernet.fmt.shadowsocks.parseShadowsocksConfig
 import io.nekohasekai.sagernet.fmt.wireguard.parseWireGuardConfig
 import io.nekohasekai.sagernet.ktx.*
@@ -178,7 +179,10 @@ object RawUpdater : GroupUpdater() {
                         runCatching { InetAddress.getByName(proxy.serverAddress).hostAddress }.getOrNull()
                     }
                     if (resolved != null) {
-                        proxy.serverAddress = resolved
+                        if (proxy is StandardV2RayBean && proxy.sni.isNullOrEmpty()) {
+                            proxy.sni = proxy.serverAddress
+                        }
+                        proxy.finalAddress = resolved
                     }
                 }
             }

@@ -319,10 +319,7 @@ class VpnService : BaseVpnService(),
             config.discardIPv6BasedOnNetwork = true
         }
 
-        if (tunImplementation == TunImplementation.SYSTEM &&
-            data.proxy!!.config.outboundTagsAll.values.any { it?.requireBean()?.needProtect() == true ||
-                    it?.matsuriBean != null }
-        ) {
+        if (tunImplementation == TunImplementation.SYSTEM) {
             config.protectPath = SagerNet.deviceStorage.noBackupFilesDir.toString() + "/protect_path"
         }
 

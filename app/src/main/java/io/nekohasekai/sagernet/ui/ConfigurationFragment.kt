@@ -788,6 +788,19 @@ class ConfigurationFragment @JvmOverloads constructor(
         return true
     }
 
+    fun genFriendlyMsg(msg: String): String {
+        val msgL = msg.lowercase()
+        return when {
+            msgL.contains("timeout") || msgL.contains("deadline") -> {
+                getString(R.string.connection_test_timeout)
+            }
+            msgL.contains("refused") || msgL.contains("closed pipe") -> {
+                getString(R.string.connection_test_refused)
+            }
+            else -> msg
+        }
+    }
+
     inner class TestDialog {
         val binding = LayoutProgressListBinding.inflate(layoutInflater)
         val builder = MaterialAlertDialogBuilder(requireContext()).setView(binding.root)
@@ -886,7 +899,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                         binding.profileStatus.setTextColor(requireContext().getColour(R.color.material_red_500))
                     }
                     3 -> {
-                        binding.profileStatus.setText(R.string.unavailable)
+                        val err = profile.error ?: "<?>"
+                        val msg = genFriendlyMsg(err)
+                        binding.profileStatus.text = if (msg != err) msg else getString(R.string.unavailable)
                         binding.profileStatus.setTextColor(requireContext().getColour(R.color.material_red_500))
                     }
                 }
@@ -2127,22 +2142,27 @@ class ConfigurationFragment @JvmOverloads constructor(
                         }
                     }
                     proxyEntity.status == 1 -> {
-                        profileStatus.text = getString(R.string.available, proxyEntity.ping)
-                        val pingColor = when {
-                            proxyEntity.ping <= 200 -> requireContext().getColour(R.color.material_green_500)
-                            proxyEntity.ping <= 600 -> requireContext().getColour(R.color.material_orange_500)
-                            else -> requireContext().getColour(R.color.material_red_500)
-                        }
-                        profileStatus.setTextColor(pingColor)
+                        profileStatus.text = parent.getString(R.string.available, proxyEntity.ping)
+                        profileStatus.setTextColor(card.context.getColour(R.color.material_green_500))
                     }
                     proxyEntity.status == 2 -> {
                         profileStatus.text = proxyEntity.error
-                        profileStatus.setTextColor(requireContext().getColour(R.color.material_red_500))
+                        profileStatus.setTextColor(card.context.getColour(R.color.material_red_500))
                     }
                     proxyEntity.status == 3 -> {
-                        profileStatus.setText(R.string.unavailable)
-                        profileStatus.setTextColor(requireContext().getColour(R.color.material_red_500))
+                        val err = proxyEntity.error ?: "<?>"
+                        val msg = parent.genFriendlyMsg(err)
+                        profileStatus.text = if (msg != err) msg else parent.getString(R.string.unavailable)
+                        profileStatus.setTextColor(card.context.getColour(R.color.material_red_500))
                     }
+                }
+
+                if (proxyEntity.status == 3) {
+                    profileStatus.setOnClickListener {
+                        it.context.alert(proxyEntity.error ?: "<?>").show()
+                    }
+                } else {
+                    profileStatus.setOnClickListener(null)
                 }
 
                 profileStatus.isClickable = proxyEntity.status == 3

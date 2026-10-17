@@ -548,7 +548,7 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
             val uuidStr = outbound.getString("uuid")
             val parsedUuid = uuidStr?.let { parseUUID(it) }
 
-            if (ver == 4 || !tokenStr.isNullOrEmpty() || parsedUuid == null) {
+            if (ver == 4 || (!tokenStr.isNullOrEmpty() && uuidStr.isNullOrEmpty() && outbound.getString("password").isNullOrEmpty())) {
                 val tuicBean = TuicBean().apply {
                     outbound.getString("tag", ignoreCase = false)?.also {
                         name = it
@@ -622,7 +622,9 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                     outbound.getInt("server_port")?.also {
                         serverPort = it
                     } ?: return listOf()
-                    uuid = parsedUuid.toHexDashString()
+                    uuid = parsedUuid?.toHexDashString()
+                        ?: parseUUID(outbound.getString("password").orEmpty())?.toHexDashString()
+                        ?: "00000000-0000-0000-0000-000000000000"
                     outbound.getString("password")?.also {
                         password = it
                     }
