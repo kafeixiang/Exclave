@@ -96,9 +96,14 @@ fun parseTuic(server: String): AbstractBean {
             }
         }
         if (u == null) {
-            return parseTuic4(server)
+            if (link.password.isNotEmpty()) {
+                uuid = Uuid.NIL.toHexDashString()
+            } else {
+                return parseTuic4(server)
+            }
+        } else {
+            uuid = u.toHexDashString()
         }
-        uuid = u.toHexDashString()
         link.queryParameter("sni")?.let {
             sni = it
         }
