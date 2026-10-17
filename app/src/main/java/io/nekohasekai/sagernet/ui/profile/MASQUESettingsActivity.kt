@@ -172,7 +172,7 @@ class MASQUESettingsActivity: ProfileSettingsActivity<MASQUEBean>() {
         echEnabled.isVisible = isTLS
         echConfigList.isVisible = isTLS
         echQueryName.isVisible = isTLS
-        utlsFingerprint.isVisible = isTLS && httpVersion == 3
+        utlsFingerprint.isVisible = isTLS && httpVersion != 3
     }
 
 }
