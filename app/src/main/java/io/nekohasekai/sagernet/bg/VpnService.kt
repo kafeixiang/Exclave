@@ -331,7 +331,6 @@ class VpnService : BaseVpnService(),
                 }
             }
         }
-
         if (tunImplementation == TunImplementation.SYSTEM) {
             config.protectPath = SagerNet.deviceStorage.noBackupFilesDir.toString() + "/protect_path"
         }
