@@ -23,6 +23,7 @@ package io.nekohasekai.sagernet.ui.profile
 import android.os.Bundle
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
+import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import io.nekohasekai.sagernet.Key
@@ -43,13 +44,15 @@ class MASQUESettingsActivity: ProfileSettingsActivity<MASQUEBean>() {
         DataStore.serverUsername = username
         DataStore.serverPassword = password
         DataStore.serverMASQUEURITemplate = uriTemplate
-        DataStore.serverProtocol = if (http3) "http3" else "http2"
+        DataStore.serverProtocolVersion = httpVersion
+        DataStore.serverSecurity = security
+        DataStore.serverMASQUEMTU = mtu
         DataStore.serverSNI = sni
         DataStore.serverCertificates = certificates
         DataStore.serverPinnedCertificateChain = pinnedPeerCertificateChainSha256
         DataStore.serverPinnedCertificatePublicKey = pinnedPeerCertificatePublicKeySha256
         DataStore.serverPinnedCertificate = pinnedPeerCertificateSha256
-        DataStore.serverUTLSFingerprint = if (http3) "" else utlsFingerprint
+        DataStore.serverUTLSFingerprint = utlsFingerprint
         DataStore.serverEchEnabled = echEnabled
         DataStore.serverEchConfigList = echConfigList
         DataStore.serverEchQueryName = echQueryName
@@ -66,13 +69,15 @@ class MASQUESettingsActivity: ProfileSettingsActivity<MASQUEBean>() {
         username = DataStore.serverUsername
         password = DataStore.serverPassword
         uriTemplate = DataStore.serverMASQUEURITemplate
-        http3 = DataStore.serverProtocol == "http3"
-        sni = DataStore.serverSNI
+        httpVersion = DataStore.serverProtocolVersion
+        security = DataStore.serverSecurity
+        mtu = DataStore.serverMASQUEMTU
+        sni =  DataStore.serverSNI
         certificates = DataStore.serverCertificates
         pinnedPeerCertificateChainSha256 = DataStore.serverPinnedCertificateChain
         pinnedPeerCertificatePublicKeySha256 = DataStore.serverPinnedCertificatePublicKey
         pinnedPeerCertificateSha256 = DataStore.serverPinnedCertificate
-        utlsFingerprint = if (DataStore.serverProtocol == "http3") "" else DataStore.serverUTLSFingerprint
+        utlsFingerprint = DataStore.serverUTLSFingerprint
         echEnabled = DataStore.serverEchEnabled
         echConfigList = DataStore.serverEchConfigList
         echQueryName = DataStore.serverEchQueryName
@@ -82,8 +87,19 @@ class MASQUESettingsActivity: ProfileSettingsActivity<MASQUEBean>() {
         serverNameToVerify = DataStore.serverServerNameToVerify
     }
 
+    lateinit var httpVersion: ListPreference
+    lateinit var securityCategory: PreferenceCategory
+    lateinit var security: ListPreference
+    lateinit var sni: EditTextPreference
+    lateinit var certificates: EditTextPreference
+    lateinit var pinnedCertificateChain: EditTextPreference
+    lateinit var pinnedPeerCertificatePublicKey: EditTextPreference
+    lateinit var pinnedPeerCertificate: EditTextPreference
+    lateinit var allowInsecure: SwitchPreference
     lateinit var utlsFingerprint: ListPreference
-    lateinit var http3: ListPreference
+    lateinit var mtlsCertificate: EditTextPreference
+    lateinit var mtlsCertificatePrivateKey: EditTextPreference
+    lateinit var serverNameToVerify: EditTextPreference
     lateinit var echEnabled: SwitchPreference
     lateinit var echConfigList: EditTextPreference
     lateinit var echQueryName: EditTextPreference
@@ -100,16 +116,19 @@ class MASQUESettingsActivity: ProfileSettingsActivity<MASQUEBean>() {
         findPreference<EditTextPreference>(Key.SERVER_PASSWORD)!!.apply {
             summaryProvider = PasswordSummaryProvider
         }
-        findPreference<EditTextPreference>(Key.SERVER_MTU)!!.apply {
+        findPreference<EditTextPreference>(Key.SERVER_MASQUE_MTU)!!.apply {
             setOnBindEditTextListener(EditTextPreferenceModifiers.Number)
         }
+        httpVersion = findPreference(Key.SERVER_PROTOCOL)!!
+        securityCategory = findPreference(Key.SERVER_SECURITY_CATEGORY)!!
+        security = findPreference(Key.SERVER_SECURITY)!!
+        sni = findPreference(Key.SERVER_SNI)!!
+        certificates = findPreference(Key.SERVER_CERTIFICATES)!!
+        pinnedCertificateChain = findPreference(Key.SERVER_PINNED_CERTIFICATE_CHAIN)!!
+        pinnedPeerCertificatePublicKey = findPreference(Key.SERVER_PINNED_CERTIFICATE_PUBLIC_KEY)!!
+        pinnedPeerCertificate = findPreference(Key.SERVER_PINNED_CERTIFICATE)!!
+        allowInsecure = findPreference(Key.SERVER_ALLOW_INSECURE)!!
         utlsFingerprint = findPreference(Key.SERVER_UTLS_FINGERPRINT)!!
-        http3 = findPreference(Key.SERVER_PROTOCOL)!!
-        utlsFingerprint.isVisible = http3.value != "http3"
-        http3.setOnPreferenceChangeListener { _, newValue ->
-            utlsFingerprint.isVisible = (newValue as String) != "http3"
-            true
-        }
         echEnabled = findPreference(Key.SERVER_ECH_ENABLED)!!
         echConfigList = findPreference(Key.SERVER_ECH_CONFIG_LIST)!!
         echQueryName = findPreference(Key.SERVER_ECH_QUERY_NAME)!!
@@ -120,6 +139,40 @@ class MASQUESettingsActivity: ProfileSettingsActivity<MASQUEBean>() {
             echQueryName.isEnabled = newValue
             true
         }
+        mtlsCertificate = findPreference(Key.SERVER_MTLS_CERTIFICATE)!!
+        mtlsCertificatePrivateKey = findPreference(Key.SERVER_MTLS_CERTIFICATE_PRIVATE_KEY)!!
+        serverNameToVerify = findPreference(Key.SERVER_SERVER_NAME_TO_VERIFY)!!
+        val securityValues = resources.getStringArray(R.array.masque_transport_layer_encryption_value)
+        if (security.value !in securityValues) {
+            security.value = "tls"
+        }
+        updateSecurity(security.value, httpVersion.value.toInt())
+        security.setOnPreferenceChangeListener { _, newValue ->
+            updateSecurity(newValue as String, httpVersion.value.toInt())
+            true
+        }
+        httpVersion.setOnPreferenceChangeListener { _, newValue ->
+            updateSecurity(security.value, (newValue as String).toInt())
+            true
+        }
+    }
+
+    fun updateSecurity(security: String, httpVersion: Int) {
+        val isTLS = security == "tls"
+        securityCategory.isVisible = isTLS
+        certificates.isVisible = isTLS
+        pinnedCertificateChain.isVisible = isTLS
+        pinnedPeerCertificatePublicKey.isVisible = isTLS
+        pinnedPeerCertificate.isVisible = isTLS
+        allowInsecure.isVisible = isTLS
+        sni.isVisible = isTLS
+        mtlsCertificate.isVisible = isTLS
+        mtlsCertificatePrivateKey.isVisible = isTLS
+        serverNameToVerify.isVisible = isTLS
+        echEnabled.isVisible = isTLS
+        echConfigList.isVisible = isTLS
+        echQueryName.isVisible = isTLS
+        utlsFingerprint.isVisible = isTLS && httpVersion == 3
     }
 
 }

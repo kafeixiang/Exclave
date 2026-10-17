@@ -36,7 +36,8 @@ public class MASQUEBean extends AbstractBean {
     public String username;
     public String password;
     public String uriTemplate;
-    public Boolean http3;
+    public Integer httpVersion;
+    public String security;
     public Integer mtu;
     public String sni;
     public String certificates;
@@ -58,8 +59,9 @@ public class MASQUEBean extends AbstractBean {
         if (username == null) username = "";
         if (password == null) password = "";
         if (uriTemplate == null) uriTemplate = "";
-        if (http3 == null) http3 = true;
-        if (mtu == null) mtu = 1280;
+        if (httpVersion == null) httpVersion = 3;
+        if (security == null) security = "tls";
+        if (mtu == null) mtu = 0;
         if (sni == null) sni = "";
         if (certificates == null) certificates = "";
         if (pinnedPeerCertificateChainSha256 == null) pinnedPeerCertificateChainSha256 = "";
@@ -77,12 +79,13 @@ public class MASQUEBean extends AbstractBean {
 
     @Override
     public void serialize(ByteBufferOutput output) {
-        output.writeInt(0);
+        output.writeInt(1);
         super.serialize(output);
         output.writeString(username);
         output.writeString(password);
         output.writeString(uriTemplate);
-        output.writeBoolean(http3);
+        output.writeInt(httpVersion);
+        output.writeString(security);
         output.writeInt(mtu);
         output.writeString(sni);
         output.writeString(certificates);
@@ -106,7 +109,21 @@ public class MASQUEBean extends AbstractBean {
         username = input.readString();
         password = input.readString();
         uriTemplate = input.readString();
-        http3 = input.readBoolean();
+        if (version >= 1) {
+            httpVersion = input.readInt();
+        } else {
+            boolean http3 = input.readBoolean();
+            if (http3) {
+                httpVersion = 3;
+            } else {
+                httpVersion = 2;
+            }
+        }
+        if (version >= 1) {
+            security = input.readString();
+        } else {
+            security = "tls";
+        }
         mtu = input.readInt();
         sni = input.readString();
         certificates = input.readString();

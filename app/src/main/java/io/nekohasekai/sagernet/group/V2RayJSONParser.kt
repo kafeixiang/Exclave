@@ -2176,84 +2176,90 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                 settings.getString("uriTemplate")?.also {
                     masqueBean.uriTemplate = it
                 }
-                masqueBean.http3 = settings.getBoolean("http3") ?: false
+                settings.getInt("version")?.takeIf { it in 1..3 }?.also {
+                    masqueBean.httpVersion = it
+                } ?: return listOf()
                 settings.getInt("mtu")?.takeIf { it > 0 }?.also {
                     masqueBean.mtu = it
                 }
             }
             outbound.getObject("streamSettings")?.also { streamSettings ->
-                if (streamSettings.getString("security") != "tls") return listOf()
-                streamSettings.getObject("tlsSettings")?.also { tlsSettings ->
-                    tlsSettings.getString("serverName")?.also {
-                        masqueBean.sni = it
-                    }
-                    tlsSettings.getBoolean("allowInsecure")?.also {
-                        masqueBean.allowInsecure = it
-                    }
-                    tlsSettings.getArray("certificates")?.asReversed()?.forEach { certificate ->
-                        when (certificate.getString("usage")?.lowercase()) {
-                            null, "", "encipherment" -> {
-                                if (!certificate.contains("certificateFile") && !certificate.contains("keyFile")) {
-                                    val cert = certificate.getStringArray("certificate")?.joinToString("\n")?.takeIf {
-                                        it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                val tlsEnabled = streamSettings.getString("security") == "tls"
+                if (masqueBean.httpVersion != 1 && !tlsEnabled) return listOf()
+                masqueBean.security = if (tlsEnabled) "tls" else ""
+                if (tlsEnabled) {
+                    streamSettings.getObject("tlsSettings")?.also { tlsSettings ->
+                        tlsSettings.getString("serverName")?.also {
+                            masqueBean.sni = it
+                        }
+                        tlsSettings.getBoolean("allowInsecure")?.also {
+                            masqueBean.allowInsecure = it
+                        }
+                        tlsSettings.getArray("certificates")?.asReversed()?.forEach { certificate ->
+                            when (certificate.getString("usage")?.lowercase()) {
+                                null, "", "encipherment" -> {
+                                    if (!certificate.contains("certificateFile") && !certificate.contains("keyFile")) {
+                                        val cert = certificate.getStringArray("certificate")?.joinToString("\n")?.takeIf {
+                                            it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                        }
+                                        val key = certificate.getStringArray("key")?.joinToString("\n")?.takeIf {
+                                            it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
+                                        }
+                                        if (cert != null && key != null) {
+                                            masqueBean.mtlsCertificate = cert
+                                            masqueBean.mtlsCertificatePrivateKey = key
+                                        }
                                     }
-                                    val key = certificate.getStringArray("key")?.joinToString("\n")?.takeIf {
-                                        it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" PRIVATE KEY-----")
-                                    }
-                                    if (cert != null && key != null) {
-                                        masqueBean.mtlsCertificate = cert
-                                        masqueBean.mtlsCertificatePrivateKey = key
+                                }
+                                "verify" -> {
+                                    if (!certificate.contains("certificateFile")) {
+                                        val cert = certificate.getStringArray("certificate")?.joinToString("\n")?.takeIf {
+                                            it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
+                                        }
+                                        if (cert != null) {
+                                            masqueBean.certificates = cert
+                                        }
                                     }
                                 }
                             }
-                            "verify" -> {
-                                if (!certificate.contains("certificateFile")) {
-                                    val cert = certificate.getStringArray("certificate")?.joinToString("\n")?.takeIf {
-                                        it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
-                                    }
-                                    if (cert != null) {
-                                        masqueBean.certificates = cert
-                                    }
-                                }
+                        }
+                        tlsSettings.getStringArray("pinnedPeerCertificateChainSha256")?.takeIf { it.isNotEmpty() }?.also {
+                            masqueBean.pinnedPeerCertificateChainSha256 = it.joinToString("\n")
+                            tlsSettings.getBoolean("allowInsecureIfPinnedPeerCertificate")?.also { allowInsecure ->
+                                masqueBean.allowInsecure = allowInsecure
                             }
                         }
-                    }
-                    tlsSettings.getStringArray("pinnedPeerCertificateChainSha256")?.takeIf { it.isNotEmpty() }?.also {
-                        masqueBean.pinnedPeerCertificateChainSha256 = it.joinToString("\n")
-                        tlsSettings.getBoolean("allowInsecureIfPinnedPeerCertificate")?.also { allowInsecure ->
-                            masqueBean.allowInsecure = allowInsecure
+                        tlsSettings.getStringArray("pinnedPeerCertificatePublicKeySha256")?.takeIf { it.isNotEmpty() }?.also {
+                            masqueBean.pinnedPeerCertificatePublicKeySha256 = it.joinToString("\n")
+                            tlsSettings.getBoolean("allowInsecureIfPinnedPeerCertificate")?.also { allowInsecure ->
+                                masqueBean.allowInsecure = allowInsecure
+                            }
                         }
-                    }
-                    tlsSettings.getStringArray("pinnedPeerCertificatePublicKeySha256")?.takeIf { it.isNotEmpty() }?.also {
-                        masqueBean.pinnedPeerCertificatePublicKeySha256 = it.joinToString("\n")
-                        tlsSettings.getBoolean("allowInsecureIfPinnedPeerCertificate")?.also { allowInsecure ->
-                            masqueBean.allowInsecure = allowInsecure
+                        tlsSettings.getStringArray("pinnedPeerCertificateSha256")?.takeIf { it.isNotEmpty() }?.also {
+                            masqueBean.pinnedPeerCertificateSha256 = it.joinToString("\n")
+                            tlsSettings.getBoolean("allowInsecureIfPinnedPeerCertificate")?.also { allowInsecure ->
+                                masqueBean.allowInsecure = allowInsecure
+                            }
                         }
-                    }
-                    tlsSettings.getStringArray("pinnedPeerCertificateSha256")?.takeIf { it.isNotEmpty() }?.also {
-                        masqueBean.pinnedPeerCertificateSha256 = it.joinToString("\n")
-                        tlsSettings.getBoolean("allowInsecureIfPinnedPeerCertificate")?.also { allowInsecure ->
-                            masqueBean.allowInsecure = allowInsecure
-                        }
-                    }
-                    tlsSettings.getStringArray("serverNameToVerify")?.takeIf { it.isNotEmpty() }?.also {
-                        masqueBean.serverNameToVerify = it.joinToString("\n")
-                    }
-                    tlsSettings.getString("pinnedPeerCertSha256")?.takeIf { it.isNotEmpty() }?.also { pcs ->
-                        // https://github.com/XTLS/Xray-core/commit/0ca13452b8e99824e08c2c860dd0f84a4ae2859d
-                        masqueBean.pinnedPeerCertificateSha256 =
-                            pcs.split(",")
-                                .mapNotNull { it.trim().ifEmpty { null }?.replace(":", "") }
-                                .joinToString("\n")
-                        if (!masqueBean.pinnedPeerCertificateSha256.isNullOrEmpty()) {
-                            masqueBean.allowInsecure = true
-                        }
-                    }
-                    tlsSettings.getString("verifyPeerCertByName")?.split(",")
-                        ?.filter { it.isNotEmpty() }?.takeIf { it.isNotEmpty() }?.also {
-                            // Xray verifyPeerCertByName
+                        tlsSettings.getStringArray("serverNameToVerify")?.takeIf { it.isNotEmpty() }?.also {
                             masqueBean.serverNameToVerify = it.joinToString("\n")
                         }
+                        tlsSettings.getString("pinnedPeerCertSha256")?.takeIf { it.isNotEmpty() }?.also { pcs ->
+                            // https://github.com/XTLS/Xray-core/commit/0ca13452b8e99824e08c2c860dd0f84a4ae2859d
+                            masqueBean.pinnedPeerCertificateSha256 =
+                                pcs.split(",")
+                                    .mapNotNull { it.trim().ifEmpty { null }?.replace(":", "") }
+                                    .joinToString("\n")
+                            if (!masqueBean.pinnedPeerCertificateSha256.isNullOrEmpty()) {
+                                masqueBean.allowInsecure = true
+                            }
+                        }
+                        tlsSettings.getString("verifyPeerCertByName")?.split(",")
+                            ?.filter { it.isNotEmpty() }?.takeIf { it.isNotEmpty() }?.also {
+                                // Xray verifyPeerCertByName
+                                masqueBean.serverNameToVerify = it.joinToString("\n")
+                            }
+                    }
                 }
                 (streamSettings.getString("method") ?: streamSettings.getString("network"))?.lowercase()?.also { network ->
                     when (network) {
@@ -2265,7 +2271,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                             }?: streamSettings.getObject("tlsSettings")?.getString("alpn")?.also {
                                 alpn.add(it)
                             }
-                            masqueBean.http3 = !(alpn.contains("h2") && !alpn.contains("h3"))
+                            masqueBean.httpVersion = if (!(alpn.contains("h2") && !alpn.contains("h3"))) 3 else 2
                             streamSettings.getObject("masqueSettings")?.also { masqueSettings ->
                                 masqueSettings.getObject("warp")?.also {
                                     return listOf()
@@ -2297,7 +2303,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                     }
                     streamSettings.getObject("finalmask")?.also { finalmask ->
                         // ban Xray finalmask
-                        finalmask.getArray(if (masqueBean.http3) "udp" else "tcp")?.takeIf { it.isNotEmpty() }?.also {
+                        finalmask.getArray(if (masqueBean.httpVersion == 3) "udp" else "tcp")?.takeIf { it.isNotEmpty() }?.also {
                             return listOf()
                         }
                     }
