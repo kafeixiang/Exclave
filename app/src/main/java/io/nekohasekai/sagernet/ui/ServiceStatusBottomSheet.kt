@@ -84,6 +84,12 @@ class ServiceStatusBottomSheet(
                             ContextCompat.getColor(context, R.color.cupertino_green)
                         )
                     }
+                    latency == -1 -> {
+                        itemBinding.serviceLatency.text = "--"
+                        itemBinding.serviceLatency.setTextColor(
+                            ContextCompat.getColor(context, R.color.material_grey_500)
+                        )
+                    }
                     else -> {
                         itemBinding.serviceLatency.text = context.getString(R.string.unavailable)
                         itemBinding.serviceLatency.setTextColor(

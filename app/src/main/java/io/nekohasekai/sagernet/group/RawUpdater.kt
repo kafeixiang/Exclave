@@ -182,6 +182,7 @@ object RawUpdater : GroupUpdater() {
                         if (proxy is StandardV2RayBean && proxy.sni.isNullOrEmpty()) {
                             proxy.sni = proxy.serverAddress
                         }
+                        proxy.serverAddress = resolved
                         proxy.finalAddress = resolved
                     }
                 }

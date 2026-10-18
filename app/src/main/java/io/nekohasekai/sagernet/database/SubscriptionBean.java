@@ -120,10 +120,12 @@ public class SubscriptionBean extends Serializable {
         } else {
             link = input.readString();
         }
-        if (version >= 6) {
+        if (version >= 10) {
             subscriptionForceResolve = input.readBoolean();
-        } else {
+        } else if (version < 6) {
             input.readBoolean(); // forceResolve, removed
+        } else {
+            subscriptionForceResolve = false;
         }
         deduplication = input.readBoolean();
         if (version < 2) input.readBoolean();
@@ -201,10 +203,12 @@ public class SubscriptionBean extends Serializable {
         } else {
             link = input.readString();
         }
-        if (version >= 6) {
+        if (version >= 8) {
             subscriptionForceResolve = input.readBoolean();
-        } else if (version >= 5) {
+        } else if (version < 5) {
             input.readBoolean(); // forceResolve, removed
+        } else {
+            subscriptionForceResolve = false;
         }
         deduplication = input.readBoolean();
         if (version < 1) input.readBoolean();
