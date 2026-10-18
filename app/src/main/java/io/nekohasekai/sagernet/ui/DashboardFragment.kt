@@ -53,6 +53,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
+import java.net.InetSocketAddress
+import java.net.Proxy
 import java.net.URL
 import java.util.Collections
 import java.util.Locale
@@ -471,7 +473,15 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             lifecycleScope.launch(Dispatchers.IO) {
                 val time = try {
                     measureTimeMillis {
-                        val connection = URL(target.testUrl).openConnection() as HttpURLConnection
+                        val connection = if (SagerNet.started && DataStore.requireSocks) {
+                            val proxy = Proxy(
+                                Proxy.Type.SOCKS,
+                                InetSocketAddress("127.0.0.1", DataStore.socksPort)
+                            )
+                            URL(target.testUrl).openConnection(proxy) as HttpURLConnection
+                        } else {
+                            URL(target.testUrl).openConnection() as HttpURLConnection
+                        }
                         connection.connectTimeout = 4000
                         connection.readTimeout = 4000
                         connection.instanceFollowRedirects = true
@@ -480,7 +490,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         connection.disconnect()
                     }
                 } catch (_: Exception) {
-                    -1L
+                    -3L
                 }
 
                 withContext(Dispatchers.Main) {
@@ -988,6 +998,12 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         binding.selectedServiceStatusPill.setTextColor(ContextCompat.getColor(context, R.color.cupertino_green))
                         binding.selectedServiceLatency.text = context.getString(R.string.available, latency)
                         binding.selectedServiceLatency.setTextColor(ContextCompat.getColor(context, R.color.cupertino_green))
+                    }
+                    latency == -1 -> {
+                        binding.selectedServiceStatusPill.text = context.getString(R.string.untested)
+                        binding.selectedServiceStatusPill.setTextColor(ContextCompat.getColor(context, R.color.material_grey_500))
+                        binding.selectedServiceLatency.text = "--"
+                        binding.selectedServiceLatency.setTextColor(ContextCompat.getColor(context, R.color.material_grey_500))
                     }
                     else -> {
                         binding.selectedServiceStatusPill.text = context.getString(R.string.unavailable)
