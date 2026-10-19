@@ -848,8 +848,6 @@ fun buildV2RayConfig(
                                             tlsSettings = TLSObject().apply {
                                                 if (bean.sni.isNotEmpty()) {
                                                     serverName = bean.sni
-                                                } else if (bean.host.isNotEmpty()) {
-                                                    serverName = bean.host
                                                 }
                                                 if (bean.alpn.isNotEmpty()) {
                                                     alpn = bean.alpn.listByLineOrComma()
@@ -911,8 +909,6 @@ fun buildV2RayConfig(
                                             realitySettings = RealityObject().apply {
                                                 if (bean.sni.isNotEmpty()) {
                                                     serverName = bean.sni
-                                                } else if (bean.host.isNotEmpty()) {
-                                                    serverName = bean.host
                                                 }
                                                 if (bean.realityPublicKey.isNotEmpty()) {
                                                     publicKey = bean.realityPublicKey
