@@ -3038,7 +3038,6 @@ fun buildCustomConfig(proxy: ProxyEntity, forTest: Boolean = false, forExport: B
                     routeOnly = DataStore.trafficSniffing && !DataStore.destinationOverride
                 }
             }
-            if (shouldDumpUID) dumpUID = true
         })
         inbounds.add(InboundObject().apply {
             tag = TAG_DNS_IN
