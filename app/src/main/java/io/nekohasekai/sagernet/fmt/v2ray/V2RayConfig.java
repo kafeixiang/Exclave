@@ -1016,6 +1016,7 @@ public class V2RayConfig {
 
         public String address;
         public Integer port;
+        public Integer level;
         public List<String> portRange;
         public String username;
         public String password;
@@ -1056,6 +1057,7 @@ public class V2RayConfig {
 
         public String address;
         public Integer port;
+        public Integer level;
         public String username;
         public String password;
         public Map<String, String> headers;
