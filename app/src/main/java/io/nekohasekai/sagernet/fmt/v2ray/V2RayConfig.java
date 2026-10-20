@@ -1062,7 +1062,7 @@ public class V2RayConfig {
         public String password;
         public Map<String, String> headers;
         public String uriTemplate;
-        public Integer version;
+        public Boolean http3;
         public Integer mtu;
         public String serverName;
         public String domainStrategy;
