@@ -332,12 +332,34 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                         v2rayBean.password = it
                     }
                     outbound.getString("plugin")?.takeIf { it.isNotEmpty() }?.also { pluginId ->
-                        if (pluginId != "obfs-local" && pluginId != "v2ray-plugin") return listOf()
-                        // In sing-box, v2ray-plugin quic mode sends ALPN "h3" but nobody complains about it.
-                        // Let's assume nobody uses v2ray-plugin quic mode in sing-box. Keep it broken.
-                        // https://github.com/SagerNet/sing-box/pull/1934
-                        // https://github.com/ExclaveNetwork/Exclave/issues/488
-                        v2rayBean.plugin = PluginOptions(pluginId, outbound.getString("plugin_opts")).toString(trimId = false)
+                        val pluginOpts = PluginOptions(pluginId, outbound.getString("plugin_opts"))
+                        when (pluginId) {
+                            "v2ray-plugin" -> {
+                                // In sing-box, v2ray-plugin quic mode sends ALPN "h3" but nobody complains about it.
+                                // Let's assume nobody uses v2ray-plugin quic mode in sing-box. Keep it broken.
+                                // https://github.com/SagerNet/sing-box/pull/1934
+                                // https://github.com/ExclaveNetwork/Exclave/issues/488
+                            }
+                            "obfs-local" -> {
+                                // FIXME: https://github.com/shadowsocks/simple-obfs does not support "obfs-host=",
+                                // This works only because of implementation differences.
+                                if (!pluginOpts.containsKey("obfs-host")) {
+                                    when (pluginOpts["obfs"]) {
+                                        "tls" -> {
+                                            // send SNI extension with zero Server Name length
+                                            pluginOpts["obfs-host"] = ""
+                                        }
+                                        else -> { // http
+                                            // https://github.com/SagerNet/sing-box/blob/dfb80349bf5779ec0a3f834c9ec2794345bff8f0/transport/simple-obfs/http.go#L71-L74
+                                            // Send empty Host if port is 80, otherwise send something like ":81" as Host
+                                            pluginOpts["obfs-host"] = if (v2rayBean.serverPort == 80) "" else ":${v2rayBean.serverPort}"
+                                        }
+                                    }
+                                }
+                            }
+                            else -> return listOf()
+                        }
+                        v2rayBean.plugin = pluginOpts.toString(trimId = false)
                     }
                 }
                 "trojan" -> {
