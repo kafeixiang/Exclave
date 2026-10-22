@@ -145,9 +145,8 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                             // https://github.com/MetaCubeX/mihomo/blob/903371719021d74cbec9cd24efb66e386c8b7595/adapter/outbound/shadowsocks.go#L307
                             null -> pluginOpts["obfs-host"] = "bing.com"
                             "" -> {
-                                // FIXME: https://github.com/shadowsocks/simple-obfs does not support "obfs-host=",
-                                // This works only because of implementation differences.
-                                pluginOpts["obfs-host"] = host
+                                // https://github.com/shadowsocks/simple-obfs does not support "obfs-host="
+                                pluginOpts["obfs-host"] = "bing.com"
                             }
                             else -> pluginOpts["obfs-host"] = host
                         }

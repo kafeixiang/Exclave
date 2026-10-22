@@ -341,20 +341,10 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                                 // https://github.com/ExclaveNetwork/Exclave/issues/488
                             }
                             "obfs-local" -> {
-                                // FIXME: https://github.com/shadowsocks/simple-obfs does not support "obfs-host=",
-                                // This works only because of implementation differences.
-                                if (!pluginOpts.containsKey("obfs-host")) {
-                                    when (pluginOpts["obfs"]) {
-                                        "tls" -> {
-                                            // send SNI extension with zero Server Name length
-                                            pluginOpts["obfs-host"] = ""
-                                        }
-                                        else -> { // http
-                                            // https://github.com/SagerNet/sing-box/blob/dfb80349bf5779ec0a3f834c9ec2794345bff8f0/transport/simple-obfs/http.go#L71-L74
-                                            // Send empty Host if port is 80, otherwise send something like ":81" as Host
-                                            pluginOpts["obfs-host"] = if (v2rayBean.serverPort == 80) "" else ":${v2rayBean.serverPort}"
-                                        }
-                                    }
+                                // unlike https://github.com/shadowsocks/simple-obfs, sing-box default to "", not "cloudfront.net".
+                                // However, https://github.com/shadowsocks/simple-obfs does not support "obfs-host=".
+                                if (pluginOpts["obfs-host"] == "") {
+                                    pluginOpts.remove("obfs-host")
                                 }
                             }
                             else -> return listOf()
