@@ -372,8 +372,11 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
             if (bean.type == "tcp" && bean.headerType != null && bean.headerType == "http") {
                 proxy.getObject("http-opts")?.also {
                     bean.path = it.getStringArray("path")?.joinToString("\n")
+                    // https://github.com/MetaCubeX/mihomo/blob/3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8/adapter/outbound/vmess.go#L253-L255
+                    // https://github.com/MetaCubeX/mihomo/blob/3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8/transport/vmess/http.go#L61-L64
                     val headers = it.getObject("headers") as? Map<String, List<String>>
                     bean.host = headers?.getStringArray("host")?.joinToString("\n")
+                        ?: bean.serverAddress
                 }
             }
             if (bean.type == "ws") {
