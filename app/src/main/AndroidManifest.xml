@@ -388,6 +388,14 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name="io.nekohasekai.sagernet.bg.test.UrlTestCancelReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="io.nekohasekai.sagernet.ACTION_CANCEL_URL_TEST" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

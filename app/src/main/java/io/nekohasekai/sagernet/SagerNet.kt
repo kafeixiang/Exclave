@@ -296,6 +296,10 @@ class SagerNet : Application(),
                             "service-subscription",
                             application.getText(R.string.service_subscription),
                             NotificationManager.IMPORTANCE_DEFAULT
+                        ), NotificationChannel(
+                            "service-test",
+                            application.getText(R.string.connection_test),
+                            NotificationManager.IMPORTANCE_LOW
                         )
                     )
                 )

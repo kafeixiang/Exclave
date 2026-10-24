@@ -59,6 +59,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import io.nekohasekai.sagernet.*
 import io.nekohasekai.sagernet.aidl.TrafficStats
 import io.nekohasekai.sagernet.bg.BaseService
+import io.nekohasekai.sagernet.bg.test.UrlTestManager
 import io.nekohasekai.sagernet.bg.test.V2RayTestInstance
 import io.nekohasekai.sagernet.database.*
 import io.nekohasekai.sagernet.databinding.LayoutAppsItemBinding
@@ -227,6 +228,13 @@ class ConfigurationFragment @JvmOverloads constructor(
         tabLayout = view.findViewById(R.id.group_tab)
         adapter = GroupPagerAdapter()
         ProfileManager.addListener(adapter)
+
+        if (arguments?.getBoolean("open_url_test") == true) {
+            arguments?.remove("open_url_test")
+            view.post {
+                urlTest()
+            }
+        }
         GroupManager.addListener(adapter)
 
         groupPager.adapter = adapter
@@ -801,44 +809,121 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
     }
 
-    inner class TestDialog {
+    inner class TestDialog(val isResuming: Boolean = false) : UrlTestManager.Listener {
         val binding = LayoutProgressListBinding.inflate(layoutInflater)
-        val builder = MaterialAlertDialogBuilder(requireContext()).setView(binding.root)
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
-                close()
-                cancel()
-            }
-            .setNeutralButton(" ", null)
-            .setCancelable(false)
-        lateinit var cancel: () -> Unit
+        lateinit var dialog: AlertDialog
         val results = ArrayList<ProxyEntity>()
         val adapter = TestAdapter()
         val scrollTimer = Timer("insert timer")
         var currentTask: TimerTask? = null
 
-        fun insert(profile: ProxyEntity) {
+        fun show(): AlertDialog {
+            dialog = MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.connection_test_url_test)
+                .setView(binding.root)
+                .setPositiveButton(R.string.run_in_background) { _, _ ->
+                    (activity as? MainActivity)?.snackbar(getString(R.string.url_test_running_background))?.show()
+                }
+                .setNegativeButton(android.R.string.cancel) { _, _ ->
+                    if (UrlTestManager.isTesting) {
+                        UrlTestManager.cancelTest()
+                        (activity as? MainActivity)?.snackbar(getString(R.string.url_test_cancelled))?.show()
+                    }
+                }
+                .setNeutralButton(" ", null)
+                .setCancelable(true)
+                .setOnDismissListener {
+                    close()
+                    UrlTestManager.unregisterListener(this)
+                }
+                .create()
+
+            dialog.applyGlassBlur()
+            dialog.show()
+
+            dialog.getButton(DialogInterface.BUTTON_NEUTRAL).isEnabled = false
+
+            results.clear()
+            results.addAll(UrlTestManager.results)
+            adapter.notifyDataSetChanged()
+
+            if (UrlTestManager.totalCount > 0) {
+                val progress = ((UrlTestManager.finishedCount.toDouble() / UrlTestManager.totalCount.toDouble()) * 100).toInt()
+                binding.progressCircular.apply {
+                    isVisible = true
+                    setProgressCompat(progress, false)
+                }
+                dialog.getButton(DialogInterface.BUTTON_NEUTRAL).text =
+                    "${UrlTestManager.finishedCount}/${UrlTestManager.totalCount}"
+            }
+
+            if (!UrlTestManager.isTesting && UrlTestManager.finishedCount > 0) {
+                binding.progressCircular.isGone = true
+                dialog.getButton(DialogInterface.BUTTON_POSITIVE)?.isVisible = false
+                dialog.getButton(DialogInterface.BUTTON_NEGATIVE)?.setText(android.R.string.ok)
+            }
+
+            UrlTestManager.registerListener(this)
+            return dialog
+        }
+
+        override fun onTestStarted(total: Int) {
+            runOnMainDispatcher {
+                binding.progressCircular.isVisible = true
+                binding.progressCircular.setProgressCompat(0, false)
+                dialog.getButton(DialogInterface.BUTTON_NEUTRAL)?.text = "0/$total"
+            }
+        }
+
+        override fun onProfileAdded(profile: ProxyEntity) {
             binding.listView.post {
-                results.add(profile)
-                val index = results.size - 1
-                adapter.notifyItemInserted(index)
-                try {
-                    scrollTimer.schedule(timerTask {
-                        binding.listView.post {
-                            if (currentTask == this) binding.listView.smoothScrollToPosition(index)
-                        }
-                    }.also {
-                        currentTask?.cancel()
-                        currentTask = it
-                    }, 500L)
-                } catch (ignored: Exception) {
+                val index = results.indexOfFirst { it.id == profile.id }
+                if (index == -1) {
+                    results.add(profile)
+                    val newIndex = results.size - 1
+                    adapter.notifyItemInserted(newIndex)
+                    try {
+                        scrollTimer.schedule(timerTask {
+                            binding.listView.post {
+                                if (currentTask == this) binding.listView.smoothScrollToPosition(newIndex)
+                            }
+                        }.also {
+                            currentTask?.cancel()
+                            currentTask = it
+                        }, 500L)
+                    } catch (_: Exception) {}
                 }
             }
         }
 
-        fun update(profile: ProxyEntity) {
+        override fun onProfileUpdated(profile: ProxyEntity, finished: Int, total: Int) {
             binding.listView.post {
-                val index = results.indexOf(profile)
-                adapter.notifyItemChanged(index)
+                val index = results.indexOfFirst { it.id == profile.id }
+                if (index != -1) {
+                    results[index] = profile
+                    adapter.notifyItemChanged(index)
+                }
+                binding.progressCircular.apply {
+                    isVisible = true
+                    setProgressCompat(((finished.toDouble() / total.toDouble()) * 100).toInt(), true)
+                }
+                dialog.getButton(DialogInterface.BUTTON_NEUTRAL)?.text = "$finished/$total"
+            }
+        }
+
+        override fun onTestCompleted(successCount: Int, total: Int) {
+            runOnMainDispatcher {
+                binding.progressCircular.isGone = true
+                dialog.getButton(DialogInterface.BUTTON_POSITIVE)?.isVisible = false
+                dialog.getButton(DialogInterface.BUTTON_NEGATIVE)?.setText(android.R.string.ok)
+                dialog.getButton(DialogInterface.BUTTON_NEUTRAL)?.text = "$successCount/$total"
+            }
+        }
+
+        override fun onTestCancelled() {
+            runOnMainDispatcher {
+                close()
+                dialog.dismiss()
             }
         }
 
@@ -847,8 +932,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 scrollTimer.schedule(timerTask {
                     scrollTimer.cancel()
                 }, 0)
-            } catch (ignored: Exception) {
-            }
+            } catch (_: Exception) {}
         }
 
         init {
@@ -944,84 +1028,12 @@ class ConfigurationFragment @JvmOverloads constructor(
 
     @Suppress("EXPERIMENTAL_API_USAGE")
     fun urlTest() {
-        val test = TestDialog()
-        val dialog = test.builder.show()
-        dialog.getButton(DialogInterface.BUTTON_NEUTRAL).isEnabled = false
-        val testJobs = mutableListOf<Job>()
-
-        val mainJob = runOnDefaultDispatcher {
+        if (!UrlTestManager.isTesting) {
             val group = DataStore.currentGroup()
-            var profilesUnfiltered = SagerDatabase.proxyDao.getByGroup(group.id)
-            profilesUnfiltered = profilesUnfiltered.filter {
-                !it.useBrowserForwarder()
-            }
-            val profiles = ConcurrentLinkedQueue(profilesUnfiltered)
-
-            val profileCount = profilesUnfiltered.size
-            var finishedProfileCount = 0
-            //stopService()
-
-            val link = DataStore.connectionTestURL
-            val timeout = 5000
-
-            repeat(6) {
-                testJobs.add(launch {
-                    while (isActive) {
-                        val profile = profiles.poll() ?: break
-                        profile.status = 0
-                        test.insert(profile)
-
-                        try {
-                            val instance = if (DataStore.tunImplementation == TunImplementation.SYSTEM && DataStore.serviceMode == Key.MODE_VPN && SagerNet.started && DataStore.startedProfile > 0) {
-                                V2RayTestInstance(profile, link, timeout, protectPath = SagerNet.deviceStorage.noBackupFilesDir.toString() + "/protect_path")
-                            } else {
-                                V2RayTestInstance(profile, link, timeout)
-                            }
-                            val result = instance.use {
-                                it.doTest()
-                            }
-                            profile.status = 1
-                            profile.ping = result
-                        } catch (e: PluginManager.PluginNotFoundException) {
-                            profile.status = -1
-                            profile.error = e.readableMessage
-                        } catch (e: Exception) {
-                            profile.status = 3
-                            profile.error = e.readableMessage
-                        }
-                        onMainDispatcher {
-                            finishedProfileCount++
-                            test.binding.progressCircular.apply {
-                                isVisible = true
-                                setProgressCompat(
-                                    ((finishedProfileCount.toDouble() / profileCount.toDouble()) * 100).toInt(),
-                                    true
-                                )
-                            }
-                            // TODO: fix l10n
-                            dialog.getButton(DialogInterface.BUTTON_NEUTRAL).text = "$finishedProfileCount/$profileCount"
-                        }
-
-                        test.update(profile)
-                        ProfileManager.updateProfile(profile)
-                    }
-                })
-            }
-
-            testJobs.joinAll()
-            test.close()
-            onMainDispatcher {
-                test.binding.progressCircular.isGone = true
-                dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setText(android.R.string.ok)
-            }
+            UrlTestManager.startTest(requireContext(), group.id)
         }
-        test.cancel = {
-            mainJob.cancel()
-            runOnDefaultDispatcher {
-                GroupManager.postReload(DataStore.currentGroupId())
-                MatsuriJSInterface.Default.destroyAllJsi()
-            }
-        }
+        val test = TestDialog(isResuming = UrlTestManager.isTesting)
+        test.show()
     }
 
     fun stateChanged(state: BaseService.State, profileName: String?) {
