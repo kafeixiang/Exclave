@@ -1462,6 +1462,7 @@ fun buildV2RayConfig(
                                         port = bean.serverPort
                                         token = bean.token
                                         password = bean.token
+                                        uuid = Uuid.NIL.toHexDashString()
                                         congestionControl = bean.congestionController
                                         udpRelayMode = bean.udpRelayMode
                                         if (bean.heartbeat != null && bean.heartbeat > 0) heartbeat = bean.heartbeat

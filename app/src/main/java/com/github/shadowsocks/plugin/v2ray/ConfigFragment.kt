@@ -46,10 +46,7 @@ class ConfigFragment : PreferenceFragmentCompat(), Preference.OnPreferenceChange
         "websocket-http" -> Pair(null, false)
         "websocket-tls" -> Pair(null, true)
         "quic-tls" -> Pair("quic", false)
-        else -> {
-            check(false)
-            Pair(null, false)
-        }
+        else -> Pair(null, false)
     }
 
     val options get() = PluginOptions().apply {

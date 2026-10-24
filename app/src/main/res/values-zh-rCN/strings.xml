@@ -302,6 +302,7 @@
     <string name="probe_interval">负载均衡观测间隔（秒）</string>
     <string name="available">%d ms</string>
     <string name="unavailable">不可用</string>
+    <string name="untested">未测试</string>
     <string name="always_show_address">始终显示地址</string>
     <string name="always_show_address_sum">始终在配置卡片上显示服务器地址</string>
     <string name="clear_traffic_statistics">清空流量统计数据</string>

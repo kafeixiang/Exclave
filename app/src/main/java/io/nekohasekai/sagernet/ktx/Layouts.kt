@@ -149,21 +149,9 @@ private class FrostedCardItemDecoration : RecyclerView.ItemDecoration() {
     override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
         try {
             val context = parent.context
-            if (Theme.isCupertino()) {
-                val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
-                val baseSurface = ContextCompat.getColor(context, R.color.surface_glass)
-                val tintAlpha = if (Theme.usingNightMode()) 18 else 24
-                fillPaint.color = ColorUtils.compositeColors(ColorUtils.setAlphaComponent(accent, tintAlpha), baseSurface)
-                strokePaint.color = ColorUtils.compositeColors(
-                    ColorUtils.setAlphaComponent(accent, 35),
-                    ContextCompat.getColor(context, R.color.card_stroke)
-                )
-                dividerPaint.color = if (Theme.usingNightMode()) 0x26FFFFFF.toInt() else 0x14000000.toInt()
-            } else {
-                fillPaint.color = ContextCompat.getColor(context, R.color.surface_glass)
-                strokePaint.color = ContextCompat.getColor(context, R.color.card_stroke)
-                dividerPaint.color = if (Theme.usingNightMode()) 0x26FFFFFF.toInt() else 0x14000000.toInt()
-            }
+            fillPaint.color = Theme.getCardBackgroundColor(context, false)
+            strokePaint.color = Theme.getCardStrokeColor(context, false)
+            dividerPaint.color = if (Theme.usingNightMode()) 0x26FFFFFF.toInt() else 0x14000000.toInt()
 
             val adapter = parent.adapter as? androidx.preference.PreferenceGroupAdapter
             val childCount = parent.childCount
@@ -297,12 +285,13 @@ private fun applyFrostedStyle(view: View?, isDirectItem: Boolean = true) {
         }
     }
     if (view is com.google.android.material.card.MaterialCardView) {
+        val ctx = view.context
+        view.setCardBackgroundColor(Theme.getCardBackgroundColor(ctx, false))
+        view.strokeColor = Theme.getCardStrokeColor(ctx, false)
+        view.strokeWidth = ctx.resources.getDimensionPixelSize(R.dimen.card_stroke_width)
         if (view.getTag(R.id.tag_custom_style) == true) return
         view.setTag(R.id.tag_custom_style, true)
-        view.setCardBackgroundColor(ContextCompat.getColor(view.context, R.color.surface_glass))
-        view.strokeColor = ContextCompat.getColor(view.context, R.color.card_stroke)
-        view.strokeWidth = dp2px(1) 
-        view.radius = dp2px(24).toFloat()
+        view.radius = dp2px(20).toFloat()
         view.cardElevation = 0f
         view.maxCardElevation = 0f
         view.preventCornerOverlap = false
@@ -314,7 +303,7 @@ private fun applyFrostedStyle(view: View?, isDirectItem: Boolean = true) {
                 val h = v.height
                 if (w <= 0 || h <= 0) return
                 try {
-                    val r = minOf(dp2px(24).toFloat(), w / 2f, h / 2f).coerceAtLeast(0f)
+                    val r = minOf(dp2px(20).toFloat(), w / 2f, h / 2f).coerceAtLeast(0f)
                     outline.setRoundRect(0, 0, w, h, r)
                 } catch (_: Exception) {
                     try {
@@ -366,9 +355,9 @@ private fun applyFrostedStyle(view: View?, isDirectItem: Boolean = true) {
             view.setTag(R.id.tag_custom_style, true)
             val ctx = view.context
             val glassDrawable = android.graphics.drawable.GradientDrawable().apply {
-                setColor(ContextCompat.getColor(ctx, R.color.surface_glass))
+                setColor(Theme.getCardBackgroundColor(ctx, false))
                 cornerRadius = dp2px(16).toFloat()
-                setStroke(dp2px(1), ContextCompat.getColor(ctx, R.color.card_stroke))
+                setStroke(dp2px(1), Theme.getCardStrokeColor(ctx, false))
             }
             view.background = glassDrawable
         }
