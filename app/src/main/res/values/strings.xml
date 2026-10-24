@@ -21,6 +21,12 @@
     <string name="wallpaper_sunset">Twilight Dusk</string>
     <string name="wallpaper_nebula">Dark Nebula</string>
     <string name="custom_wallpaper">Custom Wallpaper</string>
+    <string name="run_in_background">Run in Background</string>
+    <string name="url_test_running_background">URL testing running in background, check notification for progress</string>
+    <string name="url_test_cancelled">URL testing cancelled</string>
+    <string name="url_test_completed">URL Test Completed</string>
+    <string name="url_test_progress">URL testing (%1$d/%2$d)</string>
+    <string name="url_test_summary">Completed: %1$d available / %2$d total</string>
     <string name="speed_zero" translatable="false">0 B/s</string>
     <string name="full_test" translatable="false">Full Test</string>
     <string name="group_default">Ungrouped</string>

@@ -48,6 +48,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AlertDialog
+import io.nekohasekai.sagernet.bg.test.UrlTestManager
 import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.utils.WallpaperManager
 import androidx.core.app.ActivityCompat
@@ -214,7 +215,7 @@ class MainActivity : ThemedActivity(),
         connection.connect(this, this)
         DataStore.configurationStore.registerChangeListener(this)
 
-        if (intent?.action == Intent.ACTION_VIEW) {
+        if (intent?.action != null) {
             onNewIntent(intent)
         }
 
@@ -275,6 +276,18 @@ class MainActivity : ThemedActivity(),
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+
+        if (intent.action == UrlTestManager.ACTION_OPEN_URL_TEST) {
+            val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_holder)
+            if (currentFragment is ConfigurationFragment) {
+                currentFragment.urlTest()
+            } else {
+                displayFragment(ConfigurationFragment().apply {
+                    arguments = androidx.core.os.bundleOf("open_url_test" to true)
+                })
+            }
+            return
+        }
 
         val uri = intent.data ?: return
 
