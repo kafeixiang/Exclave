@@ -242,17 +242,29 @@ object Theme {
     fun getCardBackgroundColor(context: Context, isSelected: Boolean = false): Int {
         val isNight = usingNightMode()
         val isWallpaper = isWallpaperTheme()
+        val isPureBlack = isNight && DataStore.amoledPureBlack
         val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
 
-        // Unified base surface:
-        // When wallpaper theme is active: translucent acrylic frosted glass
-        // Dark mode: ~82% opacity (#D118181C), Light mode: ~86% opacity (#DCFFFFFF)
-        // Standard mode:
-        // Dark mode: ~94% opacity (#F01C1C1E), Light mode: ~94% opacity (#F0FFFFFF)
-        val baseGlass = if (isWallpaper) {
-            if (isNight) Color.argb(208, 24, 24, 28) else Color.argb(220, 255, 255, 255)
+        if (isPureBlack && !isWallpaper) {
+            val baseBlack = Color.rgb(8, 8, 8)
+            return if (isSelected) {
+                ColorUtils.compositeColors(
+                    ColorUtils.setAlphaComponent(accent, 55),
+                    baseBlack
+                )
+            } else {
+                baseBlack
+            }
+        }
+
+        // FlClash dynamic card glass opacity
+        val opacityPercent = (DataStore.cardGlassOpacity.coerceIn(20, 100)) / 100f
+        val baseAlpha = kotlin.math.round((255 * opacityPercent)).toInt()
+
+        val baseGlass = if (isNight) {
+            Color.argb(baseAlpha, 22, 22, 26)
         } else {
-            if (isNight) Color.argb(240, 28, 28, 30) else Color.argb(240, 255, 255, 255)
+            Color.argb(baseAlpha, 255, 255, 255)
         }
 
         return if (isSelected) {
@@ -261,7 +273,7 @@ object Theme {
                 ColorUtils.setAlphaComponent(accent, selectAlpha),
                 baseGlass
             )
-        } else if (isCupertino() || isWallpaper) {
+        } else if (isCupertino() || isWallpaper || DataStore.liquidGlassMode > 0) {
             val tintAlpha = if (isNight) 20 else 24
             ColorUtils.compositeColors(
                 ColorUtils.setAlphaComponent(accent, tintAlpha),
@@ -276,20 +288,21 @@ object Theme {
         val isNight = usingNightMode()
         val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
         val isWallpaper = isWallpaperTheme()
+        val isUltra = DataStore.liquidGlassMode == 2
 
         if (isSelected) {
             return ColorUtils.setAlphaComponent(accent, 190)
         }
 
         val baseStroke = if (isNight) {
-            if (isWallpaper) Color.argb(60, 255, 255, 255) else Color.argb(38, 255, 255, 255)
+            if (isWallpaper || isUltra) Color.argb(65, 255, 255, 255) else Color.argb(38, 255, 255, 255)
         } else {
-            if (isWallpaper) Color.argb(45, 0, 0, 0) else Color.argb(22, 0, 0, 0)
+            if (isWallpaper || isUltra) Color.argb(48, 0, 0, 0) else Color.argb(22, 0, 0, 0)
         }
 
-        return if (isCupertino() || isWallpaper) {
+        return if (isCupertino() || isWallpaper || isUltra) {
             ColorUtils.compositeColors(
-                ColorUtils.setAlphaComponent(accent, 40),
+                ColorUtils.setAlphaComponent(accent, if (isUltra) 60 else 40),
                 baseStroke
             )
         } else {
@@ -298,8 +311,9 @@ object Theme {
     }
 
     fun getClassicListBackgroundColor(): Int {
-        return if (usingNightMode()) {
-            Color.BLACK
+        val isNight = usingNightMode()
+        return if (isNight) {
+            if (DataStore.amoledPureBlack) Color.BLACK else Color.rgb(18, 18, 20)
         } else {
             Color.rgb(0xF2, 0xF2, 0xF7)
         }

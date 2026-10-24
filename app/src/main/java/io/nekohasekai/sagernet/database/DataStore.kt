@@ -132,6 +132,10 @@ object DataStore : OnPreferenceDataStoreChangeListener {
 
     var appTheme by configurationStore.int(Key.APP_THEME)
     var nightTheme by configurationStore.stringToInt(Key.NIGHT_THEME)
+    var amoledPureBlack by configurationStore.boolean(Key.AMOLED_PURE_BLACK) { false }
+    var wallpaperBlurRadius by configurationStore.int(Key.WALLPAPER_BLUR_RADIUS) { 40 }
+    var cardGlassOpacity by configurationStore.int(Key.CARD_GLASS_OPACITY) { 82 }
+    var liquidGlassMode by configurationStore.int(Key.LIQUID_GLASS_MODE) { 2 }
     var wallpaperThemeEnabled by configurationStore.boolean(Key.WALLPAPER_THEME_ENABLED) { false }
     var currentWallpaperPath by configurationStore.string(Key.CURRENT_WALLPAPER_PATH) { "" }
     var serviceMode by configurationStore.string(Key.SERVICE_MODE) { Key.MODE_VPN }
