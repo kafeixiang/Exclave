@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import io.nekohasekai.sagernet.GroupType
@@ -145,6 +146,11 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         recyclerView = view.findViewById(R.id.dashboard_recycler)
 
         editModeFloatingBar = view.findViewById(R.id.edit_mode_floating_bar)
+        (editModeFloatingBar as? MaterialCardView)?.let { bar ->
+            val ctx = bar.context
+            bar.setCardBackgroundColor(Theme.getCardBackgroundColor(ctx, false))
+            bar.strokeColor = Theme.getCardStrokeColor(ctx, false)
+        }
         btnAddCard = view.findViewById(R.id.btn_add_card)
         btnDoneEdit = view.findViewById(R.id.btn_done_edit)
 
@@ -660,10 +666,22 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
         override fun getItemViewType(position: Int): Int = items[position].ordinal
 
+        private fun applyFrostedCardStyle(card: MaterialCardView) {
+            val ctx = card.context
+            card.setCardBackgroundColor(Theme.getCardBackgroundColor(ctx, false))
+            card.strokeColor = Theme.getCardStrokeColor(ctx, false)
+            card.strokeWidth = ctx.resources.getDimensionPixelSize(R.dimen.card_stroke_width)
+            card.radius = dp2px(20).toFloat()
+            card.cardElevation = 0f
+            card.maxCardElevation = 0f
+            card.preventCornerOverlap = false
+            card.useCompatPadding = false
+        }
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             val type = ItemType.entries[viewType]
             val inflater = LayoutInflater.from(parent.context)
-            return when (type) {
+            val holder = when (type) {
                 ItemType.STATUS -> StatusViewHolder(ItemDashboardStatusBinding.inflate(inflater, parent, false))
                 ItemType.SPEED -> SpeedViewHolder(ItemDashboardSpeedBinding.inflate(inflater, parent, false))
                 ItemType.TRAFFIC -> TrafficViewHolder(ItemDashboardTrafficBinding.inflate(inflater, parent, false))
@@ -676,9 +694,12 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 ItemType.DNS_QUERIES -> DnsQueriesViewHolder(ItemDashboardDnsBinding.inflate(inflater, parent, false))
                 ItemType.MEMORY_INFO -> MemoryInfoViewHolder(ItemDashboardMemoryBinding.inflate(inflater, parent, false))
             }
+            (holder.itemView as? MaterialCardView)?.let { applyFrostedCardStyle(it) }
+            return holder
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            (holder.itemView as? MaterialCardView)?.let { applyFrostedCardStyle(it) }
             when (holder) {
                 is StatusViewHolder -> holder.bind()
                 is SpeedViewHolder -> holder.bind()

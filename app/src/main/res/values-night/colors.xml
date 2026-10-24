@@ -9,7 +9,7 @@
     <color name="glass_card_bg">#BF1A1A1A</color>
     <color name="glass_card_stroke">#4DFFFFFF</color>
 
-    <color name="surface_glass">#1C1C1E</color>
+    <color name="surface_glass">#E61C1C1E</color>
     <color name="surface_glass_heavy">#E61C1C1E</color>
     <color name="cupertino_window_bg">#000000</color>
     <color name="card_stroke">#26FFFFFF</color>
