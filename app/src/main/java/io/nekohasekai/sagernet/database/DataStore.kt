@@ -132,6 +132,8 @@ object DataStore : OnPreferenceDataStoreChangeListener {
 
     var appTheme by configurationStore.int(Key.APP_THEME)
     var nightTheme by configurationStore.stringToInt(Key.NIGHT_THEME)
+    var wallpaperThemeEnabled by configurationStore.boolean(Key.WALLPAPER_THEME_ENABLED) { false }
+    var currentWallpaperPath by configurationStore.string(Key.CURRENT_WALLPAPER_PATH) { "" }
     var serviceMode by configurationStore.string(Key.SERVICE_MODE) { Key.MODE_VPN }
 
     var domainStrategy by configurationStore.string(Key.DOMAIN_STRATEGY) { "AsIs" }
