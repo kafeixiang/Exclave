@@ -18,6 +18,12 @@
     <string name="wallpaper_sunset">暮色晚霞</string>
     <string name="wallpaper_nebula">星云暗影</string>
     <string name="custom_wallpaper">自定义壁纸</string>
+    <string name="run_in_background">后台运行</string>
+    <string name="url_test_running_background">URL 测试已转入后台运行，可在通知栏查看进度</string>
+    <string name="url_test_cancelled">已取消 URL 测试</string>
+    <string name="url_test_completed">URL 测试完成</string>
+    <string name="url_test_progress">URL 批量测试中 (%1$d/%2$d)</string>
+    <string name="url_test_summary">测试完成: 可用 %1$d / 总计 %2$d</string>
     <string name="full_test">全测速</string>
     <string name="group_default">未分组</string>
     <string name="quick_toggle">切换</string>
