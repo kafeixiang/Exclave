@@ -26,8 +26,12 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Color
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
@@ -36,13 +40,16 @@ import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.res.TypedArrayUtils
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.setPadding
 import androidx.core.widget.NestedScrollView
@@ -58,6 +65,7 @@ import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.dp2px
 import io.nekohasekai.sagernet.ktx.getColorAttr
+import io.nekohasekai.sagernet.ui.MainActivity
 import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.utils.WallpaperManager
 import kotlin.math.roundToInt
@@ -127,20 +135,8 @@ class ColorPickerPreference
         super.onClick()
 
         lateinit var dialog: AlertDialog
-
-        fun addColorsToLayout(layout: FlexboxLayout, arrayRes: Int, idOffset: Int) {
-            val colors = context.resources.getIntArray(arrayRes)
-            for ((i, color) in colors.withIndex()) {
-                val view = getImageViewAtColor(color, 64, 0).apply {
-                    setOnClickListener {
-                        persistInt(i + idOffset)
-                        dialog.dismiss()
-                        callChangeListener(i + idOffset)
-                    }
-                }
-                layout.addView(view)
-            }
-        }
+        val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+        var currentSelectedTheme = DataStore.appTheme
 
         val container = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
@@ -148,317 +144,873 @@ class ColorPickerPreference
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
+        }
 
-            // --- 1. Wallpaper Theme Section ---
-            addView(TextView(context).apply {
-                text = context.getString(R.string.theme_wallpaper_category)
-                textSize = 14f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-                setPadding(0, 0, 0, dp2px(8))
+        // =========================================================================
+        // 1. Live Preview Card (FlClash ThemeLivePreview)
+        // =========================================================================
+        val previewCard = MaterialCardView(context).apply {
+            radius = dp2px(20).toFloat()
+            cardElevation = dp2px(2).toFloat()
+            maxCardElevation = dp2px(4).toFloat()
+            strokeWidth = dp2px(2)
+            strokeColor = Theme.getCardStrokeColor(context)
+            setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp2px(125)
+            ).apply {
+                bottomMargin = dp2px(16)
+            }
+        }
+
+        val previewFrameLayout = FrameLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+
+        val previewBgImage = ImageView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }
+        previewFrameLayout.addView(previewBgImage)
+
+        val previewScrim = View(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+        previewFrameLayout.addView(previewScrim)
+
+        // Mock Mini Floating Card
+        val miniCard = MaterialCardView(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+            )
+            radius = dp2px(14).toFloat()
+            cardElevation = 0f
+            maxCardElevation = 0f
+            strokeWidth = dp2px(1)
+            strokeColor = Theme.getCardStrokeColor(context)
+            setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+        }
+
+        val miniCardContent = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp2px(14), dp2px(8), dp2px(14), dp2px(8))
+        }
+
+        val miniCardText = TextView(context).apply {
+            text = "Exclave Liquid Glass"
+            textSize = 12f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(if (Theme.usingNightMode()) Color.WHITE else Color.BLACK)
+        }
+        miniCardContent.addView(miniCardText)
+
+        val miniStatusChip = TextView(context).apply {
+            text = "Active"
+            textSize = 10f
+            setTextColor(Color.WHITE)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(dp2px(6), dp2px(2), dp2px(6), dp2px(2))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginStart = dp2px(8)
+            }
+            background = GradientDrawable().apply {
+                cornerRadius = dp2px(8).toFloat()
+                setColor(accent)
+            }
+        }
+        miniCardContent.addView(miniStatusChip)
+        miniCard.addView(miniCardContent)
+        previewFrameLayout.addView(miniCard)
+
+        // Mode badge at top right
+        val previewModeBadge = TextView(context).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP or Gravity.END
+            ).apply {
+                setMargins(0, dp2px(8), dp2px(8), 0)
+            }
+            textSize = 10f
+            setTextColor(Color.WHITE)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(dp2px(8), dp2px(3), dp2px(8), dp2px(3))
+            background = GradientDrawable().apply {
+                cornerRadius = dp2px(10).toFloat()
+                setColor(0x88000000.toInt())
+                setStroke(dp2px(1), 0x33FFFFFF)
+            }
+        }
+        previewFrameLayout.addView(previewModeBadge)
+
+        previewCard.addView(previewFrameLayout)
+        container.addView(previewCard)
+
+        fun refreshLivePreview() {
+            val isNight = Theme.usingNightMode()
+            val isPureBlack = isNight && DataStore.amoledPureBlack
+            val curAccent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+
+            if (isPureBlack && !Theme.isWallpaperTheme()) {
+                previewBgImage.setImageDrawable(null)
+                previewBgImage.setBackgroundColor(Color.BLACK)
+                previewScrim.setBackgroundColor(Color.TRANSPARENT)
+            } else if (Theme.isWallpaperTheme() && DataStore.currentWallpaperPath.isNotEmpty()) {
+                val drawable = WallpaperManager.loadWallpaperDrawable(context, DataStore.currentWallpaperPath)
+                if (drawable != null) {
+                    previewBgImage.setImageDrawable(drawable)
+                } else {
+                    previewBgImage.setImageResource(R.drawable.bg_mesh_gradient)
+                }
+                previewScrim.setBackgroundColor(if (isNight) Color.parseColor("#40000000") else Color.parseColor("#20FFFFFF"))
+            } else {
+                previewBgImage.setImageResource(R.drawable.bg_mesh_gradient)
+                previewScrim.setBackgroundColor(if (isNight) Color.parseColor("#50000000") else Color.parseColor("#20FFFFFF"))
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val blur = DataStore.wallpaperBlurRadius.toFloat().coerceIn(0f, 60f)
+                if (blur > 0f) {
+                    previewBgImage.setRenderEffect(RenderEffect.createBlurEffect(blur, blur, Shader.TileMode.CLAMP))
+                } else {
+                    previewBgImage.setRenderEffect(null)
+                }
+            }
+
+            previewCard.strokeColor = Theme.getCardStrokeColor(context)
+            previewCard.setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+
+            miniCard.strokeColor = Theme.getCardStrokeColor(context)
+            miniCard.setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+            miniCardText.setTextColor(if (isNight) Color.WHITE else Color.BLACK)
+
+            miniStatusChip.background = GradientDrawable().apply {
+                cornerRadius = dp2px(8).toFloat()
+                setColor(curAccent)
+            }
+
+            previewModeBadge.text = when {
+                isPureBlack -> "🖤 AMOLED"
+                DataStore.nightTheme == 1 -> "🌙 " + context.getString(R.string.theme_mode_dark)
+                DataStore.nightTheme == 2 -> "☀️ " + context.getString(R.string.theme_mode_light)
+                else -> "📱 " + context.getString(R.string.theme_mode_system)
+            }
+        }
+
+        refreshLivePreview()
+
+        // =========================================================================
+        // 2. Appearance Mode Item (FlClash _ThemeModeItem)
+        // =========================================================================
+        container.addView(TextView(context).apply {
+            text = context.getString(R.string.theme_appearance_mode)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, dp2px(8))
+        })
+
+        val modeGroupCard = MaterialCardView(context).apply {
+            radius = dp2px(16).toFloat()
+            cardElevation = 0f
+            maxCardElevation = 0f
+            strokeWidth = dp2px(1)
+            strokeColor = Theme.getCardStrokeColor(context)
+            setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp2px(12)
+            }
+        }
+
+        val modeRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dp2px(4), dp2px(4), dp2px(4), dp2px(4))
+        }
+
+        val modes = listOf(
+            Triple(0, context.getString(R.string.theme_mode_system), "📱"),
+            Triple(2, context.getString(R.string.theme_mode_light), "☀️"),
+            Triple(1, context.getString(R.string.theme_mode_dark), "🌙")
+        )
+
+        val modeButtons = mutableListOf<TextView>()
+
+        fun populateModeButtons() {
+            modeRow.removeAllViews()
+            val curMode = DataStore.nightTheme
+            for ((modeVal, label, icon) in modes) {
+                val isSelected = curMode == modeVal
+                val btn = TextView(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, dp2px(38), 1f).apply {
+                        setMargins(dp2px(2), 0, dp2px(2), 0)
+                    }
+                    gravity = Gravity.CENTER
+                    text = "$icon $label"
+                    textSize = 12f
+                    setTypeface(null, if (isSelected) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+                    if (isSelected) {
+                        setTextColor(Color.WHITE)
+                        background = GradientDrawable().apply {
+                            cornerRadius = dp2px(12).toFloat()
+                            setColor(accent)
+                        }
+                    } else {
+                        setTextColor(context.getColorAttr(android.R.attr.textColorSecondary))
+                        background = ColorDrawable(Color.TRANSPARENT)
+                    }
+                    setOnClickListener {
+                        DataStore.nightTheme = modeVal
+                        Theme.currentNightMode = -1
+                        Theme.applyNightTheme()
+                        populateModeButtons()
+                        refreshLivePreview()
+                        (context as? MainActivity)?.updateWallpaperBackground()
+                    }
+                }
+                modeButtons.add(btn)
+                modeRow.addView(btn)
+            }
+        }
+
+        populateModeButtons()
+        modeGroupCard.addView(modeRow)
+        container.addView(modeGroupCard)
+
+        // =========================================================================
+        // 3. AMOLED Pure Black Switch (FlClash _PureBlackItem)
+        // =========================================================================
+        val pureBlackCard = MaterialCardView(context).apply {
+            radius = dp2px(16).toFloat()
+            cardElevation = 0f
+            maxCardElevation = 0f
+            strokeWidth = dp2px(1)
+            strokeColor = Theme.getCardStrokeColor(context)
+            setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp2px(12)
+            }
+        }
+
+        val pureBlackRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp2px(14), dp2px(10), dp2px(14), dp2px(10))
+        }
+
+        val pureBlackTextLayout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        pureBlackTextLayout.addView(TextView(context).apply {
+            text = "🖤 " + context.getString(R.string.theme_pure_black)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+
+        pureBlackTextLayout.addView(TextView(context).apply {
+            text = context.getString(R.string.theme_pure_black_desc)
+            textSize = 11f
+            setTextColor(context.getColorAttr(android.R.attr.textColorSecondary))
+        })
+        pureBlackRow.addView(pureBlackTextLayout)
+
+        val pureBlackSwitch = SwitchCompat(context).apply {
+            isChecked = DataStore.amoledPureBlack
+            setOnCheckedChangeListener { _, isChecked ->
+                DataStore.amoledPureBlack = isChecked
+                refreshLivePreview()
+                (context as? MainActivity)?.updateWallpaperBackground()
+            }
+        }
+        pureBlackRow.addView(pureBlackSwitch)
+        pureBlackCard.addView(pureBlackRow)
+        container.addView(pureBlackCard)
+
+        // =========================================================================
+        // 4. Liquid Glass Mode Selection (FlClash _LiquidGlassItem)
+        // =========================================================================
+        container.addView(TextView(context).apply {
+            text = context.getString(R.string.theme_liquid_glass)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, dp2px(8))
+        })
+
+        val glassGroupCard = MaterialCardView(context).apply {
+            radius = dp2px(16).toFloat()
+            cardElevation = 0f
+            maxCardElevation = 0f
+            strokeWidth = dp2px(1)
+            strokeColor = Theme.getCardStrokeColor(context)
+            setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp2px(12)
+            }
+        }
+
+        val glassRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dp2px(4), dp2px(4), dp2px(4), dp2px(4))
+        }
+
+        val glassModes = listOf(
+            Pair(0, context.getString(R.string.theme_liquid_glass_none)),
+            Pair(1, context.getString(R.string.theme_liquid_glass_standard)),
+            Pair(2, context.getString(R.string.theme_liquid_glass_ultra))
+        )
+
+        fun populateGlassButtons() {
+            glassRow.removeAllViews()
+            val curGlass = DataStore.liquidGlassMode
+            for ((gVal, label) in glassModes) {
+                val isSelected = curGlass == gVal
+                val btn = TextView(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(0, dp2px(36), 1f).apply {
+                        setMargins(dp2px(2), 0, dp2px(2), 0)
+                    }
+                    gravity = Gravity.CENTER
+                    text = label
+                    textSize = 12f
+                    setTypeface(null, if (isSelected) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+                    if (isSelected) {
+                        setTextColor(Color.WHITE)
+                        background = GradientDrawable().apply {
+                            cornerRadius = dp2px(12).toFloat()
+                            setColor(accent)
+                        }
+                    } else {
+                        setTextColor(context.getColorAttr(android.R.attr.textColorSecondary))
+                        background = ColorDrawable(Color.TRANSPARENT)
+                    }
+                    setOnClickListener {
+                        DataStore.liquidGlassMode = gVal
+                        populateGlassButtons()
+                        refreshLivePreview()
+                    }
+                }
+                glassRow.addView(btn)
+            }
+        }
+
+        populateGlassButtons()
+        glassGroupCard.addView(glassRow)
+        container.addView(glassGroupCard)
+
+        // =========================================================================
+        // 5. FlClash Sliders (Background Blur & Card Opacity)
+        // =========================================================================
+        val slidersCard = MaterialCardView(context).apply {
+            radius = dp2px(16).toFloat()
+            cardElevation = 0f
+            maxCardElevation = 0f
+            strokeWidth = dp2px(1)
+            strokeColor = Theme.getCardStrokeColor(context)
+            setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp2px(12)
+            }
+        }
+
+        val slidersLayout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp2px(14), dp2px(12), dp2px(14), dp2px(12))
+        }
+
+        // --- Background Blur Slider ---
+        val blurHeaderRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        blurHeaderRow.addView(TextView(context).apply {
+            text = "💧 " + context.getString(R.string.theme_background_blur)
+            textSize = 13f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        val blurValueText = TextView(context).apply {
+            text = "${DataStore.wallpaperBlurRadius} dp"
+            textSize = 12f
+            setTextColor(accent)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }
+        blurHeaderRow.addView(blurValueText)
+        slidersLayout.addView(blurHeaderRow)
+
+        val blurSeekBar = SeekBar(context).apply {
+            max = 60
+            progress = DataStore.wallpaperBlurRadius.coerceIn(0, 60)
+            thumbTintList = ColorStateList.valueOf(accent)
+            progressTintList = ColorStateList.valueOf(accent)
+            setPadding(dp2px(4), dp2px(6), dp2px(4), dp2px(10))
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    blurValueText.text = "$progress dp"
+                    DataStore.wallpaperBlurRadius = progress
+                    refreshLivePreview()
+                    (context as? MainActivity)?.updateWallpaperBackground()
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
+        }
+        slidersLayout.addView(blurSeekBar)
 
-            // Switch Card
-            val switchCard = MaterialCardView(context).apply {
-                radius = dp2px(16).toFloat()
+        // --- Card Glass Opacity Slider ---
+        val opacityHeaderRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = dp2px(4)
+            }
+        }
+        opacityHeaderRow.addView(TextView(context).apply {
+            text = "✨ " + context.getString(R.string.theme_card_opacity)
+            textSize = 13f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        val opacityValueText = TextView(context).apply {
+            text = "${DataStore.cardGlassOpacity}%"
+            textSize = 12f
+            setTextColor(accent)
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }
+        opacityHeaderRow.addView(opacityValueText)
+        slidersLayout.addView(opacityHeaderRow)
+
+        val opacitySeekBar = SeekBar(context).apply {
+            max = 100
+            progress = DataStore.cardGlassOpacity.coerceIn(25, 100)
+            thumbTintList = ColorStateList.valueOf(accent)
+            progressTintList = ColorStateList.valueOf(accent)
+            setPadding(dp2px(4), dp2px(6), dp2px(4), dp2px(4))
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    val realProgress = progress.coerceAtLeast(25)
+                    opacityValueText.text = "$realProgress%"
+                    DataStore.cardGlassOpacity = realProgress
+                    refreshLivePreview()
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+        }
+        slidersLayout.addView(opacitySeekBar)
+
+        slidersCard.addView(slidersLayout)
+        container.addView(slidersCard)
+
+        // =========================================================================
+        // 6. Wallpaper Theme Section (FlClash Background Management)
+        // =========================================================================
+        container.addView(TextView(context).apply {
+            text = context.getString(R.string.theme_wallpaper_category)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, dp2px(8))
+        })
+
+        // Switch Card
+        val switchCard = MaterialCardView(context).apply {
+            radius = dp2px(16).toFloat()
+            cardElevation = 0f
+            maxCardElevation = 0f
+            strokeWidth = dp2px(1)
+            strokeColor = Theme.getCardStrokeColor(context)
+            setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                bottomMargin = dp2px(10)
+            }
+        }
+        val switchRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp2px(14), dp2px(10), dp2px(14), dp2px(10))
+        }
+        val textLayout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        val switchTitle = TextView(context).apply {
+            text = context.getString(R.string.enable_wallpaper_theme)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        }
+        textLayout.addView(switchTitle)
+        switchRow.addView(textLayout)
+
+        val toggleSwitch = SwitchCompat(context).apply {
+            isChecked = DataStore.wallpaperThemeEnabled
+        }
+        switchRow.addView(toggleSwitch)
+        switchCard.addView(switchRow)
+        container.addView(switchCard)
+
+        // Horizontal Wallpapers Carousel
+        val wallpaperScrollView = HorizontalScrollView(context).apply {
+            isHorizontalScrollBarEnabled = false
+            clipToPadding = false
+            setPadding(0, 0, 0, dp2px(16))
+        }
+        val wallpaperContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        wallpaperScrollView.addView(wallpaperContainer)
+        container.addView(wallpaperScrollView)
+
+        fun populateWallpapers() {
+            wallpaperContainer.removeAllViews()
+
+            // + Upload Wallpaper Button Card
+            val uploadCard = MaterialCardView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(dp2px(85), dp2px(120)).apply {
+                    marginEnd = dp2px(10)
+                }
+                radius = dp2px(14).toFloat()
                 cardElevation = 0f
                 maxCardElevation = 0f
                 strokeWidth = dp2px(1)
                 strokeColor = Theme.getCardStrokeColor(context)
                 setCardBackgroundColor(Theme.getCardBackgroundColor(context))
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    bottomMargin = dp2px(10)
+
+                val uploadContent = LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+
+                    addView(ImageView(context).apply {
+                        layoutParams = LinearLayout.LayoutParams(dp2px(30), dp2px(30))
+                        setImageResource(R.drawable.ic_image_photo)
+                        imageTintList = ColorStateList.valueOf(accent)
+                    })
+                    addView(TextView(context).apply {
+                        layoutParams = LinearLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            topMargin = dp2px(6)
+                        }
+                        text = context.getString(R.string.upload_wallpaper)
+                        textSize = 12f
+                        setTextColor(accent)
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                        gravity = Gravity.CENTER
+                    })
+                }
+                addView(uploadContent)
+                setOnClickListener {
+                    dialog.dismiss()
+                    if (onPickWallpaper != null) {
+                        onPickWallpaper?.invoke()
+                    } else {
+                        val act = context as? Activity
+                        try {
+                            val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*" }
+                            act?.startActivity(intent)
+                        } catch (_: Exception) {}
+                    }
                 }
             }
-            val switchRow = LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp2px(14), dp2px(10), dp2px(14), dp2px(10))
-            }
-            val textLayout = LinearLayout(context).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            }
-            val switchTitle = TextView(context).apply {
-                text = context.getString(R.string.enable_wallpaper_theme)
-                textSize = 14f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-            }
-            textLayout.addView(switchTitle)
-            switchRow.addView(textLayout)
+            wallpaperContainer.addView(uploadCard)
 
-            val toggleSwitch = SwitchCompat(context).apply {
-                isChecked = DataStore.wallpaperThemeEnabled
-            }
-            switchRow.addView(toggleSwitch)
-            switchCard.addView(switchRow)
-            addView(switchCard)
+            val currentPath = DataStore.currentWallpaperPath
+            val isThemeEnabled = DataStore.wallpaperThemeEnabled
+            val wallpapers = WallpaperManager.getAllWallpapers(context)
 
-            // Horizontal Wallpapers Carousel
-            val wallpaperScrollView = HorizontalScrollView(context).apply {
-                isHorizontalScrollBarEnabled = false
-                clipToPadding = false
-                setPadding(0, 0, 0, dp2px(16))
-            }
-            val wallpaperContainer = LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-            }
-            wallpaperScrollView.addView(wallpaperContainer)
-            addView(wallpaperScrollView)
-
-            fun populateWallpapers() {
-                wallpaperContainer.removeAllViews()
-
-                // + Upload Wallpaper Button Card
-                val uploadCard = MaterialCardView(context).apply {
+            wallpapers.forEach { item ->
+                val isSelected = isThemeEnabled && (
+                        currentPath == item.path || (currentPath.isEmpty() && item.path == WallpaperManager.PRESET_MESH)
+                        )
+                val card = MaterialCardView(context).apply {
                     layoutParams = LinearLayout.LayoutParams(dp2px(85), dp2px(120)).apply {
                         marginEnd = dp2px(10)
                     }
                     radius = dp2px(14).toFloat()
                     cardElevation = 0f
                     maxCardElevation = 0f
-                    strokeWidth = dp2px(1)
-                    strokeColor = Theme.getCardStrokeColor(context)
-                    setCardBackgroundColor(Theme.getCardBackgroundColor(context))
-
-                    val uploadContent = LinearLayout(context).apply {
-                        orientation = LinearLayout.VERTICAL
-                        gravity = Gravity.CENTER
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-
-                        addView(ImageView(context).apply {
-                            layoutParams = LinearLayout.LayoutParams(dp2px(30), dp2px(30))
-                            setImageResource(R.drawable.ic_image_photo)
-                            imageTintList = ColorStateList.valueOf(
-                                context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
-                            )
-                        })
-                        addView(TextView(context).apply {
-                            layoutParams = LinearLayout.LayoutParams(
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
-                            ).apply {
-                                topMargin = dp2px(6)
-                            }
-                            text = context.getString(R.string.upload_wallpaper)
-                            textSize = 12f
-                            setTextColor(context.getColorAttr(androidx.appcompat.R.attr.colorAccent))
-                            setTypeface(null, android.graphics.Typeface.BOLD)
-                            gravity = Gravity.CENTER
-                        })
-                    }
-                    addView(uploadContent)
-                    setOnClickListener {
-                        dialog.dismiss()
-                        if (onPickWallpaper != null) {
-                            onPickWallpaper?.invoke()
-                        } else {
-                            val act = context as? Activity
-                            try {
-                                val intent = Intent(Intent.ACTION_GET_CONTENT).apply { type = "image/*" }
-                                act?.startActivity(intent)
-                            } catch (_: Exception) {}
-                        }
-                    }
-                }
-                wallpaperContainer.addView(uploadCard)
-
-                // Wallpaper items
-                val currentPath = DataStore.currentWallpaperPath
-                val isThemeEnabled = DataStore.wallpaperThemeEnabled
-                val wallpapers = WallpaperManager.getAllWallpapers(context)
-
-                wallpapers.forEach { item ->
-                    val isSelected = isThemeEnabled && (
-                            currentPath == item.path || (currentPath.isEmpty() && item.path == WallpaperManager.PRESET_MESH)
-                            )
-                    val card = MaterialCardView(context).apply {
-                        layoutParams = LinearLayout.LayoutParams(dp2px(85), dp2px(120)).apply {
-                            marginEnd = dp2px(10)
-                        }
-                        radius = dp2px(14).toFloat()
-                        cardElevation = 0f
-                        maxCardElevation = 0f
-                        val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
-                        if (isSelected) {
-                            strokeWidth = dp2px(2)
-                            strokeColor = accent
-                        } else {
-                            strokeWidth = dp2px(1)
-                            strokeColor = Theme.getCardStrokeColor(context)
-                        }
-                        setCardBackgroundColor(Theme.getCardBackgroundColor(context))
-                    }
-
-                    val frame = FrameLayout(context).apply {
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                    }
-
-                    val imageView = ImageView(context).apply {
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        scaleType = ImageView.ScaleType.CENTER_CROP
-                        val thumb = WallpaperManager.getThumbnail(context, item, dp2px(85), dp2px(120))
-                        if (thumb != null) {
-                            setImageDrawable(thumb)
-                        } else {
-                            setBackgroundColor(0xFF222222.toInt())
-                        }
-                    }
-                    frame.addView(imageView)
-
-                    // Scrim at bottom
-                    val scrimView = View(context).apply {
-                        layoutParams = FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            dp2px(34),
-                            Gravity.BOTTOM
-                        )
-                        background = GradientDrawable(
-                            GradientDrawable.Orientation.BOTTOM_TOP,
-                            intArrayOf(0xCC000000.toInt(), 0x00000000)
-                        )
-                    }
-                    frame.addView(scrimView)
-
-                    // Wallpaper title
-                    val titleView = TextView(context).apply {
-                        layoutParams = FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.WRAP_CONTENT,
-                            Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-                        ).apply {
-                            setPadding(dp2px(4), 0, dp2px(4), dp2px(4))
-                        }
-                        text = item.name
-                        textSize = 10f
-                        setTextColor(Color.WHITE)
-                        gravity = Gravity.CENTER
-                        isSingleLine = true
-                        ellipsize = android.text.TextUtils.TruncateAt.END
-                    }
-                    frame.addView(titleView)
-
-                    // Checkmark badge when active
                     if (isSelected) {
-                        val badge = ImageView(context).apply {
-                            layoutParams = FrameLayout.LayoutParams(dp2px(20), dp2px(20), Gravity.TOP or Gravity.START).apply {
-                                setMargins(dp2px(4), dp2px(4), 0, 0)
-                            }
-                            setImageResource(R.drawable.ic_action_done)
-                            imageTintList = ColorStateList.valueOf(Color.WHITE)
-                            val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
-                            background = GradientDrawable().apply {
-                                shape = GradientDrawable.OVAL
-                                setColor(accent)
-                            }
-                            setPadding(dp2px(2))
-                        }
-                        frame.addView(badge)
+                        strokeWidth = dp2px(2)
+                        strokeColor = accent
+                    } else {
+                        strokeWidth = dp2px(1)
+                        strokeColor = Theme.getCardStrokeColor(context)
                     }
-
-                    // Delete button for custom uploaded wallpapers
-                    if (!item.isPreset) {
-                        val deleteBtn = ImageView(context).apply {
-                            layoutParams = FrameLayout.LayoutParams(dp2px(20), dp2px(20), Gravity.TOP or Gravity.END).apply {
-                                setMargins(0, dp2px(4), dp2px(4), 0)
-                            }
-                            setImageResource(R.drawable.ic_action_delete)
-                            imageTintList = ColorStateList.valueOf(Color.WHITE)
-                            background = GradientDrawable().apply {
-                                shape = GradientDrawable.OVAL
-                                setColor(0x99000000.toInt())
-                            }
-                            setPadding(dp2px(2))
-                            setOnClickListener {
-                                MaterialAlertDialogBuilder(context)
-                                    .setTitle(R.string.delete_wallpaper_confirm)
-                                    .setPositiveButton(android.R.string.ok) { _, _ ->
-                                        WallpaperManager.deleteWallpaper(context, item.path)
-                                        populateWallpapers()
-                                        callChangeListener(DataStore.appTheme)
-                                        (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
-                                    }
-                                    .setNegativeButton(android.R.string.cancel, null)
-                                    .show()
-                            }
-                        }
-                        frame.addView(deleteBtn)
-                    }
-
-                    card.addView(frame)
-
-                    card.setOnClickListener {
-                        DataStore.wallpaperThemeEnabled = true
-                        DataStore.currentWallpaperPath = item.path
-                        dialog.dismiss()
-                        callChangeListener(DataStore.appTheme)
-                        (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
-                    }
-
-                    wallpaperContainer.addView(card)
+                    setCardBackgroundColor(Theme.getCardBackgroundColor(context))
                 }
-            }
 
-            populateWallpapers()
-
-            toggleSwitch.setOnCheckedChangeListener { _, isChecked ->
-                DataStore.wallpaperThemeEnabled = isChecked
-                if (isChecked && DataStore.currentWallpaperPath.isEmpty()) {
-                    DataStore.currentWallpaperPath = WallpaperManager.PRESET_MESH
+                val frame = FrameLayout(context).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                 }
-                populateWallpapers()
-                dialog.dismiss()
-                callChangeListener(DataStore.appTheme)
-                (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
-            }
 
-            // --- 2. Cupertino Section ---
-            addView(TextView(context).apply {
-                text = context.getString(R.string.theme_cupertino_category)
-                textSize = 14f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-                setPadding(0, 0, 0, dp2px(8))
-            })
-            val cupertinoFlex = FlexboxLayout(context).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-                flexWrap = FlexWrap.WRAP
-                justifyContent = JustifyContent.SPACE_BETWEEN
-            }
-            addColorsToLayout(cupertinoFlex, R.array.cupertino_colors, 101)
-            addView(cupertinoFlex)
+                val imageView = ImageView(context).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    val thumb = WallpaperManager.getThumbnail(context, item, dp2px(85), dp2px(120))
+                    if (thumb != null) {
+                        setImageDrawable(thumb)
+                    } else {
+                        setBackgroundColor(0xFF222222.toInt())
+                    }
+                }
+                frame.addView(imageView)
 
-            // --- 3. Material Section ---
-            addView(TextView(context).apply {
-                text = context.getString(R.string.theme_material_category)
-                textSize = 14f
-                setTypeface(null, android.graphics.Typeface.BOLD)
-                setPadding(0, dp2px(16), 0, dp2px(8))
-            })
-            val materialFlex = FlexboxLayout(context).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                )
-                flexWrap = FlexWrap.WRAP
-                justifyContent = JustifyContent.SPACE_BETWEEN
+                val scrimView = View(context).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        dp2px(34),
+                        Gravity.BOTTOM
+                    )
+                    background = GradientDrawable(
+                        GradientDrawable.Orientation.BOTTOM_TOP,
+                        intArrayOf(0xCC000000.toInt(), 0x00000000)
+                    )
+                }
+                frame.addView(scrimView)
+
+                val titleView = TextView(context).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                    ).apply {
+                        setPadding(dp2px(4), 0, dp2px(4), dp2px(4))
+                    }
+                    text = item.name
+                    textSize = 10f
+                    setTextColor(Color.WHITE)
+                    gravity = Gravity.CENTER
+                    isSingleLine = true
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                }
+                frame.addView(titleView)
+
+                if (isSelected) {
+                    val badge = ImageView(context).apply {
+                        layoutParams = FrameLayout.LayoutParams(dp2px(20), dp2px(20), Gravity.TOP or Gravity.START).apply {
+                            setMargins(dp2px(4), dp2px(4), 0, 0)
+                        }
+                        setImageResource(R.drawable.ic_action_done)
+                        imageTintList = ColorStateList.valueOf(Color.WHITE)
+                        background = GradientDrawable().apply {
+                            shape = GradientDrawable.OVAL
+                            setColor(accent)
+                        }
+                        setPadding(dp2px(2))
+                    }
+                    frame.addView(badge)
+                }
+
+                if (!item.isPreset) {
+                    val deleteBtn = ImageView(context).apply {
+                        layoutParams = FrameLayout.LayoutParams(dp2px(20), dp2px(20), Gravity.TOP or Gravity.END).apply {
+                            setMargins(0, dp2px(4), dp2px(4), 0)
+                        }
+                        setImageResource(R.drawable.ic_action_delete)
+                        imageTintList = ColorStateList.valueOf(Color.WHITE)
+                        background = GradientDrawable().apply {
+                            shape = GradientDrawable.OVAL
+                            setColor(0x99000000.toInt())
+                        }
+                        setPadding(dp2px(2))
+                        setOnClickListener {
+                            MaterialAlertDialogBuilder(context)
+                                .setTitle(R.string.delete_wallpaper_confirm)
+                                .setPositiveButton(android.R.string.ok) { _, _ ->
+                                    WallpaperManager.deleteWallpaper(context, item.path)
+                                    populateWallpapers()
+                                    refreshLivePreview()
+                                    (context as? MainActivity)?.updateWallpaperBackground()
+                                }
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .show()
+                        }
+                    }
+                    frame.addView(deleteBtn)
+                }
+
+                card.addView(frame)
+
+                card.setOnClickListener {
+                    DataStore.wallpaperThemeEnabled = true
+                    DataStore.currentWallpaperPath = item.path
+                    toggleSwitch.isChecked = true
+                    populateWallpapers()
+                    refreshLivePreview()
+                    (context as? MainActivity)?.updateWallpaperBackground()
+                }
+
+                wallpaperContainer.addView(card)
             }
-            addColorsToLayout(materialFlex, R.array.material_colors, 1)
-            addView(materialFlex)
         }
+
+        populateWallpapers()
+
+        toggleSwitch.setOnCheckedChangeListener { _, isChecked ->
+            DataStore.wallpaperThemeEnabled = isChecked
+            if (isChecked && DataStore.currentWallpaperPath.isEmpty()) {
+                DataStore.currentWallpaperPath = WallpaperManager.PRESET_MESH
+            }
+            populateWallpapers()
+            refreshLivePreview()
+            (context as? MainActivity)?.updateWallpaperBackground()
+        }
+
+        // =========================================================================
+        // 7. Accent Color Palettes (FlClash _ColorSwatch)
+        // =========================================================================
+        fun getFlClashSwatch(color: Int, isSelected: Boolean, onClick: () -> Unit): View {
+            val size = dp2px(48)
+            val frame = FrameLayout(context).apply {
+                layoutParams = ViewGroup.MarginLayoutParams(size, size).apply {
+                    val m = dp2px(4)
+                    setMargins(m, m, m, m)
+                }
+            }
+            val circle = View(context).apply {
+                val circleSize = dp2px(38)
+                layoutParams = FrameLayout.LayoutParams(circleSize, circleSize, Gravity.CENTER)
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(color)
+                    if (isSelected) {
+                        setStroke(dp2px(2), Color.WHITE)
+                    }
+                }
+            }
+            frame.addView(circle)
+            if (isSelected) {
+                val check = ImageView(context).apply {
+                    val checkSize = dp2px(20)
+                    layoutParams = FrameLayout.LayoutParams(checkSize, checkSize, Gravity.CENTER)
+                    setImageResource(R.drawable.ic_action_done)
+                    val isDark = ColorUtils.calculateLuminance(color) < 0.5
+                    imageTintList = ColorStateList.valueOf(if (isDark) Color.WHITE else Color.BLACK)
+                }
+                frame.addView(check)
+            }
+            frame.setOnClickListener { onClick() }
+            return frame
+        }
+
+        lateinit var cupertinoFlex: FlexboxLayout
+        lateinit var materialFlex: FlexboxLayout
+
+        fun populateColors() {
+            cupertinoFlex.removeAllViews()
+            val cupertinoColors = context.resources.getIntArray(R.array.cupertino_colors)
+            for ((i, color) in cupertinoColors.withIndex()) {
+                val themeId = i + 101
+                val isSelected = currentSelectedTheme == themeId
+                val swatch = getFlClashSwatch(color, isSelected) {
+                    currentSelectedTheme = themeId
+                    persistInt(themeId)
+                    DataStore.appTheme = themeId
+                    populateColors()
+                    refreshLivePreview()
+                    callChangeListener(themeId)
+                    dialog.dismiss()
+                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                }
+                cupertinoFlex.addView(swatch)
+            }
+
+            materialFlex.removeAllViews()
+            val materialColors = context.resources.getIntArray(R.array.material_colors)
+            for ((i, color) in materialColors.withIndex()) {
+                val themeId = i + 1
+                val isSelected = currentSelectedTheme == themeId
+                val swatch = getFlClashSwatch(color, isSelected) {
+                    currentSelectedTheme = themeId
+                    persistInt(themeId)
+                    DataStore.appTheme = themeId
+                    populateColors()
+                    refreshLivePreview()
+                    callChangeListener(themeId)
+                    dialog.dismiss()
+                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                }
+                materialFlex.addView(swatch)
+            }
+        }
+
+        // --- Cupertino Section ---
+        container.addView(TextView(context).apply {
+            text = context.getString(R.string.theme_cupertino_category)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, dp2px(8))
+        })
+        cupertinoFlex = FlexboxLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            flexWrap = FlexWrap.WRAP
+            justifyContent = JustifyContent.SPACE_BETWEEN
+        }
+        container.addView(cupertinoFlex)
+
+        // --- Material Section ---
+        container.addView(TextView(context).apply {
+            text = context.getString(R.string.theme_material_category)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, dp2px(16), 0, dp2px(8))
+        })
+        materialFlex = FlexboxLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            flexWrap = FlexWrap.WRAP
+            justifyContent = JustifyContent.SPACE_BETWEEN
+        }
+        container.addView(materialFlex)
+
+        populateColors()
 
         val scrollView = NestedScrollView(context).apply {
             setPadding(dp2px(16), dp2px(16), dp2px(16), dp2px(16))
@@ -469,8 +1021,13 @@ class ColorPickerPreference
             addView(container)
         }
 
-        dialog = MaterialAlertDialogBuilder(context).setTitle(title)
+        dialog = MaterialAlertDialogBuilder(context)
+            .setTitle(title)
             .setView(scrollView)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                callChangeListener(DataStore.appTheme)
+                (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+            }
             .setNegativeButton(android.R.string.cancel, null)
             .create()
         dialog.applyGlassBlur()
