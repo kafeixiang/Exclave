@@ -176,12 +176,23 @@ class ProfileNodeBottomSheet(
             binding.itemTypePill.text = item.proxy.displayType()
 
             binding.itemPingPill.isVisible = true
-            if (item.proxy.ping > 0) {
-                binding.itemPingPill.text = context.getString(R.string.available, item.proxy.ping)
-                binding.itemPingPill.setTextColor(ContextCompat.getColor(context, R.color.cupertino_green))
-            } else {
-                binding.itemPingPill.text = context.getString(R.string.unavailable)
-                binding.itemPingPill.setTextColor(ContextCompat.getColor(context, R.color.material_red_500))
+            when {
+                item.proxy.ping > 0 -> {
+                    binding.itemPingPill.text = context.getString(R.string.available, item.proxy.ping)
+                    binding.itemPingPill.setTextColor(ContextCompat.getColor(context, R.color.cupertino_green))
+                }
+                item.proxy.status == 0 -> {
+                    binding.itemPingPill.text = context.getString(R.string.connection_test_testing)
+                    binding.itemPingPill.setTextColor(ContextCompat.getColor(context, R.color.material_grey_500))
+                }
+                item.proxy.status <= 0 || item.proxy.ping == 0 -> {
+                    binding.itemPingPill.text = "--"
+                    binding.itemPingPill.setTextColor(ContextCompat.getColor(context, R.color.material_grey_500))
+                }
+                else -> {
+                    binding.itemPingPill.text = context.getString(R.string.unavailable)
+                    binding.itemPingPill.setTextColor(ContextCompat.getColor(context, R.color.material_red_500))
+                }
             }
 
             binding.itemCheck.isVisible = item.isSelected

@@ -34,9 +34,11 @@ class SwitchActivity : ThemedActivity(R.layout.layout_empty),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        supportFragmentManager.beginTransaction().replace(
-            R.id.fragment_holder, ConfigurationFragment(true, null, R.string.quick_toggle)
-        ).commitAllowingStateLoss()
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction().replace(
+                R.id.fragment_holder, ConfigurationFragment(true, null, R.string.quick_toggle)
+            ).commitAllowingStateLoss()
+        }
     }
 
     override fun returnProfile(profileId: Long) {

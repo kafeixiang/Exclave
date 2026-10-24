@@ -161,10 +161,8 @@ class GroupSettingsActivity(
 
         frontProxyPreference = findPreference(Key.GROUP_FRONT_PROXY)!!
         if (DataStore.frontProxy == 1) {
-            // https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-s2-release/core/java/android/preference/ListPreference.java#167
-            // If the summary has a {@linkplain java.lang.String#format String formatting} marker in it,
-            // (i.e. "%s" or "%1$s"), then the current entry value will be substituted in its place.
-            frontProxyPreference.setSummary(ProfileManager.getProfile(DataStore.frontProxyOutbound)?.displayName()?.replace("%", "%%"))
+            val profile = ProfileManager.getProfile(DataStore.frontProxyOutbound)
+            frontProxyPreference.setSummary(profile?.displayName()?.replace("%", "%%") ?: resources.getString(R.string.disable))
         } else {
             frontProxyPreference.setSummary(resources.getString(R.string.disable))
         }
@@ -183,10 +181,8 @@ class GroupSettingsActivity(
         }
         landingProxyPreference = findPreference(Key.GROUP_LANDING_PROXY)!!
         if (DataStore.landingProxy == 1) {
-            // https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-s2-release/core/java/android/preference/ListPreference.java#167
-            // If the summary has a {@linkplain java.lang.String#format String formatting} marker in it,
-            // (i.e. "%s" or "%1$s"), then the current entry value will be substituted in its place.
-            landingProxyPreference.setSummary(ProfileManager.getProfile(DataStore.landingProxyOutbound)?.displayName()?.replace("%", "%%"))
+            val profile = ProfileManager.getProfile(DataStore.landingProxyOutbound)
+            landingProxyPreference.setSummary(profile?.displayName()?.replace("%", "%%") ?: resources.getString(R.string.disable))
         } else {
             landingProxyPreference.setSummary(resources.getString(R.string.disable))
         }
@@ -298,6 +294,8 @@ class GroupSettingsActivity(
                 }
             }
         } else {
+            DataStore.editingId = savedInstanceState.getLong(EXTRA_GROUP_ID, intent.getLongExtra(EXTRA_GROUP_ID, 0L))
+            DataStore.profileCacheStore.registerChangeListener(this@GroupSettingsActivity)
             savedInstanceState.getBoolean(KEY_DIRTY).let {
                 dirty = it
                 onBackPressedCallback.isEnabled = it
@@ -307,6 +305,7 @@ class GroupSettingsActivity(
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        outState.putLong(EXTRA_GROUP_ID, DataStore.editingId)
         outState.putBoolean(KEY_DIRTY, dirty)
     }
 
