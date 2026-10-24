@@ -57,6 +57,7 @@ import io.nekohasekai.sagernet.tasker.TaskerReceiver
 import io.nekohasekai.sagernet.ui.profile.ProfileSettingsActivity
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.nekohasekai.sagernet.utils.Theme
+import io.nekohasekai.sagernet.utils.WallpaperManager
 import io.nekohasekai.sagernet.widget.ColorPickerPreference
 import io.nekohasekai.sagernet.widget.LinkOrContentPreference
 import io.nekohasekai.sagernet.widget.PluginListPreference
@@ -142,7 +143,25 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         // app settings
         findPreference<SwitchPreference>(Key.PERSIST_ACROSS_REBOOT)!!.onPreferenceChangeListener = restartListener
 
-        findPreference<ColorPickerPreference>(Key.APP_THEME)!!.setOnPreferenceChangeListener { _, newTheme ->
+        val colorPickerPref = findPreference<ColorPickerPreference>(Key.APP_THEME)!!
+        val pickWallpaperLauncher = registerForActivityResult(
+            ActivityResultContracts.GetContent()
+        ) { uri ->
+            if (uri != null) {
+                val item = WallpaperManager.saveWallpaper(requireContext(), uri)
+                if (item != null) {
+                    DataStore.wallpaperThemeEnabled = true
+                    DataStore.currentWallpaperPath = item.path
+                    requireActivity().apply {
+                        ActivityCompat.recreate(this)
+                    }
+                }
+            }
+        }
+        colorPickerPref.onPickWallpaper = {
+            pickWallpaperLauncher.launch("image/*")
+        }
+        colorPickerPref.setOnPreferenceChangeListener { _, newTheme ->
             if (SagerNet.started) {
                 SagerNet.reloadService()
             }
