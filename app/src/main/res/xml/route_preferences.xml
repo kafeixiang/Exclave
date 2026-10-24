@@ -17,6 +17,7 @@
         app:dialogMessage="@string/one_per_line"
         app:useSimpleSummaryProvider="true" />
     <androidx.preference.MultiSelectListPreference
+        android:defaultValue="@array/empty_string_array"
         app:entries="@array/network_type_entry"
         app:entryValues="@array/network_type_value"
         app:icon="@drawable/baseline_public_24"

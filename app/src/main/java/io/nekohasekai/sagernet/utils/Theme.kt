@@ -24,9 +24,11 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.graphics.ColorUtils
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.app
+import io.nekohasekai.sagernet.ktx.getColorAttr
 
 object Theme {
 
@@ -231,6 +233,66 @@ object Theme {
 
     fun isCupertino(theme: Int = DataStore.appTheme): Boolean {
         return theme in CUPERTINO_PINK..CUPERTINO_UNICORN
+    }
+
+    fun isWallpaperTheme(): Boolean = false
+
+    fun getCardBackgroundColor(context: Context, isSelected: Boolean = false): Int {
+        val isNight = usingNightMode()
+        val isWallpaper = isWallpaperTheme()
+        val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+
+        // Unified base surface:
+        // When wallpaper theme is active: translucent acrylic frosted glass
+        // Dark mode: ~82% opacity (#D118181C), Light mode: ~86% opacity (#DCFFFFFF)
+        // Standard mode:
+        // Dark mode: ~94% opacity (#F01C1C1E), Light mode: ~94% opacity (#F0FFFFFF)
+        val baseGlass = if (isWallpaper) {
+            if (isNight) Color.argb(208, 24, 24, 28) else Color.argb(220, 255, 255, 255)
+        } else {
+            if (isNight) Color.argb(240, 28, 28, 30) else Color.argb(240, 255, 255, 255)
+        }
+
+        return if (isSelected) {
+            val selectAlpha = if (isNight) 55 else 48
+            ColorUtils.compositeColors(
+                ColorUtils.setAlphaComponent(accent, selectAlpha),
+                baseGlass
+            )
+        } else if (isCupertino() || isWallpaper) {
+            val tintAlpha = if (isNight) 20 else 24
+            ColorUtils.compositeColors(
+                ColorUtils.setAlphaComponent(accent, tintAlpha),
+                baseGlass
+            )
+        } else {
+            baseGlass
+        }
+    }
+
+    fun getCardStrokeColor(context: Context, isSelected: Boolean = false): Int {
+        val isNight = usingNightMode()
+        val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+        val isWallpaper = isWallpaperTheme()
+
+        if (isSelected) {
+            return ColorUtils.setAlphaComponent(accent, 190)
+        }
+
+        val baseStroke = if (isNight) {
+            if (isWallpaper) Color.argb(60, 255, 255, 255) else Color.argb(38, 255, 255, 255)
+        } else {
+            if (isWallpaper) Color.argb(45, 0, 0, 0) else Color.argb(22, 0, 0, 0)
+        }
+
+        return if (isCupertino() || isWallpaper) {
+            ColorUtils.compositeColors(
+                ColorUtils.setAlphaComponent(accent, 40),
+                baseStroke
+            )
+        } else {
+            baseStroke
+        }
     }
 
     fun getClassicListBackgroundColor(): Int {

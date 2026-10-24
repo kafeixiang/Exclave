@@ -189,38 +189,45 @@ class RouteSettingsActivity(
     lateinit var ssid: EditTextPreference
 
     fun PreferenceFragmentCompat.viewCreated(view: View, savedInstanceState: Bundle?) {
-        findPreference<EditTextPreference>(Key.ROUTE_SOURCE_PORT)!!.dialogMessage = getString(R.string.format, "53,443,1000-2000")
-        findPreference<EditTextPreference>(Key.ROUTE_PORT)!!.dialogMessage = getString(R.string.format, "53,443,1000-2000")
-        outbound = findPreference(Key.ROUTE_OUTBOUND)!!
-        apps = findPreference(Key.ROUTE_PACKAGES)!!
-        customPackageNames = findPreference(Key.ROUTE_CUSTOM_PACKAGE_NAME_OR_UID)!!
-        networkType = findPreference(Key.ROUTE_NETWORK_TYPE)!!
-        ssid = findPreference(Key.ROUTE_SSID)!!
+        findPreference<EditTextPreference>(Key.ROUTE_SOURCE_PORT)?.dialogMessage = getString(R.string.format, "53,443,1000-2000")
+        findPreference<EditTextPreference>(Key.ROUTE_PORT)?.dialogMessage = getString(R.string.format, "53,443,1000-2000")
+        val outboundPref = findPreference<ListPreference>(Key.ROUTE_OUTBOUND) ?: return
+        val appsPref = findPreference<AppListPreference>(Key.ROUTE_PACKAGES) ?: return
+        val customPackageNamesPref = findPreference<EditTextPreference>(Key.ROUTE_CUSTOM_PACKAGE_NAME_OR_UID) ?: return
+        val networkTypePref = findPreference<MultiSelectListPreference>(Key.ROUTE_NETWORK_TYPE) ?: return
+        val ssidPref = findPreference<EditTextPreference>(Key.ROUTE_SSID) ?: return
+
+        outbound = outboundPref
+        apps = appsPref
+        customPackageNames = customPackageNamesPref
+        networkType = networkTypePref
+        ssid = ssidPref
 
         apps.isEnabled = customPackageNames.text.isNullOrEmpty()
         customPackageNames.setOnPreferenceChangeListener { _, newValue ->
-            apps.isEnabled = (newValue as String).isEmpty()
+            apps.isEnabled = (newValue as? String).isNullOrEmpty()
             true
         }
 
         val outboundEntries = resources.getStringArray(R.array.outbound_entry)
         if (DataStore.routeOutbound == 3) {
-            // https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-s2-release/core/java/android/preference/ListPreference.java#167
-            // If the summary has a {@linkplain java.lang.String#format String formatting} marker in it,
-            // (i.e. "%s" or "%1$s"), then the current entry value will be substituted in its place.
-            outbound.setSummary(ProfileManager.getProfile(DataStore.routeOutboundRule)?.displayName()?.replace("%", "%%"))
+            val profile = ProfileManager.getProfile(DataStore.routeOutboundRule)
+            outbound.summary = profile?.displayName()?.replace("%", "%%") ?: getString(R.string.route_proxy)
         } else {
-            outbound.setSummary(outboundEntries[DataStore.routeOutbound.toString().toInt()])
+            val idx = DataStore.routeOutbound.coerceIn(0, (outboundEntries.size - 1).coerceAtLeast(0))
+            outbound.summary = outboundEntries.getOrNull(idx) ?: ""
         }
         outbound.apply {
             setOnPreferenceChangeListener { _, newValue ->
-                if (newValue.toString() == "3") {
+                val strVal = newValue.toString()
+                if (strVal == "3") {
                     selectProfileForAdd.launch(
                         Intent(this@RouteSettingsActivity, ProfileSelectActivity::class.java)
                     )
                     false
                 } else {
-                    setSummary(outboundEntries[newValue.toString().toInt()])
+                    val idx = strVal.toIntOrNull()?.coerceIn(0, outboundEntries.size - 1) ?: 0
+                    setSummary(outboundEntries.getOrNull(idx) ?: "")
                     true
                 }
             }
@@ -235,28 +242,29 @@ class RouteSettingsActivity(
             true
         }
 
-        fun updateNetwork(newValues: Set<String> = networkType.values) {
-            networkType.summary = if (newValues.isEmpty()) {
+        fun updateNetwork(newValues: Set<String>? = networkType.values) {
+            val values = newValues ?: emptySet()
+            networkType.summary = if (values.isEmpty()) {
                 getString(androidx.preference.R.string.not_set)
             } else {
                 val types = mutableListOf<String>()
-                if (newValues.contains("data")) types.add(getString(R.string.network_data))
-                if (newValues.contains("wifi")) types.add(getString(R.string.network_wifi))
-                if (newValues.contains("bluetooth")) types.add(getString(R.string.network_bt))
-                if (newValues.contains("ethernet")) types.add(getString(R.string.network_eth))
-                if (newValues.contains("usb")) types.add(getString(R.string.network_usb))
-                if (newValues.contains("satellite")) types.add(getString(R.string.network_satellite))
+                if (values.contains("data")) types.add(getString(R.string.network_data))
+                if (values.contains("wifi")) types.add(getString(R.string.network_wifi))
+                if (values.contains("bluetooth")) types.add(getString(R.string.network_bt))
+                if (values.contains("ethernet")) types.add(getString(R.string.network_eth))
+                if (values.contains("usb")) types.add(getString(R.string.network_usb))
+                if (values.contains("satellite")) types.add(getString(R.string.network_satellite))
                 types.joinToString("\n")
             }
-            ssid.isVisible = newValues.contains("wifi")
+            ssid.isVisible = values.contains("wifi")
         }
 
         updateNetwork()
 
         networkType.setOnPreferenceChangeListener { _, newValues ->
-            newValues as Set<String>
+            val setValues = (newValues as? Set<*>)?.filterIsInstance<String>()?.toSet() ?: emptySet()
             when {
-                newValues.contains("usb") -> if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                setValues.contains("usb") -> if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                     runOnMainDispatcher {
                         MaterialAlertDialogBuilder(this@RouteSettingsActivity)
                             .setMessage(getString(R.string.network_invalid, "12"))
@@ -264,7 +272,7 @@ class RouteSettingsActivity(
                             .show()
                     }
                 }
-                newValues.contains("satellite") -> {
+                setValues.contains("satellite") -> {
                     if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
                         SdkExtensions.getExtensionVersion(Build.VERSION_CODES.UPSIDE_DOWN_CAKE) < 12 ||
                         Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
@@ -277,7 +285,7 @@ class RouteSettingsActivity(
                     }
                 }
             }
-            updateNetwork(newValues)
+            updateNetwork(setValues)
             true
         }
     }
@@ -322,18 +330,19 @@ class RouteSettingsActivity(
                     DataStore.profileCacheStore.registerChangeListener(this@RouteSettingsActivity)
                 }
             }
-
-
-        }
-
-        savedInstanceState?.getBoolean(KEY_DIRTY)?.let {
-            dirty = it
-            onBackPressedCallback.isEnabled = it
+        } else {
+            DataStore.editingId = savedInstanceState.getLong(EXTRA_ROUTE_ID, intent.getLongExtra(EXTRA_ROUTE_ID, 0L))
+            DataStore.profileCacheStore.registerChangeListener(this@RouteSettingsActivity)
+            savedInstanceState.getBoolean(KEY_DIRTY).let {
+                dirty = it
+                onBackPressedCallback.isEnabled = it
+            }
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        outState.putLong(EXTRA_ROUTE_ID, DataStore.editingId)
         outState.putBoolean(KEY_DIRTY, dirty)
     }
 

@@ -44,9 +44,11 @@ class WebDAVSettingsActivity : ThemedActivity() {
             setHomeAsUpIndicator(R.drawable.ic_navigation_close)
         }
 
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.settings, WebDAVSettingsFragment())
-            .commit()
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.settings, WebDAVSettingsFragment())
+                .commit()
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

@@ -30,6 +30,8 @@ import androidx.core.content.ContextCompat
 import io.nekohasekai.sagernet.Action
 import io.nekohasekai.sagernet.BootReceiver
 import io.nekohasekai.sagernet.R
+import io.nekohasekai.sagernet.SagerNet
+import io.nekohasekai.sagernet.TunImplementation
 import io.nekohasekai.sagernet.aidl.AppStatsList
 import io.nekohasekai.sagernet.aidl.ISagerNetService
 import io.nekohasekai.sagernet.aidl.ISagerNetServiceCallback
@@ -516,7 +518,12 @@ class BaseService {
                                 }
                             } else {
                                 semaphore.withPermit {
-                                    val testInstance = V2RayTestInstance(proxy, DataStore.connectionTestURL, 3000)
+                                    val testInstance = V2RayTestInstance(
+                                        proxy,
+                                        DataStore.connectionTestURL,
+                                        3000,
+                                        protectPath = if (DataStore.tunImplementation == TunImplementation.SYSTEM) SagerNet.deviceStorage.noBackupFilesDir.toString() + "/protect_path" else ""
+                                    )
                                     try {
                                         val delay = testInstance.doTest()
                                         proxy.ping = if (delay > 0) delay else -1

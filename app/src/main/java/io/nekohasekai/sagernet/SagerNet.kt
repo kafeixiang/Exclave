@@ -154,6 +154,7 @@ class SagerNet : Application(),
         Libexclavecore.setenv("exclave.conf.geoloader", "memconservative")
         externalAssets.mkdirs()
         Libexclavecore.initializeV2Ray(
+            filesDir.canonicalPath + "/",
             externalAssets.canonicalPath + "/",
             "exclave-core/",
         )

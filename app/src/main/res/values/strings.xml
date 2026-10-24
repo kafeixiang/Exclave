@@ -351,6 +351,7 @@
     <string name="probe_interval">Balancer observation interval (s)</string>
     <string name="available">%d ms</string>
     <string name="unavailable">Unavailable</string>
+    <string name="untested">Untested</string>
     <string name="always_show_address">Always show address</string>
     <string name="always_show_address_sum">Always display the server address on the configuration card</string>
     <string name="clear_traffic_statistics">Clear traffic statistics</string>

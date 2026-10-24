@@ -38,10 +38,12 @@ import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.database.preference.OnPreferenceDataStoreChangeListener
 import io.nekohasekai.sagernet.ktx.Logs
+import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.app
 import io.nekohasekai.sagernet.ktx.isHTTPorHTTPSURL
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
+import io.nekohasekai.sagernet.utils.Theme
 import java.io.File
 
 class AssetEditActivity(
@@ -163,17 +165,19 @@ class AssetEditActivity(
                     DataStore.profileCacheStore.registerChangeListener(this@AssetEditActivity)
                 }
             }
-
-        }
-
-        savedInstanceState?.getBoolean(KEY_DIRTY)?.let {
-            dirty = it
-            onBackPressedCallback.isEnabled = it
+        } else {
+            DataStore.editingAssetName = savedInstanceState.getString(EXTRA_ASSET_NAME, intent.getStringExtra(EXTRA_ASSET_NAME) ?: "")
+            DataStore.profileCacheStore.registerChangeListener(this@AssetEditActivity)
+            savedInstanceState.getBoolean(KEY_DIRTY).let {
+                dirty = it
+                onBackPressedCallback.isEnabled = it
+            }
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        outState.putString(EXTRA_ASSET_NAME, DataStore.editingAssetName)
         outState.putBoolean(KEY_DIRTY, dirty)
     }
 
@@ -274,6 +278,16 @@ class AssetEditActivity(
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
+            if (!Theme.isCupertino()) {
+                view.setBackgroundColor(Theme.getClassicListBackgroundColor())
+                listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            } else {
+                view.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            }
+            setDivider(null)
+            setDividerHeight(0)
+            listView.applyGlassBlur()
 
             ViewCompat.setOnApplyWindowInsetsListener(listView) { v, insets ->
                 val bars = insets.getInsets(

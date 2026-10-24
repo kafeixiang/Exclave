@@ -95,10 +95,11 @@ class TaskerActivity : ThemedActivity(R.layout.layout_config_settings),
             setHomeAsUpIndicator(R.drawable.ic_navigation_close)
         }
 
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.settings, MyPreferenceFragmentCompat())
-            .commit()
-
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.settings, MyPreferenceFragmentCompat())
+                .commit()
+        }
         DataStore.profileCacheStore.registerChangeListener(this)
 
         savedInstanceState?.getBoolean(KEY_DIRTY)?.let {

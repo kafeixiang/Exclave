@@ -63,6 +63,7 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
 
         ruleListView = view.findViewById(R.id.route_list)
         if (!Theme.isCupertino()) {
+            view.setBackgroundColor(Theme.getClassicListBackgroundColor())
             ruleListView.setBackgroundColor(Theme.getClassicListBackgroundColor())
         }
         ruleListView.layoutManager = FixedLinearLayoutManager(ruleListView)

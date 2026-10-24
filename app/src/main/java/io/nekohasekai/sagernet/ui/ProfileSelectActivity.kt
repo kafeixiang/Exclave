@@ -36,14 +36,16 @@ class ProfileSelectActivity : ThemedActivity(R.layout.layout_empty),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val selected = IntentCompat.getParcelableExtra(intent, EXTRA_SELECTED, ProxyEntity::class.java)
+        if (savedInstanceState == null) {
+            val selected = IntentCompat.getParcelableExtra(intent, EXTRA_SELECTED, ProxyEntity::class.java)
 
-        supportFragmentManager.beginTransaction()
-            .replace(
-                R.id.fragment_holder,
-                ConfigurationFragment(true, selected, R.string.select_profile)
-            )
-            .commitAllowingStateLoss()
+            supportFragmentManager.beginTransaction()
+                .replace(
+                    R.id.fragment_holder,
+                    ConfigurationFragment(true, selected, R.string.select_profile)
+                )
+                .commitAllowingStateLoss()
+        }
     }
 
     override fun returnProfile(profileId: Long) {

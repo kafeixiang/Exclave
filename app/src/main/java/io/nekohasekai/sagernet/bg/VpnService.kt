@@ -332,7 +332,6 @@ class VpnService : BaseVpnService(),
                 }
             }
         }
-
         if (tunImplementation == TunImplementation.SYSTEM) {
             config.protectPath = app.cacheDir.toString() + "/protect_path"
         }
