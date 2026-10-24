@@ -1853,26 +1853,15 @@ class ConfigurationFragment @JvmOverloads constructor(
 
             fun applySelected(selected: Boolean) {
                 val ctx = card.context
-                val accent = ctx.getColorAttr(androidx.appcompat.R.attr.colorAccent)
-                val surface = ctx.getColour(R.color.surface_glass)
                 card.strokeWidth = ctx.resources.getDimensionPixelSize(
                     if (selected) R.dimen.card_stroke_width_selected else R.dimen.card_stroke_width
                 )
-                card.strokeColor =
-                    if (selected) ColorUtils.setAlphaComponent(accent, 180) else ctx.getColour(R.color.card_stroke)
+                card.strokeColor = Theme.getCardStrokeColor(ctx, selected)
                 card.cardElevation = 0f
                 card.maxCardElevation = 0f
                 card.preventCornerOverlap = false
                 card.useCompatPadding = false
-                card.setCardBackgroundColor(
-                    if (selected) {
-                        ColorUtils.compositeColors(
-                            ColorUtils.setAlphaComponent(accent, 48), surface
-                        )
-                    } else {
-                        surface
-                    }
-                )
+                card.setCardBackgroundColor(Theme.getCardBackgroundColor(ctx, selected))
                 card.setTag(R.id.tag_custom_style, if (selected) true else null)
             }
 
