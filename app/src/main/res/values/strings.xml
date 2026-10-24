@@ -12,6 +12,15 @@
     <string name="theme">Theme</string>
     <string name="theme_cupertino_category">Cupertino Artistic Themes (23 colors)</string>
     <string name="theme_material_category">Classic Themes</string>
+    <string name="theme_wallpaper_category">Wallpaper Theme &amp; Frosted Glass</string>
+    <string name="enable_wallpaper_theme">Enable Wallpaper Theme</string>
+    <string name="upload_wallpaper">Upload Wallpaper</string>
+    <string name="delete_wallpaper_confirm">Delete this custom wallpaper?</string>
+    <string name="wallpaper_mesh">Fluid Mesh</string>
+    <string name="wallpaper_aurora">Neon Aurora</string>
+    <string name="wallpaper_sunset">Twilight Dusk</string>
+    <string name="wallpaper_nebula">Dark Nebula</string>
+    <string name="custom_wallpaper">Custom Wallpaper</string>
     <string name="speed_zero" translatable="false">0 B/s</string>
     <string name="full_test" translatable="false">Full Test</string>
     <string name="group_default">Ungrouped</string>

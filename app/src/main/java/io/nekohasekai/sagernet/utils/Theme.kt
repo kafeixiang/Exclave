@@ -235,7 +235,9 @@ object Theme {
         return theme in CUPERTINO_PINK..CUPERTINO_UNICORN
     }
 
-    fun isWallpaperTheme(): Boolean = false
+    fun isWallpaperTheme(): Boolean {
+        return DataStore.wallpaperThemeEnabled && DataStore.currentWallpaperPath.isNotEmpty()
+    }
 
     fun getCardBackgroundColor(context: Context, isSelected: Boolean = false): Int {
         val isNight = usingNightMode()
