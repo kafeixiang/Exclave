@@ -136,6 +136,9 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var wallpaperBlurRadius by configurationStore.int(Key.WALLPAPER_BLUR_RADIUS) { 40 }
     var cardGlassOpacity by configurationStore.int(Key.CARD_GLASS_OPACITY) { 82 }
     var liquidGlassMode by configurationStore.int(Key.LIQUID_GLASS_MODE) { 2 }
+    var customColor by configurationStore.int(Key.CUSTOM_COLOR) { 0 }
+    var customColorEnabled by configurationStore.boolean(Key.CUSTOM_COLOR_ENABLED) { false }
+    var customColorsList by configurationStore.string(Key.CUSTOM_COLORS_LIST) { "" }
     var wallpaperThemeEnabled by configurationStore.boolean(Key.WALLPAPER_THEME_ENABLED) { false }
     var currentWallpaperPath by configurationStore.string(Key.CURRENT_WALLPAPER_PATH) { "" }
     var serviceMode by configurationStore.string(Key.SERVICE_MODE) { Key.MODE_VPN }

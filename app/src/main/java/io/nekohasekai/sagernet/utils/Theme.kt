@@ -93,10 +93,16 @@ object Theme {
     }
 
     fun getTheme(): Int {
+        if (DataStore.customColorEnabled && DataStore.customColor != 0) {
+            return getTheme(findClosestTheme(DataStore.customColor))
+        }
         return getTheme(DataStore.appTheme)
     }
 
     fun getDialogTheme(): Int {
+        if (DataStore.customColorEnabled && DataStore.customColor != 0) {
+            return getDialogTheme(findClosestTheme(DataStore.customColor))
+        }
         return getDialogTheme(DataStore.appTheme)
     }
 
@@ -239,11 +245,75 @@ object Theme {
         return DataStore.wallpaperThemeEnabled && DataStore.currentWallpaperPath.isNotEmpty()
     }
 
+    fun getAccentColor(context: Context): Int {
+        if (DataStore.customColorEnabled && DataStore.customColor != 0) {
+            return DataStore.customColor
+        }
+        return context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+    }
+
+    fun findClosestTheme(targetColor: Int): Int {
+        val cupertinoColors = app.resources.getIntArray(R.array.cupertino_colors)
+        var closestTheme = CUPERTINO_PINK
+        var minDistance = Double.MAX_VALUE
+
+        for ((i, color) in cupertinoColors.withIndex()) {
+            val dist = colorDistance(targetColor, color)
+            if (dist < minDistance) {
+                minDistance = dist
+                closestTheme = i + 101
+            }
+        }
+        return closestTheme
+    }
+
+    private fun colorDistance(c1: Int, c2: Int): Double {
+        val rDiff = Color.red(c1) - Color.red(c2)
+        val gDiff = Color.green(c1) - Color.green(c2)
+        val bDiff = Color.blue(c1) - Color.blue(c2)
+        return (rDiff * rDiff + gDiff * gDiff + bDiff * bDiff).toDouble()
+    }
+
+    fun getCustomColors(): MutableList<Int> {
+        val raw = DataStore.customColorsList
+        if (raw.isBlank()) return mutableListOf()
+        return raw.split(",")
+            .mapNotNull {
+                it.trim().toLongOrNull(16)?.toInt()
+            }
+            .toMutableList()
+    }
+
+    fun saveCustomColors(colors: List<Int>) {
+        DataStore.customColorsList = colors.joinToString(",") { Integer.toHexString(it) }
+    }
+
+    fun addCustomColor(color: Int) {
+        val list = getCustomColors()
+        if (!list.contains(color)) {
+            list.add(0, color)
+            saveCustomColors(list)
+        }
+    }
+
+    fun deleteCustomColor(color: Int) {
+        val list = getCustomColors()
+        list.remove(color)
+        saveCustomColors(list)
+        if (DataStore.customColor == color) {
+            if (list.isNotEmpty()) {
+                DataStore.customColor = list.first()
+            } else {
+                DataStore.customColorEnabled = false
+            }
+        }
+    }
+
     fun getCardBackgroundColor(context: Context, isSelected: Boolean = false): Int {
         val isNight = usingNightMode()
         val isWallpaper = isWallpaperTheme()
         val isPureBlack = isNight && DataStore.amoledPureBlack
-        val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+        val accent = getAccentColor(context)
 
         if (isPureBlack && !isWallpaper) {
             val baseBlack = Color.rgb(8, 8, 8)
@@ -286,7 +356,7 @@ object Theme {
 
     fun getCardStrokeColor(context: Context, isSelected: Boolean = false): Int {
         val isNight = usingNightMode()
-        val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+        val accent = getAccentColor(context)
         val isWallpaper = isWallpaperTheme()
         val isUltra = DataStore.liquidGlassMode == 2
 

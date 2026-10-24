@@ -31,6 +31,15 @@
     <string name="theme_background_blur">背景模糊度</string>
     <string name="theme_card_opacity">卡片透明度</string>
     <string name="theme_live_preview">实时效果预览</string>
+    <string name="theme_custom_colors">自定义强调色</string>
+    <string name="add_custom_color">添加颜色</string>
+    <string name="custom_color_title">自定义色彩调节</string>
+    <string name="hex_code">十六进制色值</string>
+    <string name="color_red">红色 (R)</string>
+    <string name="color_green">绿色 (G)</string>
+    <string name="color_blue">蓝色 (B)</string>
+    <string name="color_hue">色相 (H)</string>
+    <string name="delete_color_confirm">确认删除此自定义颜色？</string>
     <string name="run_in_background">后台运行</string>
     <string name="url_test_running_background">URL 测试已转入后台运行，可在通知栏查看进度</string>
     <string name="url_test_cancelled">已取消 URL 测试</string>

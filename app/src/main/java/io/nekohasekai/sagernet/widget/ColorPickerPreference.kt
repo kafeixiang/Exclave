@@ -32,10 +32,13 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
@@ -43,10 +46,8 @@ import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.res.TypedArrayUtils
 import androidx.core.graphics.ColorUtils
@@ -93,10 +94,7 @@ class ColorPickerPreference
         if (!inited) {
             inited = true
 
-            var color = context.getColorAttr(android.R.attr.colorPrimary)
-            if (color == ContextCompat.getColor(context, R.color.white)) {
-                color = ContextCompat.getColor(context, R.color.material_light_black)
-            }
+            val color = Theme.getAccentColor(context)
 
             widgetFrame.addView(
                 getImageViewAtColor(
@@ -135,7 +133,7 @@ class ColorPickerPreference
         super.onClick()
 
         lateinit var dialog: AlertDialog
-        val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+        val accent = Theme.getAccentColor(context)
         var currentSelectedTheme = DataStore.appTheme
 
         val container = LinearLayout(context).apply {
@@ -265,7 +263,7 @@ class ColorPickerPreference
         fun refreshLivePreview() {
             val isNight = Theme.usingNightMode()
             val isPureBlack = isNight && DataStore.amoledPureBlack
-            val curAccent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+            val curAccent = Theme.getAccentColor(context)
 
             if (isPureBlack && !Theme.isWallpaperTheme()) {
                 previewBgImage.setImageDrawable(null)
@@ -351,8 +349,6 @@ class ColorPickerPreference
             Triple(1, context.getString(R.string.theme_mode_dark), "🌙")
         )
 
-        val modeButtons = mutableListOf<TextView>()
-
         fun populateModeButtons() {
             modeRow.removeAllViews()
             val curMode = DataStore.nightTheme
@@ -385,7 +381,6 @@ class ColorPickerPreference
                         (context as? MainActivity)?.updateWallpaperBackground()
                     }
                 }
-                modeButtons.add(btn)
                 modeRow.addView(btn)
             }
         }
@@ -899,7 +894,7 @@ class ColorPickerPreference
         }
 
         // =========================================================================
-        // 7. Accent Color Palettes (FlClash _ColorSwatch)
+        // 7. Accent Color Palettes (FlClash _ColorSwatch & Custom Colors)
         // =========================================================================
         fun getFlClashSwatch(color: Int, isSelected: Boolean, onClick: () -> Unit): View {
             val size = dp2px(48)
@@ -935,17 +930,313 @@ class ColorPickerPreference
             return frame
         }
 
+        lateinit var customColorsFlex: FlexboxLayout
         lateinit var cupertinoFlex: FlexboxLayout
         lateinit var materialFlex: FlexboxLayout
 
+        // Forward declaration of custom color dialog
+        fun showCustomColorDialog(initialColor: Int = if (DataStore.customColor != 0) DataStore.customColor else 0xFF007AFF.toInt()) {
+            var currentColor = initialColor
+            val colorDialogView = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp2px(20), dp2px(12), dp2px(20), dp2px(12))
+            }
+
+            // --- Top Preview: Large Circle & Hex Input ---
+            val previewRow = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dp2px(16)
+                }
+            }
+
+            val largeColorCircle = View(context).apply {
+                layoutParams = LinearLayout.LayoutParams(dp2px(54), dp2px(54)).apply {
+                    marginEnd = dp2px(16)
+                }
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(currentColor)
+                    setStroke(dp2px(2), 0x33FFFFFF)
+                }
+            }
+            previewRow.addView(largeColorCircle)
+
+            val hexInputLayout = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            }
+
+            hexInputLayout.addView(TextView(context).apply {
+                text = context.getString(R.string.hex_code)
+                textSize = 12f
+                setTextColor(context.getColorAttr(android.R.attr.textColorSecondary))
+            })
+
+            val hexEditText = EditText(context).apply {
+                textSize = 18f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setText(String.format("#%06X", 0xFFFFFF and currentColor))
+                setSingleLine()
+            }
+            hexInputLayout.addView(hexEditText)
+            previewRow.addView(hexInputLayout)
+            colorDialogView.addView(previewRow)
+
+            // --- Quick Popular Aesthetic Presets ---
+            val quickPresets = intArrayOf(
+                0xFF007AFF.toInt(), // Electric Blue
+                0xFFFF2D55.toInt(), // Cyber Pink
+                0xFFAF52DE.toInt(), // Neon Purple
+                0xFF30D158.toInt(), // Tiffany Mint
+                0xFFFF9500.toInt(), // Flame Orange
+                0xFFFFD60A.toInt(), // Sunrise Gold
+                0xFF64D2FF.toInt(), // Glacier Cyan
+                0xFFFF3B30.toInt(), // Crimson Red
+                0xFF5856D6.toInt(), // Royal Violet
+                0xFF00C7BE.toInt()  // Emerald Teal
+            )
+
+            val quickScrollView = HorizontalScrollView(context).apply {
+                isHorizontalScrollBarEnabled = false
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = dp2px(16)
+                }
+            }
+            val quickContainer = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+            }
+            quickScrollView.addView(quickContainer)
+
+            lateinit var rSeek: SeekBar
+            lateinit var gSeek: SeekBar
+            lateinit var bSeek: SeekBar
+            lateinit var rText: TextView
+            lateinit var gText: TextView
+            lateinit var bText: TextView
+            var isInternalUpdating = false
+
+            fun updateColor(newColor: Int, fromText: Boolean = false, fromSliders: Boolean = false) {
+                currentColor = newColor
+                (largeColorCircle.background as? GradientDrawable)?.setColor(newColor)
+                if (!fromText) {
+                    isInternalUpdating = true
+                    hexEditText.setText(String.format("#%06X", 0xFFFFFF and newColor))
+                    isInternalUpdating = false
+                }
+                if (!fromSliders) {
+                    isInternalUpdating = true
+                    val r = Color.red(newColor)
+                    val g = Color.green(newColor)
+                    val b = Color.blue(newColor)
+                    rSeek.progress = r
+                    gSeek.progress = g
+                    bSeek.progress = b
+                    rText.text = "$r"
+                    gText.text = "$g"
+                    bText.text = "$b"
+                    isInternalUpdating = false
+                }
+            }
+
+            for (pColor in quickPresets) {
+                val chip = View(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp2px(32), dp2px(32)).apply {
+                        setMargins(dp2px(4), 0, dp2px(4), 0)
+                    }
+                    background = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(pColor)
+                        setStroke(dp2px(1), 0x33FFFFFF)
+                    }
+                    setOnClickListener {
+                        updateColor(pColor)
+                    }
+                }
+                quickContainer.addView(chip)
+            }
+            colorDialogView.addView(quickScrollView)
+
+            fun createChannelSlider(title: String, colorTint: Int, initVal: Int, onValChanged: (Int) -> Unit): Pair<SeekBar, TextView> {
+                val row = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        topMargin = dp2px(4)
+                    }
+                }
+                row.addView(TextView(context).apply {
+                    text = title
+                    textSize = 12f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(colorTint)
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                })
+                val valText = TextView(context).apply {
+                    text = "$initVal"
+                    textSize = 12f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                }
+                row.addView(valText)
+                colorDialogView.addView(row)
+
+                val seek = SeekBar(context).apply {
+                    max = 255
+                    progress = initVal
+                    thumbTintList = ColorStateList.valueOf(colorTint)
+                    progressTintList = ColorStateList.valueOf(colorTint)
+                    setPadding(dp2px(4), dp2px(6), dp2px(4), dp2px(8))
+                    setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                            valText.text = "$progress"
+                            if (fromUser && !isInternalUpdating) {
+                                onValChanged(progress)
+                            }
+                        }
+                        override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                        override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                    })
+                }
+                colorDialogView.addView(seek)
+                return Pair(seek, valText)
+            }
+
+            val rPair = createChannelSlider(context.getString(R.string.color_red), 0xFFFF3B30.toInt(), Color.red(currentColor)) { r ->
+                val newC = Color.rgb(r, Color.green(currentColor), Color.blue(currentColor))
+                updateColor(newC, fromSliders = true)
+            }
+            rSeek = rPair.first
+            rText = rPair.second
+
+            val gPair = createChannelSlider(context.getString(R.string.color_green), 0xFF34C759.toInt(), Color.green(currentColor)) { g ->
+                val newC = Color.rgb(Color.red(currentColor), g, Color.blue(currentColor))
+                updateColor(newC, fromSliders = true)
+            }
+            gSeek = gPair.first
+            gText = gPair.second
+
+            val bPair = createChannelSlider(context.getString(R.string.color_blue), 0xFF007AFF.toInt(), Color.blue(currentColor)) { b ->
+                val newC = Color.rgb(Color.red(currentColor), Color.green(currentColor), b)
+                updateColor(newC, fromSliders = true)
+            }
+            bSeek = bPair.first
+            bText = bPair.second
+
+            hexEditText.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    if (isInternalUpdating) return
+                    val text = s?.toString()?.trim() ?: ""
+                    if (text.startsWith("#") && (text.length == 7 || text.length == 9)) {
+                        try {
+                            val parsed = Color.parseColor(text)
+                            updateColor(parsed, fromText = true)
+                        } catch (_: Exception) {}
+                    }
+                }
+                override fun afterTextChanged(s: Editable?) {}
+            })
+
+            val customDialog = MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.custom_color_title)
+                .setView(colorDialogView)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    Theme.addCustomColor(currentColor)
+                    DataStore.customColor = currentColor
+                    DataStore.customColorEnabled = true
+                    val closestTheme = Theme.findClosestTheme(currentColor)
+                    DataStore.appTheme = closestTheme
+                    persistInt(closestTheme)
+                    dialog.dismiss()
+                    callChangeListener(closestTheme)
+                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .create()
+            customDialog.applyGlassBlur()
+            customDialog.show()
+        }
+
         fun populateColors() {
+            // Populate custom colors
+            customColorsFlex.removeAllViews()
+
+            // + Add Custom Color Button (FlClash _AddColorButton)
+            val addBtnSize = dp2px(48)
+            val addFrame = FrameLayout(context).apply {
+                layoutParams = ViewGroup.MarginLayoutParams(addBtnSize, addBtnSize).apply {
+                    val m = dp2px(4)
+                    setMargins(m, m, m, m)
+                }
+            }
+            val addCircle = FrameLayout(context).apply {
+                val circleSize = dp2px(38)
+                layoutParams = FrameLayout.LayoutParams(circleSize, circleSize, Gravity.CENTER)
+                background = GradientDrawable().apply {
+                    shape = GradientDrawable.OVAL
+                    setColor(Theme.getCardBackgroundColor(context))
+                    setStroke(dp2px(1), accent)
+                }
+                addView(ImageView(context).apply {
+                    layoutParams = FrameLayout.LayoutParams(dp2px(20), dp2px(20), Gravity.CENTER)
+                    setImageResource(R.drawable.ic_action_add)
+                    imageTintList = ColorStateList.valueOf(accent)
+                })
+            }
+            addFrame.addView(addCircle)
+            addFrame.setOnClickListener {
+                showCustomColorDialog()
+            }
+            customColorsFlex.addView(addFrame)
+
+            val savedCustomColors = Theme.getCustomColors()
+            for (color in savedCustomColors) {
+                val isSelected = DataStore.customColorEnabled && DataStore.customColor == color
+                val swatch = getFlClashSwatch(color, isSelected) {
+                    DataStore.customColor = color
+                    DataStore.customColorEnabled = true
+                    val closestTheme = Theme.findClosestTheme(color)
+                    DataStore.appTheme = closestTheme
+                    persistInt(closestTheme)
+                    dialog.dismiss()
+                    callChangeListener(closestTheme)
+                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                }
+                swatch.setOnLongClickListener {
+                    MaterialAlertDialogBuilder(context)
+                        .setTitle(R.string.delete_color_confirm)
+                        .setPositiveButton(android.R.string.ok) { _, _ ->
+                            Theme.deleteCustomColor(color)
+                            populateColors()
+                            refreshLivePreview()
+                            (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                        }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+                    true
+                }
+                customColorsFlex.addView(swatch)
+            }
+
+            // Populate Cupertino Colors
             cupertinoFlex.removeAllViews()
             val cupertinoColors = context.resources.getIntArray(R.array.cupertino_colors)
             for ((i, color) in cupertinoColors.withIndex()) {
                 val themeId = i + 101
-                val isSelected = currentSelectedTheme == themeId
+                val isSelected = !DataStore.customColorEnabled && currentSelectedTheme == themeId
                 val swatch = getFlClashSwatch(color, isSelected) {
                     currentSelectedTheme = themeId
+                    DataStore.customColorEnabled = false
                     persistInt(themeId)
                     DataStore.appTheme = themeId
                     populateColors()
@@ -957,13 +1248,15 @@ class ColorPickerPreference
                 cupertinoFlex.addView(swatch)
             }
 
+            // Populate Material Colors
             materialFlex.removeAllViews()
             val materialColors = context.resources.getIntArray(R.array.material_colors)
             for ((i, color) in materialColors.withIndex()) {
                 val themeId = i + 1
-                val isSelected = currentSelectedTheme == themeId
+                val isSelected = !DataStore.customColorEnabled && currentSelectedTheme == themeId
                 val swatch = getFlClashSwatch(color, isSelected) {
                     currentSelectedTheme = themeId
+                    DataStore.customColorEnabled = false
                     persistInt(themeId)
                     DataStore.appTheme = themeId
                     populateColors()
@@ -976,12 +1269,28 @@ class ColorPickerPreference
             }
         }
 
+        // --- Custom Colors Section ---
+        container.addView(TextView(context).apply {
+            text = "🎨 " + context.getString(R.string.theme_custom_colors)
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, dp2px(8))
+        })
+        customColorsFlex = FlexboxLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            flexWrap = FlexWrap.WRAP
+        }
+        container.addView(customColorsFlex)
+
         // --- Cupertino Section ---
         container.addView(TextView(context).apply {
             text = context.getString(R.string.theme_cupertino_category)
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(0, 0, 0, dp2px(8))
+            setPadding(0, dp2px(12), 0, dp2px(8))
         })
         cupertinoFlex = FlexboxLayout(context).apply {
             layoutParams = ViewGroup.LayoutParams(

@@ -34,6 +34,15 @@
     <string name="theme_background_blur">Background Blur</string>
     <string name="theme_card_opacity">Card Glass Opacity</string>
     <string name="theme_live_preview">Live Theme Preview</string>
+    <string name="theme_custom_colors">Custom Accent Colors</string>
+    <string name="add_custom_color">Add Color</string>
+    <string name="custom_color_title">Custom Color Adjuster</string>
+    <string name="hex_code">HEX Code</string>
+    <string name="color_red">Red (R)</string>
+    <string name="color_green">Green (G)</string>
+    <string name="color_blue">Blue (B)</string>
+    <string name="color_hue">Hue (H)</string>
+    <string name="delete_color_confirm">Delete this custom color?</string>
     <string name="run_in_background">Run in Background</string>
     <string name="url_test_running_background">URL testing running in background, check notification for progress</string>
     <string name="url_test_cancelled">URL testing cancelled</string>

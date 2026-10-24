@@ -521,9 +521,7 @@ class MainActivity : ThemedActivity(),
     var state = BaseService.State.Idle
 
     private fun updateCupertinoTheme() {
-        val typedValue = TypedValue()
-        theme.resolveAttribute(androidx.appcompat.R.attr.colorAccent, typedValue, true)
-        val colorAccent = typedValue.data
+        val colorAccent = Theme.getAccentColor(this)
         binding.cupertinoDock.setAccentColor(colorAccent)
         
         val isNight = io.nekohasekai.sagernet.utils.Theme.usingNightMode()
