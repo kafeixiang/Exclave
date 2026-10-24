@@ -20,7 +20,9 @@
 package io.nekohasekai.sagernet.ui
 
 import android.content.res.Configuration
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.LayerDrawable
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
@@ -42,6 +44,7 @@ import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.ktx.getBooleanProperty
 import io.nekohasekai.sagernet.ktx.getColorAttr
 import io.nekohasekai.sagernet.utils.Theme
+import io.nekohasekai.sagernet.utils.WallpaperManager
 
 abstract class ThemedActivity : AppCompatActivity {
     constructor() : super()
@@ -147,6 +150,18 @@ abstract class ThemedActivity : AppCompatActivity {
                 )
             }
             insets
+        }
+
+        if (Theme.isWallpaperTheme() && this !is MainActivity) {
+            WallpaperManager.loadWallpaperDrawable(this, DataStore.currentWallpaperPath)?.let { drawable ->
+                val isNight = Theme.usingNightMode()
+                val scrimColor = if (isNight) Color.parseColor("#4D000000") else Color.parseColor("#33FFFFFF")
+                val layered = LayerDrawable(arrayOf(
+                    drawable,
+                    ColorDrawable(scrimColor)
+                ))
+                window.setBackgroundDrawable(layered)
+            }
         }
     }
 

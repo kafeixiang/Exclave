@@ -9,6 +9,15 @@
     <string name="menu_about">关于</string>
     <string name="theme_cupertino_category">Cupertino 艺术主题 (23色)</string>
     <string name="theme_material_category">经典主题</string>
+    <string name="theme_wallpaper_category">壁纸主题与磨砂玻璃</string>
+    <string name="enable_wallpaper_theme">启用壁纸主题</string>
+    <string name="upload_wallpaper">上传壁纸</string>
+    <string name="delete_wallpaper_confirm">确认删除此自定义壁纸吗？</string>
+    <string name="wallpaper_mesh">流光弥散</string>
+    <string name="wallpaper_aurora">极光霓虹</string>
+    <string name="wallpaper_sunset">暮色晚霞</string>
+    <string name="wallpaper_nebula">星云暗影</string>
+    <string name="custom_wallpaper">自定义壁纸</string>
     <string name="full_test">全测速</string>
     <string name="group_default">未分组</string>
     <string name="quick_toggle">切换</string>

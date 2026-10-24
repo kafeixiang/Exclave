@@ -48,6 +48,8 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AlertDialog
+import io.nekohasekai.sagernet.utils.Theme
+import io.nekohasekai.sagernet.utils.WallpaperManager
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -200,11 +202,7 @@ class MainActivity : ThemedActivity(),
 
         setContentView(binding.root)
 
-        val bgImage = findViewById<ImageView>(R.id.global_bg_image)
-        if (bgImage != null) {
-            bgImage.setImageResource(R.drawable.bg_mesh_gradient)
-            bgImage.alpha = if (io.nekohasekai.sagernet.utils.Theme.usingNightMode()) 0f else 0.5f
-        }
+        updateWallpaperBackground()
         
         updateCupertinoTheme()
 
@@ -419,17 +417,34 @@ class MainActivity : ThemedActivity(),
     }
 
 
-    fun displayFragment(fragment: ToolbarFragment) {
-        binding.cupertinoDock.animate().translationY(0f).setDuration(225).start()
-        
-        val bgImage = findViewById<ImageView>(R.id.global_bg_image)
-        if (bgImage != null) {
-            val isNight = io.nekohasekai.sagernet.utils.Theme.usingNightMode()
-            bgImage.alpha = if (isNight) 0f else 0.5f
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                bgImage.setRenderEffect(RenderEffect.createBlurEffect(75f, 75f, Shader.TileMode.CLAMP))
+    fun updateWallpaperBackground() {
+        val bgImage = findViewById<ImageView>(R.id.global_bg_image) ?: return
+        val isNight = Theme.usingNightMode()
+        if (Theme.isWallpaperTheme()) {
+            val drawable = WallpaperManager.loadWallpaperDrawable(this, DataStore.currentWallpaperPath)
+            if (drawable != null) {
+                bgImage.setImageDrawable(drawable)
+                bgImage.alpha = if (isNight) 0.85f else 0.92f
+                binding.coordinator.setBackgroundColor(
+                    if (isNight) Color.parseColor("#33000000") else Color.parseColor("#1AFFFFFF")
+                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    bgImage.setRenderEffect(RenderEffect.createBlurEffect(45f, 45f, Shader.TileMode.CLAMP))
+                }
+                return
             }
         }
+        bgImage.setImageResource(R.drawable.bg_mesh_gradient)
+        bgImage.alpha = if (isNight) 0.25f else 0.45f
+        binding.coordinator.setBackgroundResource(R.color.cupertino_window_bg)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            bgImage.setRenderEffect(RenderEffect.createBlurEffect(60f, 60f, Shader.TileMode.CLAMP))
+        }
+    }
+
+    fun displayFragment(fragment: ToolbarFragment) {
+        binding.cupertinoDock.animate().translationY(0f).setDuration(225).start()
+        updateWallpaperBackground()
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_holder, fragment)
@@ -684,6 +699,11 @@ class MainActivity : ThemedActivity(),
 
     override fun onPreferenceDataStoreChanged(store: PreferenceDataStore, key: String) {
         when (key) {
+            Key.WALLPAPER_THEME_ENABLED, Key.CURRENT_WALLPAPER_PATH -> {
+                runOnMainDispatcher {
+                    updateWallpaperBackground()
+                }
+            }
             Key.SERVICE_MODE -> onBinderDied()
             Key.PROXY_APPS, Key.BYPASS_MODE, Key.INDIVIDUAL -> {
                 if (state.canStop) {

@@ -29,6 +29,8 @@ object Key {
     const val PERSIST_ACROSS_REBOOT = "isAutoConnect"
     const val APP_THEME = "appTheme"
     const val NIGHT_THEME = "nightTheme"
+    const val WALLPAPER_THEME_ENABLED = "wallpaperThemeEnabled"
+    const val CURRENT_WALLPAPER_PATH = "currentWallpaperPath"
     const val APP_LANGUAGE = "appLanguage"
     const val SERVICE_MODE = "serviceMode"
     const val MODE_VPN = "vpn"
