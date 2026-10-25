@@ -161,7 +161,7 @@ class ColorPickerPreference
                 radius = dp2px(18).toFloat()
                 cardElevation = 0f
                 maxCardElevation = 0f
-                strokeWidth = dp2px(1)
+                strokeWidth = context.resources.getDimensionPixelSize(R.dimen.card_stroke_width)
                 strokeColor = Theme.getCardStrokeColor(context)
                 setCardBackgroundColor(Theme.getCardBackgroundColor(context))
                 layoutParams = LinearLayout.LayoutParams(
@@ -300,6 +300,10 @@ class ColorPickerPreference
         previewCard.addView(previewFrameLayout)
         container.addView(previewCard)
 
+        var modeGroupCardRef: MaterialCardView? = null
+        var colorsGroupCardRef: MaterialCardView? = null
+        var glassWallpaperCardRef: MaterialCardView? = null
+
         fun refreshLivePreview() {
             val isNight = Theme.usingNightMode()
             val isPureBlack = isNight && DataStore.amoledPureBlack
@@ -331,17 +335,27 @@ class ColorPickerPreference
                 }
             }
 
-            previewCard.strokeColor = Theme.getCardStrokeColor(context)
-            previewCard.setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+            val cardBg = Theme.getCardBackgroundColor(context)
+            val strokeCol = Theme.getCardStrokeColor(context)
 
-            miniCard.strokeColor = Theme.getCardStrokeColor(context)
-            miniCard.setCardBackgroundColor(Theme.getCardBackgroundColor(context))
+            previewCard.strokeColor = strokeCol
+            previewCard.setCardBackgroundColor(cardBg)
+
+            miniCard.strokeColor = strokeCol
+            miniCard.setCardBackgroundColor(cardBg)
             miniCardText.setTextColor(if (isNight) Color.WHITE else Color.BLACK)
 
             miniStatusChip.background = GradientDrawable().apply {
                 cornerRadius = dp2px(6).toFloat()
                 setColor(curAccent)
             }
+
+            modeGroupCardRef?.setCardBackgroundColor(cardBg)
+            modeGroupCardRef?.strokeColor = strokeCol
+            colorsGroupCardRef?.setCardBackgroundColor(cardBg)
+            colorsGroupCardRef?.strokeColor = strokeCol
+            glassWallpaperCardRef?.setCardBackgroundColor(cardBg)
+            glassWallpaperCardRef?.strokeColor = strokeCol
 
             previewModeBadge.text = when {
                 isPureBlack -> "🖤 AMOLED"
@@ -358,7 +372,7 @@ class ColorPickerPreference
         // =========================================================================
         container.addView(createSectionHeader(context.getString(R.string.theme_appearance_mode), "☀️"))
 
-        val modeGroupCard = createGroupCard()
+        val modeGroupCard = createGroupCard().also { modeGroupCardRef = it }
         val modeGroupLayout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
         }
@@ -452,7 +466,7 @@ class ColorPickerPreference
         // =========================================================================
         container.addView(createSectionHeader(context.getString(R.string.theme_custom_colors), "🎨"))
 
-        val colorsGroupCard = createGroupCard()
+        val colorsGroupCard = createGroupCard().also { colorsGroupCardRef = it }
         val colorsGroupLayout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp2px(12), dp2px(12), dp2px(12), dp2px(12))
@@ -881,7 +895,7 @@ class ColorPickerPreference
         // =========================================================================
         container.addView(createSectionHeader(context.getString(R.string.theme_wallpaper_category), "✨"))
 
-        val glassWallpaperCard = createGroupCard()
+        val glassWallpaperCard = createGroupCard().also { glassWallpaperCardRef = it }
         val glassWallpaperLayout = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp2px(14), dp2px(12), dp2px(14), dp2px(12))
@@ -955,13 +969,13 @@ class ColorPickerPreference
 
         val opacitySeekBar = SeekBar(context).apply {
             max = 100
-            progress = DataStore.cardGlassOpacity.coerceIn(25, 100)
+            progress = DataStore.cardGlassOpacity.coerceIn(15, 100)
             thumbTintList = ColorStateList.valueOf(curAccent)
             progressTintList = ColorStateList.valueOf(curAccent)
             setPadding(dp2px(4), dp2px(4), dp2px(4), dp2px(8))
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    val realProgress = progress.coerceAtLeast(25)
+                    val realProgress = progress.coerceAtLeast(15)
                     opacityValueText.text = "$realProgress%"
                     DataStore.cardGlassOpacity = realProgress
                     refreshLivePreview()

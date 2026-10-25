@@ -463,7 +463,7 @@ class MainActivity : ThemedActivity(),
             }
         }
         bgImage.setImageResource(R.drawable.bg_mesh_gradient)
-        bgImage.alpha = if (isNight) 0.25f else 0.45f
+        bgImage.alpha = if (isNight) 0.70f else 0.88f
         binding.coordinator.setBackgroundResource(R.color.cupertino_window_bg)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (blurRadius > 0f) {

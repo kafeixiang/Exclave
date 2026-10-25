@@ -327,12 +327,23 @@ object Theme {
             }
         }
 
-        // FlClash dynamic card glass opacity
-        val opacityPercent = (DataStore.cardGlassOpacity.coerceIn(20, 100)) / 100f
-        val baseAlpha = kotlin.math.round((255 * opacityPercent)).toInt()
+        // iOS Liquid Glass: Calibrated physical translucent opacity curve
+        // Ensures cards stay deliciously translucent, reflecting background blur instead of chalky white
+        val rawOpacity = DataStore.cardGlassOpacity.coerceIn(15, 100)
+        val t = (rawOpacity - 15) / 85f // 0.0 .. 1.0
+
+        val baseAlpha = if (isNight) {
+            // Dark mode: 25% (64) to 60% (153)
+            (64 + t * 89).toInt().coerceIn(40, 180)
+        } else {
+            // Light mode: 20% (50) to 56% (142)
+            // Default at 45%: baseAlpha ≈ 82 (32% crystal clear translucent liquid frost)
+            // Even if legacy pref is 82%: baseAlpha ≈ 122 (48% translucent frost, never solid chalk white)
+            (50 + t * 92).toInt().coerceIn(40, 160)
+        }
 
         val baseGlass = if (isNight) {
-            Color.argb(baseAlpha, 22, 22, 26)
+            Color.argb(baseAlpha, 22, 22, 28)
         } else {
             Color.argb(baseAlpha, 255, 255, 255)
         }
@@ -353,14 +364,16 @@ object Theme {
         val accent = getAccentColor(context)
 
         if (isSelected) {
-            return ColorUtils.setAlphaComponent(accent, 190)
+            return ColorUtils.setAlphaComponent(accent, 210)
         }
 
-        // Pure physical specular highlight rim, zero theme color contamination
+        // iOS Liquid Glass: Pure physical white specular highlight rim (纯白高光反射描边)
         return if (isNight) {
-            Color.argb(45, 255, 255, 255)
+            // Dark mode: Crisp 34% white specular edge reflection
+            Color.argb(86, 255, 255, 255)
         } else {
-            Color.argb(25, 0, 0, 0)
+            // Light mode: Luminous 76% pure white specular rim (brighter than the translucent body)
+            Color.argb(195, 255, 255, 255)
         }
     }
 

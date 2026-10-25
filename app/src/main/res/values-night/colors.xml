@@ -6,13 +6,13 @@
     <color name="dropdown_color_selected">#4F4F4F</color>
 
     <color name="glass_window_tint">#1A000000</color>
-    <color name="glass_card_bg">#BF1A1A1A</color>
-    <color name="glass_card_stroke">#4DFFFFFF</color>
+    <color name="glass_card_bg">#6616161A</color>
+    <color name="glass_card_stroke">#66FFFFFF</color>
 
-    <color name="surface_glass">#E61C1C1E</color>
-    <color name="surface_glass_heavy">#E61C1C1E</color>
+    <color name="surface_glass">#6616161A</color>
+    <color name="surface_glass_heavy">#8516161A</color>
     <color name="cupertino_window_bg">#000000</color>
-    <color name="card_stroke">#26FFFFFF</color>
+    <color name="card_stroke">#54FFFFFF</color>
 
     <color name="popup_glass_bg">#E61E1E20</color>
     <color name="popup_glass_stroke">#33FFFFFF</color>
