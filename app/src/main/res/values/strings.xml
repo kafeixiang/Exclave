@@ -43,6 +43,8 @@
     <string name="color_blue">Blue (B)</string>
     <string name="color_hue">Hue (H)</string>
     <string name="delete_color_confirm">Delete this custom color?</string>
+    <string name="expand_more_colors">More Preset Colors</string>
+    <string name="collapse_colors">Collapse</string>
     <string name="run_in_background">Run in Background</string>
     <string name="url_test_running_background">URL testing running in background, check notification for progress</string>
     <string name="url_test_cancelled">URL testing cancelled</string>

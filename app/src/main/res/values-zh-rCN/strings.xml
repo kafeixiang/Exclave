@@ -40,6 +40,8 @@
     <string name="color_blue">蓝色 (B)</string>
     <string name="color_hue">色相 (H)</string>
     <string name="delete_color_confirm">确认删除此自定义颜色？</string>
+    <string name="expand_more_colors">展开更多预设色彩</string>
+    <string name="collapse_colors">收起</string>
     <string name="run_in_background">后台运行</string>
     <string name="url_test_running_background">URL 测试已转入后台运行，可在通知栏查看进度</string>
     <string name="url_test_cancelled">已取消 URL 测试</string>

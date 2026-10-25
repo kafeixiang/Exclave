@@ -343,12 +343,6 @@ object Theme {
                 ColorUtils.setAlphaComponent(accent, selectAlpha),
                 baseGlass
             )
-        } else if (isCupertino() || isWallpaper || DataStore.liquidGlassMode > 0) {
-            val tintAlpha = if (isNight) 20 else 24
-            ColorUtils.compositeColors(
-                ColorUtils.setAlphaComponent(accent, tintAlpha),
-                baseGlass
-            )
         } else {
             baseGlass
         }
@@ -357,26 +351,16 @@ object Theme {
     fun getCardStrokeColor(context: Context, isSelected: Boolean = false): Int {
         val isNight = usingNightMode()
         val accent = getAccentColor(context)
-        val isWallpaper = isWallpaperTheme()
-        val isUltra = DataStore.liquidGlassMode == 2
 
         if (isSelected) {
             return ColorUtils.setAlphaComponent(accent, 190)
         }
 
-        val baseStroke = if (isNight) {
-            if (isWallpaper || isUltra) Color.argb(65, 255, 255, 255) else Color.argb(38, 255, 255, 255)
+        // Pure physical specular highlight rim, zero theme color contamination
+        return if (isNight) {
+            Color.argb(45, 255, 255, 255)
         } else {
-            if (isWallpaper || isUltra) Color.argb(48, 0, 0, 0) else Color.argb(22, 0, 0, 0)
-        }
-
-        return if (isCupertino() || isWallpaper || isUltra) {
-            ColorUtils.compositeColors(
-                ColorUtils.setAlphaComponent(accent, if (isUltra) 60 else 40),
-                baseStroke
-            )
-        } else {
-            baseStroke
+            Color.argb(25, 0, 0, 0)
         }
     }
 
