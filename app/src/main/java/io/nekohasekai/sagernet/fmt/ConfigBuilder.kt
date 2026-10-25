@@ -2360,7 +2360,7 @@ fun buildV2RayConfig(
         for (rule in extraRules) {
             val uidList = mutableListOf<Int>()
             if (rule.packages.isNotEmpty() || rule.customPackageNames.isNotEmpty()) {
-                if (!isVpn) {
+                if (!isVpn && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     alerts.add(Alerts.ROUTE_ALERT_NOT_VPN to rule.displayName())
                     continue
                 }

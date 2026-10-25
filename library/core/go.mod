@@ -2,7 +2,7 @@ module libexclavecore
 
 go 1.26.0
 
-require github.com/exclavenetwork/libexclavecore v0.0.0-20261025144214-ff7c35bae1f7
+require github.com/exclavenetwork/libexclavecore v0.0.0-20261025155210-542bdb10762b
 
 require (
 	filippo.io/age v1.3.2 // indirect
