@@ -150,6 +150,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             val ctx = bar.context
             bar.setCardBackgroundColor(Theme.getCardBackgroundColor(ctx, false))
             bar.strokeColor = Theme.getCardStrokeColor(ctx, false)
+            bar.strokeWidth = ctx.resources.getDimensionPixelSize(R.dimen.card_stroke_width)
         }
         btnAddCard = view.findViewById(R.id.btn_add_card)
         btnDoneEdit = view.findViewById(R.id.btn_done_edit)

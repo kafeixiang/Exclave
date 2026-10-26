@@ -83,13 +83,19 @@
         <item name="android:layout_marginBottom">0dp</item>
     </style>
 
+    <style name="Animation.FlClash.Dialog" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/flclash_dialog_enter</item>
+        <item name="android:windowExitAnimation">@anim/flclash_dialog_exit</item>
+    </style>
+
     <style name="Theme.SagerNet.Dialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
         <item name="android:windowBlurBehindEnabled" tools:targetApi="s">true</item>
         <item name="android:windowBlurBehindRadius" tools:targetApi="s">60dp</item>
+        <item name="android:windowAnimationStyle">@style/Animation.FlClash.Dialog</item>
         <item name="colorSurface">@color/surface_glass</item>
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:backgroundDimEnabled">false</item>
-        <item name="android:backgroundDimAmount">0.0</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.35</item>
         <item name="android:windowIsFloating">true</item>
         <item name="actionBarStyle">@style/Widget.MaterialComponents.ActionBar.Solid</item>
         <item name="actionModeCloseDrawable">@drawable/ic_navigation_close</item>

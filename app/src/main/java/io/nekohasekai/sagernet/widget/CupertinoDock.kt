@@ -84,7 +84,7 @@ class CupertinoDock @JvmOverloads constructor(
         }
 
         try {
-            accentColor = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+            accentColor = io.nekohasekai.sagernet.utils.Theme.getAccentColor(context)
         } catch (_: Exception) {}
         updateFabColors()
         applyDockMode()

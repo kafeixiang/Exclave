@@ -19,6 +19,7 @@
 
 package io.nekohasekai.sagernet.ktx
 
+import android.app.Dialog
 import android.content.Context
 import android.os.Build
 import android.view.WindowManager
@@ -39,20 +40,27 @@ fun Context.alert(text: String): AlertDialog {
 
 fun Fragment.alert(text: String) = requireContext().alert(text)
 
-fun AlertDialog.applyGlassBlur() {
+fun Dialog.applyGlassBlur(isBottomSheet: Boolean = false) {
     window?.let { window ->
-        window.setBackgroundDrawableResource(R.drawable.bg_dialog_window_whitish)
+        if (!isBottomSheet) {
+            window.setBackgroundDrawableResource(R.drawable.bg_dialog_window_whitish)
+            window.setWindowAnimations(R.style.Animation_FlClash_Dialog)
+        }
 
-        window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-        window.setDimAmount(0f)
+        window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        window.setDimAmount(0.35f)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            window.setElevation(0f)
+            window.setElevation(8f)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-            window.attributes.blurBehindRadius = 80
+            window.attributes.blurBehindRadius = 60
         }
     }
+}
+
+fun AlertDialog.applyGlassBlur() {
+    (this as Dialog).applyGlassBlur(isBottomSheet = false)
 }

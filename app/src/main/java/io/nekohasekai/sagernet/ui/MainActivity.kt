@@ -22,6 +22,7 @@
 package io.nekohasekai.sagernet.ui
 
 import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.graphics.Outline
 import android.graphics.Rect
 import android.graphics.RenderEffect
@@ -433,6 +434,16 @@ class MainActivity : ThemedActivity(),
     fun updateWallpaperBackground() {
         val bgImage = findViewById<ImageView>(R.id.global_bg_image) ?: return
         val isNight = Theme.usingNightMode()
+        val isPureBlack = isNight && DataStore.amoledPureBlack
+        val blurRadius = DataStore.wallpaperBlurRadius.toFloat().coerceIn(0f, 80f)
+
+        if (isPureBlack && !Theme.isWallpaperTheme()) {
+            bgImage.setImageDrawable(null)
+            binding.coordinator.setBackgroundColor(Color.BLACK)
+            window.setBackgroundDrawable(ColorDrawable(Color.BLACK))
+            return
+        }
+
         if (Theme.isWallpaperTheme()) {
             val drawable = WallpaperManager.loadWallpaperDrawable(this, DataStore.currentWallpaperPath)
             if (drawable != null) {
@@ -442,16 +453,24 @@ class MainActivity : ThemedActivity(),
                     if (isNight) Color.parseColor("#33000000") else Color.parseColor("#1AFFFFFF")
                 )
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    bgImage.setRenderEffect(RenderEffect.createBlurEffect(45f, 45f, Shader.TileMode.CLAMP))
+                    if (blurRadius > 0f) {
+                        bgImage.setRenderEffect(RenderEffect.createBlurEffect(blurRadius, blurRadius, Shader.TileMode.CLAMP))
+                    } else {
+                        bgImage.setRenderEffect(null)
+                    }
                 }
                 return
             }
         }
         bgImage.setImageResource(R.drawable.bg_mesh_gradient)
-        bgImage.alpha = if (isNight) 0.25f else 0.45f
+        bgImage.alpha = if (isNight) 0.70f else 0.88f
         binding.coordinator.setBackgroundResource(R.color.cupertino_window_bg)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            bgImage.setRenderEffect(RenderEffect.createBlurEffect(60f, 60f, Shader.TileMode.CLAMP))
+            if (blurRadius > 0f) {
+                bgImage.setRenderEffect(RenderEffect.createBlurEffect(blurRadius, blurRadius, Shader.TileMode.CLAMP))
+            } else {
+                bgImage.setRenderEffect(null)
+            }
         }
     }
 
@@ -502,9 +521,7 @@ class MainActivity : ThemedActivity(),
     var state = BaseService.State.Idle
 
     private fun updateCupertinoTheme() {
-        val typedValue = TypedValue()
-        theme.resolveAttribute(androidx.appcompat.R.attr.colorAccent, typedValue, true)
-        val colorAccent = typedValue.data
+        val colorAccent = Theme.getAccentColor(this)
         binding.cupertinoDock.setAccentColor(colorAccent)
         
         val isNight = io.nekohasekai.sagernet.utils.Theme.usingNightMode()

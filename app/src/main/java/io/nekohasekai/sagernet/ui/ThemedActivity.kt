@@ -41,6 +41,7 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.R
+import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.getBooleanProperty
 import io.nekohasekai.sagernet.ktx.getColorAttr
 import io.nekohasekai.sagernet.utils.Theme
@@ -85,7 +86,9 @@ abstract class ThemedActivity : AppCompatActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
             window.attributes = window.attributes.apply { blurBehindRadius = 60 }
         }
-        if (Theme.isCupertino()) {
+        if (Theme.usingNightMode() && DataStore.amoledPureBlack && !Theme.isWallpaperTheme()) {
+            window.setBackgroundDrawable(ColorDrawable(Color.BLACK))
+        } else if (Theme.isCupertino()) {
             window.setBackgroundDrawableResource(R.color.cupertino_window_bg)
         } else {
             window.setBackgroundDrawable(ColorDrawable(Theme.getClassicListBackgroundColor()))
@@ -96,23 +99,21 @@ abstract class ThemedActivity : AppCompatActivity {
             onBackPressedDispatcher.addCallback(this, it)
         }
 
-        val clearDialogDim = { f: androidx.fragment.app.Fragment ->
+        val applyFragmentGlassBlur = { f: androidx.fragment.app.Fragment ->
             if (f is DialogFragment) {
                 try {
-                    f.dialog?.window?.let { window ->
-                        window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-                        window.setDimAmount(0f)
-                    }
+                    val isBottom = f is com.google.android.material.bottomsheet.BottomSheetDialogFragment
+                    f.dialog?.applyGlassBlur(isBottomSheet = isBottom)
                 } catch (_: Exception) {}
             }
         }
 
         supportFragmentManager.registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
             override fun onFragmentStarted(fm: FragmentManager, f: androidx.fragment.app.Fragment) {
-                clearDialogDim(f)
+                applyFragmentGlassBlur(f)
             }
             override fun onFragmentResumed(fm: FragmentManager, f: androidx.fragment.app.Fragment) {
-                clearDialogDim(f)
+                applyFragmentGlassBlur(f)
             }
         }, true)
 
