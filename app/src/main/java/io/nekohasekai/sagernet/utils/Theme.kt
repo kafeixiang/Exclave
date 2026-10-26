@@ -93,10 +93,16 @@ object Theme {
     }
 
     fun getTheme(): Int {
+        if (DataStore.customColorEnabled && DataStore.customColor != 0) {
+            return getTheme(findClosestTheme(DataStore.customColor))
+        }
         return getTheme(DataStore.appTheme)
     }
 
     fun getDialogTheme(): Int {
+        if (DataStore.customColorEnabled && DataStore.customColor != 0) {
+            return getDialogTheme(findClosestTheme(DataStore.customColor))
+        }
         return getDialogTheme(DataStore.appTheme)
     }
 
@@ -239,32 +245,113 @@ object Theme {
         return DataStore.wallpaperThemeEnabled && DataStore.currentWallpaperPath.isNotEmpty()
     }
 
+    fun getAccentColor(context: Context): Int {
+        if (DataStore.customColorEnabled && DataStore.customColor != 0) {
+            return DataStore.customColor
+        }
+        return context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+    }
+
+    fun findClosestTheme(targetColor: Int): Int {
+        val cupertinoColors = app.resources.getIntArray(R.array.cupertino_colors)
+        var closestTheme = CUPERTINO_PINK
+        var minDistance = Double.MAX_VALUE
+
+        for ((i, color) in cupertinoColors.withIndex()) {
+            val dist = colorDistance(targetColor, color)
+            if (dist < minDistance) {
+                minDistance = dist
+                closestTheme = i + 101
+            }
+        }
+        return closestTheme
+    }
+
+    private fun colorDistance(c1: Int, c2: Int): Double {
+        val rDiff = Color.red(c1) - Color.red(c2)
+        val gDiff = Color.green(c1) - Color.green(c2)
+        val bDiff = Color.blue(c1) - Color.blue(c2)
+        return (rDiff * rDiff + gDiff * gDiff + bDiff * bDiff).toDouble()
+    }
+
+    fun getCustomColors(): MutableList<Int> {
+        val raw = DataStore.customColorsList
+        if (raw.isBlank()) return mutableListOf()
+        return raw.split(",")
+            .mapNotNull {
+                it.trim().toLongOrNull(16)?.toInt()
+            }
+            .toMutableList()
+    }
+
+    fun saveCustomColors(colors: List<Int>) {
+        DataStore.customColorsList = colors.joinToString(",") { Integer.toHexString(it) }
+    }
+
+    fun addCustomColor(color: Int) {
+        val list = getCustomColors()
+        if (!list.contains(color)) {
+            list.add(0, color)
+            saveCustomColors(list)
+        }
+    }
+
+    fun deleteCustomColor(color: Int) {
+        val list = getCustomColors()
+        list.remove(color)
+        saveCustomColors(list)
+        if (DataStore.customColor == color) {
+            if (list.isNotEmpty()) {
+                DataStore.customColor = list.first()
+            } else {
+                DataStore.customColorEnabled = false
+            }
+        }
+    }
+
     fun getCardBackgroundColor(context: Context, isSelected: Boolean = false): Int {
         val isNight = usingNightMode()
         val isWallpaper = isWallpaperTheme()
-        val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
+        val isPureBlack = isNight && DataStore.amoledPureBlack
+        val accent = getAccentColor(context)
 
-        // Unified base surface:
-        // When wallpaper theme is active: translucent acrylic frosted glass
-        // Dark mode: ~82% opacity (#D118181C), Light mode: ~86% opacity (#DCFFFFFF)
-        // Standard mode:
-        // Dark mode: ~94% opacity (#F01C1C1E), Light mode: ~94% opacity (#F0FFFFFF)
-        val baseGlass = if (isWallpaper) {
-            if (isNight) Color.argb(208, 24, 24, 28) else Color.argb(220, 255, 255, 255)
+        if (isPureBlack && !isWallpaper) {
+            val baseBlack = Color.rgb(8, 8, 8)
+            return if (isSelected) {
+                ColorUtils.compositeColors(
+                    ColorUtils.setAlphaComponent(accent, 55),
+                    baseBlack
+                )
+            } else {
+                baseBlack
+            }
+        }
+
+        // iOS Liquid Glass: Calibrated physical translucent opacity curve
+        // Ensures cards stay deliciously translucent, reflecting background blur instead of chalky white
+        val rawOpacity = DataStore.cardGlassOpacity.coerceIn(15, 100)
+        val t = (rawOpacity - 15) / 85f // 0.0 .. 1.0
+
+        val baseAlpha = if (isNight) {
+            // Dark mode: 25% (64) to 60% (153)
+            (64 + t * 89).toInt().coerceIn(40, 180)
         } else {
-            if (isNight) Color.argb(240, 28, 28, 30) else Color.argb(240, 255, 255, 255)
+            // Light mode: 20% (50) to 56% (142)
+            // Default at 45%: baseAlpha ≈ 82 (32% crystal clear translucent liquid frost)
+            // Even if legacy pref is 82%: baseAlpha ≈ 122 (48% translucent frost, never solid chalk white)
+            (50 + t * 92).toInt().coerceIn(40, 160)
+        }
+
+        val baseGlass = if (isNight) {
+            Color.argb(baseAlpha, 22, 22, 28)
+        } else {
+            Color.argb(baseAlpha, 255, 255, 255)
         }
 
         return if (isSelected) {
             val selectAlpha = if (isNight) 55 else 48
             ColorUtils.compositeColors(
                 ColorUtils.setAlphaComponent(accent, selectAlpha),
-                baseGlass
-            )
-        } else if (isCupertino() || isWallpaper) {
-            val tintAlpha = if (isNight) 20 else 24
-            ColorUtils.compositeColors(
-                ColorUtils.setAlphaComponent(accent, tintAlpha),
                 baseGlass
             )
         } else {
@@ -274,32 +361,26 @@ object Theme {
 
     fun getCardStrokeColor(context: Context, isSelected: Boolean = false): Int {
         val isNight = usingNightMode()
-        val accent = context.getColorAttr(androidx.appcompat.R.attr.colorAccent)
-        val isWallpaper = isWallpaperTheme()
+        val accent = getAccentColor(context)
 
         if (isSelected) {
-            return ColorUtils.setAlphaComponent(accent, 190)
+            return ColorUtils.setAlphaComponent(accent, 210)
         }
 
-        val baseStroke = if (isNight) {
-            if (isWallpaper) Color.argb(60, 255, 255, 255) else Color.argb(38, 255, 255, 255)
+        // iOS Liquid Glass: Pure physical white specular highlight rim (纯白高光反射描边)
+        return if (isNight) {
+            // Dark mode: Crisp 34% white specular edge reflection
+            Color.argb(86, 255, 255, 255)
         } else {
-            if (isWallpaper) Color.argb(45, 0, 0, 0) else Color.argb(22, 0, 0, 0)
-        }
-
-        return if (isCupertino() || isWallpaper) {
-            ColorUtils.compositeColors(
-                ColorUtils.setAlphaComponent(accent, 40),
-                baseStroke
-            )
-        } else {
-            baseStroke
+            // Light mode: Luminous 76% pure white specular rim (brighter than the translucent body)
+            Color.argb(195, 255, 255, 255)
         }
     }
 
     fun getClassicListBackgroundColor(): Int {
-        return if (usingNightMode()) {
-            Color.BLACK
+        val isNight = usingNightMode()
+        return if (isNight) {
+            if (DataStore.amoledPureBlack) Color.BLACK else Color.rgb(18, 18, 20)
         } else {
             Color.rgb(0xF2, 0xF2, 0xF7)
         }

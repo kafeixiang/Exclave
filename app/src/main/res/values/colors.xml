@@ -337,13 +337,13 @@
     <color name="color_verdant_mint_300">#509177</color>
 
     <color name="glass_window_tint">#0DFFFFFF</color>
-    <color name="glass_card_bg">#B3FFFFFF</color>
-    <color name="glass_card_stroke">#E6FFFFFF</color>
+    <color name="glass_card_bg">#66FFFFFF</color>
+    <color name="glass_card_stroke">#D9FFFFFF</color>
 
-    <color name="surface_glass">#E6FFFFFF</color>
-    <color name="surface_glass_heavy">#F5E6E6EB</color>
+    <color name="surface_glass">#66FFFFFF</color>
+    <color name="surface_glass_heavy">#85F2F2F7</color>
     <color name="cupertino_window_bg">#F2F2F7</color>
-    <color name="card_stroke">#14000000</color>
+    <color name="card_stroke">#C4FFFFFF</color>
 
     <color name="popup_glass_bg">#F5E8E8ED</color>
     <color name="popup_glass_stroke">#B3FFFFFF</color>
