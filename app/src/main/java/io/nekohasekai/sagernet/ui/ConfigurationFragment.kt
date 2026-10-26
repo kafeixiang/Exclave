@@ -24,7 +24,10 @@ import io.nekohasekai.sagernet.aidl.AppStats
 import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.text.TextUtils
@@ -266,7 +269,18 @@ class ConfigurationFragment @JvmOverloads constructor(
             tab.view.setOnLongClickListener { // clear toast
                 true
             }
+            tab.view.post {
+                for (j in 0 until tab.view.childCount) {
+                    val child = tab.view.getChildAt(j)
+                    if (child is TextView) {
+                        child.isSingleLine = true
+                        child.maxLines = 1
+                        child.ellipsize = null
+                    }
+                }
+            }
         }.attach()
+        updateTabLayoutMode()
 
         toolbar.setOnClickListener {
 
@@ -347,6 +361,68 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
 
         super.onDestroy()
+    }
+
+    fun updateTabLayoutMode() {
+        if (!::tabLayout.isInitialized) return
+        tabLayout.post {
+            if (!isAdded) return@post
+            val count = tabLayout.tabCount
+            if (count == 0) return@post
+
+            // 1. Force single-line and clear ellipsis on all Tab TextViews
+            for (i in 0 until count) {
+                val tab = tabLayout.getTabAt(i) ?: continue
+                val tabView = tab.view
+                for (j in 0 until tabView.childCount) {
+                    val child = tabView.getChildAt(j)
+                    if (child is TextView) {
+                        child.isSingleLine = true
+                        child.maxLines = 1
+                        child.ellipsize = null
+                    }
+                }
+            }
+
+            // 2. Measure total width needed for all tabs
+            val displayMetrics = resources.displayMetrics
+            val screenWidth = displayMetrics.widthPixels
+            val marginPx = dp2px(16) * 2 // 16dp horizontal margin on each side
+            val availableWidth = (screenWidth - marginPx).coerceAtLeast(0)
+
+            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textSize = dp2px(11).toFloat()
+                typeface = Typeface.DEFAULT_BOLD
+            }
+            val horizontalPaddingPerTab = dp2px(28) // 14dp start + 14dp end
+            var totalContentWidth = 0
+            for (i in 0 until count) {
+                val text = tabLayout.getTabAt(i)?.text?.toString().orEmpty()
+                val textWidth = textPaint.measureText(text).toInt()
+                totalContentWidth += textWidth + horizontalPaddingPerTab
+            }
+
+            val measuredWidth = tabLayout.getChildAt(0)?.measuredWidth ?: 0
+            val effectiveWidth = maxOf(measuredWidth, totalContentWidth)
+
+            val lp = tabLayout.layoutParams as? LinearLayout.LayoutParams ?: return@post
+            if (effectiveWidth <= availableWidth) {
+                // Total tabs fit within available screen width: wrap content tightly and center horizontally
+                lp.width = LinearLayout.LayoutParams.WRAP_CONTENT
+                lp.gravity = Gravity.CENTER_HORIZONTAL
+            } else {
+                // Total tabs exceed available screen width: expand to match parent and enable smooth dragging
+                lp.width = LinearLayout.LayoutParams.MATCH_PARENT
+                lp.gravity = Gravity.NO_GRAVITY
+            }
+            tabLayout.layoutParams = lp
+            tabLayout.requestLayout()
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        updateTabLayoutMode()
     }
 
     override fun onKeyDown(ketCode: Int, event: KeyEvent): Boolean {
@@ -1104,6 +1180,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     if (!select) {
                         groupPager.registerOnPageChangeCallback(updateSelectedCallback)
                     }
+                    updateTabLayoutMode()
                 }
             }
         }
@@ -1150,6 +1227,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
                 notifyItemInserted(groupList.size - 1)
                 tabLayout.getTabAt(groupList.size - 1)?.select()
+                updateTabLayoutMode()
             }
         }
 
@@ -1159,6 +1237,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 if (index == -1) return@post
                 groupList.removeAt(index)
                 notifyItemRemoved(index)
+                updateTabLayoutMode()
             }
         }
 
@@ -1167,7 +1246,8 @@ class ConfigurationFragment @JvmOverloads constructor(
             if (index == -1) return
 
             tabLayout.post {
-                tabLayout.getTabAt(index)?.text = group.displayName()
+                tabLayout.getTabAt(index + 1)?.text = group.displayName()
+                updateTabLayoutMode()
             }
         }
 
