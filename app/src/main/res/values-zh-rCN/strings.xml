@@ -41,7 +41,15 @@
     <string name="color_hue">色相 (H)</string>
     <string name="delete_color_confirm">确认删除此自定义颜色？</string>
     <string name="expand_more_colors">展开更多预设色彩</string>
+    <string name="expand_more_cupertino">展开全部 Cupertino 色彩 (23款)</string>
+    <string name="expand_more_material">展开全部经典 Material 色彩 (21款)</string>
     <string name="collapse_colors">收起</string>
+    <string name="theme_active_badge">当前生效</string>
+    <string name="theme_cupertino_desc">专享 iOS 液态玻璃、毛玻璃 Dock 栏与悬浮质感</string>
+    <string name="theme_material_desc">Android 原生 Material Design 传统规范配色</string>
+    <string name="theme_wallpaper_desc">支持多级壁纸模糊与液态玻璃通透度调节（Cupertino 专享）</string>
+    <string name="theme_cupertino_presets">Cupertino 预设色彩</string>
+    <string name="theme_material_presets">Material 预设色彩</string>
     <string name="run_in_background">后台运行</string>
     <string name="url_test_running_background">URL 测试已转入后台运行，可在通知栏查看进度</string>
     <string name="url_test_cancelled">已取消 URL 测试</string>

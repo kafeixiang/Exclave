@@ -44,7 +44,15 @@
     <string name="color_hue">Hue (H)</string>
     <string name="delete_color_confirm">Delete this custom color?</string>
     <string name="expand_more_colors">More Preset Colors</string>
+    <string name="expand_more_cupertino">Expand all Cupertino colors (23)</string>
+    <string name="expand_more_material">Expand all Material colors (21)</string>
     <string name="collapse_colors">Collapse</string>
+    <string name="theme_active_badge">Active</string>
+    <string name="theme_cupertino_desc">iOS Liquid Glass, Frosted Dock &amp; Floating Style</string>
+    <string name="theme_material_desc">Android Native Material Design Traditional Palette</string>
+    <string name="theme_wallpaper_desc">Multi-level blur and liquid glass opacity (Cupertino exclusive)</string>
+    <string name="theme_cupertino_presets">Cupertino Presets</string>
+    <string name="theme_material_presets">Material Presets</string>
     <string name="run_in_background">Run in Background</string>
     <string name="url_test_running_background">URL testing running in background, check notification for progress</string>
     <string name="url_test_cancelled">URL testing cancelled</string>

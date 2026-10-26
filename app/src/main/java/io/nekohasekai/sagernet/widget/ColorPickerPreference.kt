@@ -142,17 +142,65 @@ class ColorPickerPreference
             )
         }
 
-        fun createSectionHeader(title: String, icon: String): View {
+        fun createSectionHeader(
+            title: String,
+            icon: String,
+            isActive: Boolean = false,
+            subtitle: String? = null
+        ): View {
             return LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp2px(2), dp2px(10), dp2px(2), dp2px(6))
-                addView(TextView(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp2px(2), dp2px(12), dp2px(2), dp2px(6))
+
+                val titleRow = LinearLayout(context).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                }
+
+                titleRow.addView(TextView(context).apply {
                     text = "$icon  $title"
-                    textSize = 13f
+                    textSize = 13.5f
                     setTypeface(null, android.graphics.Typeface.BOLD)
                     setTextColor(context.getColorAttr(android.R.attr.textColorPrimary))
+                    layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
                 })
+
+                if (isActive) {
+                    val activeBadge = TextView(context).apply {
+                        text = "● " + context.getString(R.string.theme_active_badge)
+                        textSize = 10f
+                        setTypeface(null, android.graphics.Typeface.BOLD)
+                        val curAccent = Theme.getAccentColor(context)
+                        setTextColor(curAccent)
+                        setPadding(dp2px(8), dp2px(2), dp2px(8), dp2px(2))
+                        background = GradientDrawable().apply {
+                            cornerRadius = dp2px(8).toFloat()
+                            setColor(ColorUtils.setAlphaComponent(curAccent, 40))
+                        }
+                    }
+                    titleRow.addView(activeBadge)
+                }
+
+                addView(titleRow)
+
+                if (subtitle != null) {
+                    addView(TextView(context).apply {
+                        text = subtitle
+                        textSize = 11f
+                        setTextColor(context.getColorAttr(android.R.attr.textColorSecondary))
+                        setPadding(dp2px(2), dp2px(2), 0, 0)
+                    })
+                }
+            }
+        }
+
+        fun createSubsectionLabel(title: String): View {
+            return TextView(context).apply {
+                text = title
+                textSize = 11.5f
+                setTypeface(null, android.graphics.Typeface.BOLD)
+                setTextColor(context.getColorAttr(android.R.attr.textColorSecondary))
+                setPadding(dp2px(2), dp2px(6), dp2px(2), dp2px(4))
             }
         }
 
@@ -301,13 +349,15 @@ class ColorPickerPreference
         container.addView(previewCard)
 
         var modeGroupCardRef: MaterialCardView? = null
-        var colorsGroupCardRef: MaterialCardView? = null
+        var cupertinoCardRef: MaterialCardView? = null
+        var materialCardRef: MaterialCardView? = null
         var glassWallpaperCardRef: MaterialCardView? = null
 
         fun refreshLivePreview() {
             val isNight = Theme.usingNightMode()
             val isPureBlack = isNight && DataStore.amoledPureBlack
             val curAccent = Theme.getAccentColor(context)
+            val isCurrentCupertino = DataStore.customColorEnabled || Theme.isCupertino(currentSelectedTheme)
 
             if (isPureBlack && !Theme.isWallpaperTheme()) {
                 previewBgImage.setImageDrawable(null)
@@ -344,6 +394,7 @@ class ColorPickerPreference
             miniCard.strokeColor = strokeCol
             miniCard.setCardBackgroundColor(cardBg)
             miniCardText.setTextColor(if (isNight) Color.WHITE else Color.BLACK)
+            miniCardText.text = if (isCurrentCupertino) "Liquid Glass" else "Material Card"
 
             miniStatusChip.background = GradientDrawable().apply {
                 cornerRadius = dp2px(6).toFloat()
@@ -352,17 +403,21 @@ class ColorPickerPreference
 
             modeGroupCardRef?.setCardBackgroundColor(cardBg)
             modeGroupCardRef?.strokeColor = strokeCol
-            colorsGroupCardRef?.setCardBackgroundColor(cardBg)
-            colorsGroupCardRef?.strokeColor = strokeCol
+            cupertinoCardRef?.setCardBackgroundColor(cardBg)
+            cupertinoCardRef?.strokeColor = strokeCol
+            materialCardRef?.setCardBackgroundColor(cardBg)
+            materialCardRef?.strokeColor = strokeCol
             glassWallpaperCardRef?.setCardBackgroundColor(cardBg)
             glassWallpaperCardRef?.strokeColor = strokeCol
 
-            previewModeBadge.text = when {
+            val modeStr = when {
                 isPureBlack -> "🖤 AMOLED"
                 DataStore.nightTheme == 1 -> "🌙 " + context.getString(R.string.theme_mode_dark)
                 DataStore.nightTheme == 2 -> "☀️ " + context.getString(R.string.theme_mode_light)
                 else -> "📱 " + context.getString(R.string.theme_mode_system)
             }
+            val typeStr = if (isCurrentCupertino) "🍎 Cupertino" else "🤖 Material"
+            previewModeBadge.text = "$modeStr · $typeStr"
         }
 
         refreshLivePreview()
@@ -461,17 +516,6 @@ class ColorPickerPreference
         modeGroupCard.addView(modeGroupLayout)
         container.addView(modeGroupCard)
 
-        // =========================================================================
-        // 3. Group: Theme Accent Colors (FlClash _PrimaryColorItem & Swatches)
-        // =========================================================================
-        container.addView(createSectionHeader(context.getString(R.string.theme_custom_colors), "🎨"))
-
-        val colorsGroupCard = createGroupCard().also { colorsGroupCardRef = it }
-        val colorsGroupLayout = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp2px(12), dp2px(12), dp2px(12), dp2px(12))
-        }
-
         fun getFlClashSwatch(color: Int, isSelected: Boolean, onClick: () -> Unit): View {
             val size = dp2px(42)
             val frame = FrameLayout(context).apply {
@@ -506,10 +550,11 @@ class ColorPickerPreference
             return frame
         }
 
-        lateinit var mainSwatchesFlex: FlexboxLayout
-        lateinit var moreColorsFlex: FlexboxLayout
-        lateinit var btnExpandMore: TextView
-        var isColorsExpanded = false
+        lateinit var customSwatchesFlex: FlexboxLayout
+        lateinit var cupertinoMainFlex: FlexboxLayout
+        lateinit var cupertinoMoreFlex: FlexboxLayout
+        lateinit var materialMainFlex: FlexboxLayout
+        lateinit var materialMoreFlex: FlexboxLayout
 
         // Custom Color Dialog
         fun showCustomColorDialog(initialColor: Int = if (DataStore.customColor != 0) DataStore.customColor else 0xFF007AFF.toInt()) {
@@ -733,10 +778,15 @@ class ColorPickerPreference
         }
 
         fun populateColors() {
-            mainSwatchesFlex.removeAllViews()
+            customSwatchesFlex.removeAllViews()
+            cupertinoMainFlex.removeAllViews()
+            cupertinoMoreFlex.removeAllViews()
+            materialMainFlex.removeAllViews()
+            materialMoreFlex.removeAllViews()
+
+            val curAccent = Theme.getAccentColor(context)
 
             // 1. + Add Custom Color Button (FlClash _AddColorButton)
-            val curAccent = Theme.getAccentColor(context)
             val addBtnSize = dp2px(42)
             val addFrame = FrameLayout(context).apply {
                 layoutParams = ViewGroup.MarginLayoutParams(addBtnSize, addBtnSize).apply {
@@ -760,7 +810,7 @@ class ColorPickerPreference
             }
             addFrame.addView(addCircle)
             addFrame.setOnClickListener { showCustomColorDialog() }
-            mainSwatchesFlex.addView(addFrame)
+            customSwatchesFlex.addView(addFrame)
 
             // 2. User Saved Custom Colors
             val savedCustomColors = Theme.getCustomColors()
@@ -789,13 +839,13 @@ class ColorPickerPreference
                         .show()
                     true
                 }
-                mainSwatchesFlex.addView(swatch)
+                customSwatchesFlex.addView(swatch)
             }
 
-            // 3. Curated 10 Modern Signature Cupertino Colors (Clean & Aesthetic)
+            // 3. Cupertino Preset Colors (23 colors)
             val cupertinoColors = context.resources.getIntArray(R.array.cupertino_colors)
-            val curatedCount = minOf(10, cupertinoColors.size)
-            for (i in 0 until curatedCount) {
+            val curatedCupertinoCount = minOf(10, cupertinoColors.size)
+            for (i in 0 until curatedCupertinoCount) {
                 val color = cupertinoColors[i]
                 val themeId = i + 101
                 val isSelected = !DataStore.customColorEnabled && currentSelectedTheme == themeId
@@ -804,18 +854,14 @@ class ColorPickerPreference
                     DataStore.customColorEnabled = false
                     persistInt(themeId)
                     DataStore.appTheme = themeId
-                    populateColors()
-                    refreshLivePreview()
-                    callChangeListener(themeId)
                     dialog.dismiss()
+                    callChangeListener(themeId)
                     (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
                 }
-                mainSwatchesFlex.addView(swatch)
+                cupertinoMainFlex.addView(swatch)
             }
 
-            // 4. Extended Colors in Expandable section
-            moreColorsFlex.removeAllViews()
-            for (i in curatedCount until cupertinoColors.size) {
+            for (i in curatedCupertinoCount until cupertinoColors.size) {
                 val color = cupertinoColors[i]
                 val themeId = i + 101
                 val isSelected = !DataStore.customColorEnabled && currentSelectedTheme == themeId
@@ -824,76 +870,195 @@ class ColorPickerPreference
                     DataStore.customColorEnabled = false
                     persistInt(themeId)
                     DataStore.appTheme = themeId
-                    populateColors()
-                    refreshLivePreview()
-                    callChangeListener(themeId)
                     dialog.dismiss()
+                    callChangeListener(themeId)
                     (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
                 }
-                moreColorsFlex.addView(swatch)
+                cupertinoMoreFlex.addView(swatch)
             }
 
+            // 4. Material Classic Colors (21 colors)
             val materialColors = context.resources.getIntArray(R.array.material_colors)
-            for ((i, color) in materialColors.withIndex()) {
-                val themeId = i + 1
+            val curatedMaterialCount = minOf(10, materialColors.size)
+            for (i in 0 until curatedMaterialCount) {
+                val color = materialColors[i]
+                val themeId = if (i == 20) Theme.VERDANT_MINT else i + 1
                 val isSelected = !DataStore.customColorEnabled && currentSelectedTheme == themeId
                 val swatch = getFlClashSwatch(color, isSelected) {
                     currentSelectedTheme = themeId
                     DataStore.customColorEnabled = false
                     persistInt(themeId)
                     DataStore.appTheme = themeId
-                    populateColors()
-                    refreshLivePreview()
-                    callChangeListener(themeId)
                     dialog.dismiss()
+                    callChangeListener(themeId)
                     (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
                 }
-                moreColorsFlex.addView(swatch)
+                materialMainFlex.addView(swatch)
+            }
+
+            for (i in curatedMaterialCount until materialColors.size) {
+                val color = materialColors[i]
+                val themeId = if (i == 20) Theme.VERDANT_MINT else i + 1
+                val isSelected = !DataStore.customColorEnabled && currentSelectedTheme == themeId
+                val swatch = getFlClashSwatch(color, isSelected) {
+                    currentSelectedTheme = themeId
+                    DataStore.customColorEnabled = false
+                    persistInt(themeId)
+                    DataStore.appTheme = themeId
+                    dialog.dismiss()
+                    callChangeListener(themeId)
+                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                }
+                materialMoreFlex.addView(swatch)
             }
         }
 
-        mainSwatchesFlex = FlexboxLayout(context).apply {
+        // =========================================================================
+        // 3. Group: 🍎 Cupertino 艺术主题 (iOS 液态玻璃风格)
+        // =========================================================================
+        val isCupertinoActive = DataStore.customColorEnabled || Theme.isCupertino(currentSelectedTheme)
+        container.addView(
+            createSectionHeader(
+                title = context.getString(R.string.theme_cupertino_category),
+                icon = "🍎",
+                isActive = isCupertinoActive,
+                subtitle = context.getString(R.string.theme_cupertino_desc)
+            )
+        )
+
+        val cupertinoCard = createGroupCard().also { cupertinoCardRef = it }
+        val cupertinoLayout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp2px(12), dp2px(12), dp2px(12), dp2px(12))
+        }
+
+        // --- Custom Color Subsection ---
+        cupertinoLayout.addView(createSubsectionLabel("🎨 " + context.getString(R.string.theme_custom_colors)))
+        customSwatchesFlex = FlexboxLayout(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
             flexWrap = FlexWrap.WRAP
         }
-        colorsGroupLayout.addView(mainSwatchesFlex)
+        cupertinoLayout.addView(customSwatchesFlex)
 
-        // Expand/Collapse More Presets
-        moreColorsFlex = FlexboxLayout(context).apply {
+        // Divider
+        cupertinoLayout.addView(createDivider().apply {
+            (layoutParams as? LinearLayout.LayoutParams)?.let {
+                it.topMargin = dp2px(8)
+                it.bottomMargin = dp2px(8)
+            }
+        })
+
+        // --- Cupertino Presets Subsection ---
+        cupertinoLayout.addView(createSubsectionLabel("🍎 " + context.getString(R.string.theme_cupertino_presets)))
+        cupertinoMainFlex = FlexboxLayout(context).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
             flexWrap = FlexWrap.WRAP
-            visibility = View.GONE
         }
-        colorsGroupLayout.addView(moreColorsFlex)
+        cupertinoLayout.addView(cupertinoMainFlex)
 
-        btnExpandMore = TextView(context).apply {
-            text = "▾ " + context.getString(R.string.expand_more_colors)
+        var isCupertinoExpanded = !DataStore.customColorEnabled && currentSelectedTheme in 111..123
+        cupertinoMoreFlex = FlexboxLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            flexWrap = FlexWrap.WRAP
+            visibility = if (isCupertinoExpanded) View.VISIBLE else View.GONE
+        }
+        cupertinoLayout.addView(cupertinoMoreFlex)
+
+        val btnExpandCupertino = TextView(context).apply {
+            text = if (isCupertinoExpanded) "▴ " + context.getString(R.string.collapse_colors) else "▾ " + context.getString(R.string.expand_more_cupertino)
             textSize = 11f
             setTextColor(context.getColorAttr(android.R.attr.textColorSecondary))
             gravity = Gravity.CENTER
             setPadding(0, dp2px(8), 0, dp2px(2))
             setOnClickListener {
-                isColorsExpanded = !isColorsExpanded
-                moreColorsFlex.visibility = if (isColorsExpanded) View.VISIBLE else View.GONE
-                text = if (isColorsExpanded) "▴ " + context.getString(R.string.collapse_colors) else "▾ " + context.getString(R.string.expand_more_colors)
+                isCupertinoExpanded = !isCupertinoExpanded
+                cupertinoMoreFlex.visibility = if (isCupertinoExpanded) View.VISIBLE else View.GONE
+                text = if (isCupertinoExpanded) "▴ " + context.getString(R.string.collapse_colors) else "▾ " + context.getString(R.string.expand_more_cupertino)
             }
         }
-        colorsGroupLayout.addView(btnExpandMore)
+        cupertinoLayout.addView(btnExpandCupertino)
+
+        cupertinoCard.addView(cupertinoLayout)
+        container.addView(cupertinoCard)
+
+        // =========================================================================
+        // 4. Group: 🤖 经典主题 (Material 原生风格)
+        // =========================================================================
+        val isMaterialActive = !DataStore.customColorEnabled && !Theme.isCupertino(currentSelectedTheme)
+        container.addView(
+            createSectionHeader(
+                title = context.getString(R.string.theme_material_category),
+                icon = "🤖",
+                isActive = isMaterialActive,
+                subtitle = context.getString(R.string.theme_material_desc)
+            )
+        )
+
+        val materialCard = createGroupCard().also { materialCardRef = it }
+        val materialLayout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp2px(12), dp2px(12), dp2px(12), dp2px(12))
+        }
+
+        materialLayout.addView(createSubsectionLabel("🤖 " + context.getString(R.string.theme_material_presets)))
+        materialMainFlex = FlexboxLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            flexWrap = FlexWrap.WRAP
+        }
+        materialLayout.addView(materialMainFlex)
+
+        var isMaterialExpanded = !DataStore.customColorEnabled && currentSelectedTheme in 11..22
+        materialMoreFlex = FlexboxLayout(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            flexWrap = FlexWrap.WRAP
+            visibility = if (isMaterialExpanded) View.VISIBLE else View.GONE
+        }
+        materialLayout.addView(materialMoreFlex)
+
+        val btnExpandMaterial = TextView(context).apply {
+            text = if (isMaterialExpanded) "▴ " + context.getString(R.string.collapse_colors) else "▾ " + context.getString(R.string.expand_more_material)
+            textSize = 11f
+            setTextColor(context.getColorAttr(android.R.attr.textColorSecondary))
+            gravity = Gravity.CENTER
+            setPadding(0, dp2px(8), 0, dp2px(2))
+            setOnClickListener {
+                isMaterialExpanded = !isMaterialExpanded
+                materialMoreFlex.visibility = if (isMaterialExpanded) View.VISIBLE else View.GONE
+                text = if (isMaterialExpanded) "▴ " + context.getString(R.string.collapse_colors) else "▾ " + context.getString(R.string.expand_more_material)
+            }
+        }
+        materialLayout.addView(btnExpandMaterial)
+
+        materialCard.addView(materialLayout)
+        container.addView(materialCard)
 
         populateColors()
-        colorsGroupCard.addView(colorsGroupLayout)
-        container.addView(colorsGroupCard)
 
         // =========================================================================
-        // 4. Group: Glass & Wallpaper (FlClash Background Blur & Opacity Sliders)
+        // 5. Group: Glass & Wallpaper (FlClash Background Blur & Opacity Sliders)
         // =========================================================================
-        container.addView(createSectionHeader(context.getString(R.string.theme_wallpaper_category), "✨"))
+        container.addView(
+            createSectionHeader(
+                title = context.getString(R.string.theme_wallpaper_category),
+                icon = "✨",
+                subtitle = context.getString(R.string.theme_wallpaper_desc)
+            )
+        )
 
         val glassWallpaperCard = createGroupCard().also { glassWallpaperCardRef = it }
         val glassWallpaperLayout = LinearLayout(context).apply {
