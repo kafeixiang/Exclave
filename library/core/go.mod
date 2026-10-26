@@ -2,7 +2,7 @@ module libexclavecore
 
 go 1.26.0
 
-require github.com/exclavenetwork/libexclavecore v0.0.0-20261025155210-542bdb10762b
+require github.com/exclavenetwork/libexclavecore v0.0.0-20261026125151-32111db14977
 
 require (
 	filippo.io/age v1.3.2 // indirect
@@ -16,13 +16,13 @@ require (
 	github.com/dgryski/go-camellia v0.0.0-20191119043421-69a8a13fb23d // indirect
 	github.com/dgryski/go-metro v0.0.0-20261008173524-5059e0b1da03 // indirect
 	github.com/enfein/mieru/v3 v3.39.0 // indirect
-	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261025142127-e6e10985b051 // indirect
+	github.com/exclavenetwork/exclave-core/v5 v5.50.1-0.20261026111057-ecaed2cce153 // indirect
 	github.com/exclavenetwork/go-stun v0.1.7-0.20260811120819-d09f4628f065 // indirect
 	github.com/exclavenetwork/hysteria/core/v2 v2.13.0-1 // indirect
 	github.com/exclavenetwork/hysteria/extras/v2 v2.13.0-1 // indirect
 	github.com/exclavenetwork/reality v0.0.0-20261024092657-66bffb4f0244 // indirect
 	github.com/exclavenetwork/sing-juicity v0.3.1 // indirect
-	github.com/exclavenetwork/sing-shadowquic v0.0.0-20261003180916-bfda7e07df34 // indirect
+	github.com/exclavenetwork/sing-shadowquic v0.0.0-20261025201941-b0544c564b00 // indirect
 	github.com/gofrs/uuid/v5 v5.5.1 // indirect
 	github.com/golang-collections/go-datastructures v0.0.0-20150211160725-59788d5eb259 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
