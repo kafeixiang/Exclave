@@ -64,7 +64,9 @@ import kotlinx.coroutines.DEBUG_PROPERTY_VALUE_ON
 import libexclavecore.AndroidCAStore
 import libexclavecore.Libexclavecore
 import libexclavecore.UidDumper
-import java.io.ByteArrayOutputStream
+import org.bouncycastle.util.io.pem.PemObject
+import org.bouncycastle.util.io.pem.PemWriter
+import java.io.StringWriter
 import java.net.Inet6Address
 import java.net.InetSocketAddress
 import java.security.KeyStore
@@ -156,13 +158,15 @@ class SagerNet : Application(),
     override fun certificates(): ByteArray {
         try {
             val keyStore = KeyStore.getInstance("AndroidCAStore")
-            val byteArrayStream = ByteArrayOutputStream()
             keyStore.load(null, null)
+            val stringWriter = StringWriter()
+            val pemWriter = PemWriter(stringWriter)
             val aliases = keyStore.aliases()
             while (aliases.hasMoreElements()) {
-                byteArrayStream.write(keyStore.getCertificate(aliases.nextElement()).encoded)
+                pemWriter.writeObject(PemObject("CERTIFICATE", keyStore.getCertificate(aliases.nextElement()).encoded))
             }
-            return byteArrayStream.toByteArray()
+            pemWriter.close()
+            return stringWriter.toString().toByteArray()
         } catch (e: Exception) {
             throw e
         }
