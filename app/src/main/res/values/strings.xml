@@ -142,6 +142,12 @@
     <string name="dashboard_import_sub">Import Sub</string>
     <string name="dashboard_refresh_dns">Refresh DNS</string>
     <string name="dashboard_share_config">Share Config</string>
+    <string name="dashboard_templates">Presets</string>
+    <string name="dashboard_template_default">Default Balanced</string>
+    <string name="dashboard_template_minimal">Minimalist</string>
+    <string name="dashboard_template_pro">Pro Monitor</string>
+    <string name="dashboard_template_applied">Layout template applied</string>
+    <string name="copied_ip">IP address copied to clipboard</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
     <string name="upload">Upload</string>
