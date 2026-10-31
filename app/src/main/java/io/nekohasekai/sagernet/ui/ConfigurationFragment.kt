@@ -370,7 +370,58 @@ class ConfigurationFragment @JvmOverloads constructor(
             val count = tabLayout.tabCount
             if (count == 0) return@post
 
-            // 1. Force single-line and clear ellipsis on all Tab TextViews
+            // 1. Tag 栏外框长短固定为 match_parent，保持固定的整体轨道长度
+            val lp = tabLayout.layoutParams as? LinearLayout.LayoutParams
+            if (lp != null && lp.width != LinearLayout.LayoutParams.MATCH_PARENT) {
+                lp.width = LinearLayout.LayoutParams.MATCH_PARENT
+                lp.gravity = Gravity.NO_GRAVITY
+                tabLayout.layoutParams = lp
+            }
+
+            // 2. 测量可用宽度
+            val containerWidth = if (tabLayout.width > 0) {
+                tabLayout.width
+            } else {
+                val screenWidth = resources.displayMetrics.widthPixels
+                val marginPx = dp2px(16) * 2 // 16dp horizontal margin on each side
+                (screenWidth - marginPx).coerceAtLeast(0)
+            }
+            val availableWidth = (containerWidth - tabLayout.paddingLeft - tabLayout.paddingRight).coerceAtLeast(0)
+
+            // 3. 测量各 tag 组所需的自然宽度
+            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textSize = dp2px(11).toFloat()
+                typeface = Typeface.DEFAULT_BOLD
+            }
+            val horizontalPaddingPerTab = dp2px(28) // 14dp start + 14dp end
+            val slotWidth = if (count > 0) availableWidth / count else 0
+            var totalContentWidth = 0
+            var anyTabExceedsSlot = false
+            for (i in 0 until count) {
+                val text = tabLayout.getTabAt(i)?.text?.toString().orEmpty()
+                val textWidth = textPaint.measureText(text).toInt()
+                val tabNeededWidth = textWidth + horizontalPaddingPerTab
+                totalContentWidth += tabNeededWidth
+                if (tabNeededWidth > slotWidth) {
+                    anyTabExceedsSlot = true
+                }
+            }
+
+            // 4. Tag 组自动适应：
+            // - 若总宽度超出可用宽度或任一 tag 超过均分槽位（会产生换行/挤压）：tag 组自适应为 SCROLLABLE 滚动模式，按内容撑开并支持横向左右拖动
+            // - 若所有 tag 都能舒适放下：tag 组自适应为 FIXED 均分模式，铺满固定长短的 tag 栏
+            val shouldScroll = (totalContentWidth > availableWidth) || anyTabExceedsSlot
+            val targetMode = if (shouldScroll) TabLayout.MODE_SCROLLABLE else TabLayout.MODE_FIXED
+            val targetGravity = if (shouldScroll) TabLayout.GRAVITY_START else TabLayout.GRAVITY_FILL
+
+            if (tabLayout.tabMode != targetMode) {
+                tabLayout.tabMode = targetMode
+            }
+            if (tabLayout.tabGravity != targetGravity) {
+                tabLayout.tabGravity = targetGravity
+            }
+
+            // 5. 确保所有 Tab 的 TextView 保持严格单行，避免在任何情况下文字折行挤压
             for (i in 0 until count) {
                 val tab = tabLayout.getTabAt(i) ?: continue
                 val tabView = tab.view
@@ -379,44 +430,20 @@ class ConfigurationFragment @JvmOverloads constructor(
                     if (child is TextView) {
                         child.isSingleLine = true
                         child.maxLines = 1
-                        child.ellipsize = null
+                        if (shouldScroll) {
+                            child.ellipsize = null
+                        } else {
+                            child.ellipsize = TextUtils.TruncateAt.END
+                        }
                     }
                 }
             }
 
-            // 2. Measure total width needed for all tabs
-            val displayMetrics = resources.displayMetrics
-            val screenWidth = displayMetrics.widthPixels
-            val marginPx = dp2px(16) * 2 // 16dp horizontal margin on each side
-            val availableWidth = (screenWidth - marginPx).coerceAtLeast(0)
-
-            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                textSize = dp2px(11).toFloat()
-                typeface = Typeface.DEFAULT_BOLD
-            }
-            val horizontalPaddingPerTab = dp2px(28) // 14dp start + 14dp end
-            var totalContentWidth = 0
-            for (i in 0 until count) {
-                val text = tabLayout.getTabAt(i)?.text?.toString().orEmpty()
-                val textWidth = textPaint.measureText(text).toInt()
-                totalContentWidth += textWidth + horizontalPaddingPerTab
-            }
-
-            val measuredWidth = tabLayout.getChildAt(0)?.measuredWidth ?: 0
-            val effectiveWidth = maxOf(measuredWidth, totalContentWidth)
-
-            val lp = tabLayout.layoutParams as? LinearLayout.LayoutParams ?: return@post
-            if (effectiveWidth <= availableWidth) {
-                // Total tabs fit within available screen width: wrap content tightly and center horizontally
-                lp.width = LinearLayout.LayoutParams.WRAP_CONTENT
-                lp.gravity = Gravity.CENTER_HORIZONTAL
-            } else {
-                // Total tabs exceed available screen width: expand to match parent and enable smooth dragging
-                lp.width = LinearLayout.LayoutParams.MATCH_PARENT
-                lp.gravity = Gravity.NO_GRAVITY
-            }
-            tabLayout.layoutParams = lp
             tabLayout.requestLayout()
+            val current = tabLayout.selectedTabPosition
+            if (current in 0 until count) {
+                tabLayout.setScrollPosition(current, 0f, true)
+            }
         }
     }
 
