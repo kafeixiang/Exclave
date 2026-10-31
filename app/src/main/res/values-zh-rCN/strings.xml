@@ -140,6 +140,12 @@
     <string name="dashboard_import_sub">导入订阅</string>
     <string name="dashboard_refresh_dns">刷新 DNS</string>
     <string name="dashboard_share_config">分享配置</string>
+    <string name="dashboard_templates">布局模版</string>
+    <string name="dashboard_template_default">出厂推荐（均衡完整）</string>
+    <string name="dashboard_template_minimal">极简常用（核心精简）</string>
+    <string name="dashboard_template_pro">监控专家（运维全面）</string>
+    <string name="dashboard_template_applied">已应用布局模版</string>
+    <string name="copied_ip">已复制外网 IP 地址到剪贴板</string>
     <string name="connected">已连接</string>
     <string name="disconnected">未连接</string>
     <string name="upload">上传</string>

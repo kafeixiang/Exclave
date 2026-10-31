@@ -24,7 +24,10 @@ import io.nekohasekai.sagernet.aidl.AppStats
 import android.app.Activity
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.text.TextUtils
@@ -128,8 +131,8 @@ class ConfigurationFragment @JvmOverloads constructor(
     lateinit var groupPager: ViewPager2
     var searchView: SearchView? = null
     val selectedGroup
-        get() = if (adapter.groupList.size > 0) {
-            val position = groupPager.currentItem
+        get() = if (::adapter.isInitialized && adapter.groupList.size > 0) {
+            val position = if (::groupPager.isInitialized) groupPager.currentItem else 0
             if (position > 0 && position <= adapter.groupList.size) {
                 adapter.groupList[position - 1]
             } else {
@@ -146,6 +149,7 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     fun switchAllGroupFragmentsLayout() {
+        if (!::adapter.isInitialized) return
         adapter.groupFragments.values.forEach { fragment ->
             if (fragment.isAdded && fragment.view != null) {
                 fragment.switchLayoutMode()
@@ -157,8 +161,15 @@ class ConfigurationFragment @JvmOverloads constructor(
         override fun onPageScrolled(
             position: Int, positionOffset: Float, positionOffsetPixels: Int
         ) {
-            if (position > 0 && adapter.groupList.size > position - 1) {
+            if (::adapter.isInitialized && position > 0 && adapter.groupList.size > position - 1) {
                 DataStore.selectedGroup = adapter.groupList[position - 1].id
+            }
+        }
+
+        override fun onPageSelected(position: Int) {
+            super.onPageSelected(position)
+            if (::adapter.isInitialized) {
+                adapter.dashboardFragment?.onVisibilityInPagerChanged(position == 0)
             }
         }
     }
@@ -266,7 +277,18 @@ class ConfigurationFragment @JvmOverloads constructor(
             tab.view.setOnLongClickListener { // clear toast
                 true
             }
+            tab.view.post {
+                for (j in 0 until tab.view.childCount) {
+                    val child = tab.view.getChildAt(j)
+                    if (child is TextView) {
+                        child.isSingleLine = true
+                        child.maxLines = 1
+                        child.ellipsize = null
+                    }
+                }
+            }
         }.attach()
+        updateTabLayoutMode()
 
         toolbar.setOnClickListener {
 
@@ -347,6 +369,95 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
 
         super.onDestroy()
+    }
+
+    fun updateTabLayoutMode() {
+        if (!::tabLayout.isInitialized) return
+        tabLayout.post {
+            if (!isAdded) return@post
+            val count = tabLayout.tabCount
+            if (count == 0) return@post
+
+            // 1. Tag 栏外框长短固定为 match_parent，保持固定的整体轨道长度
+            val lp = tabLayout.layoutParams as? LinearLayout.LayoutParams
+            if (lp != null && lp.width != LinearLayout.LayoutParams.MATCH_PARENT) {
+                lp.width = LinearLayout.LayoutParams.MATCH_PARENT
+                lp.gravity = Gravity.NO_GRAVITY
+                tabLayout.layoutParams = lp
+            }
+
+            // 2. 测量可用宽度
+            val containerWidth = if (tabLayout.width > 0) {
+                tabLayout.width
+            } else {
+                val screenWidth = resources.displayMetrics.widthPixels
+                val marginPx = dp2px(16) * 2 // 16dp horizontal margin on each side
+                (screenWidth - marginPx).coerceAtLeast(0)
+            }
+            val availableWidth = (containerWidth - tabLayout.paddingLeft - tabLayout.paddingRight).coerceAtLeast(0)
+
+            // 3. 测量各 tag 组所需的自然宽度
+            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                textSize = dp2px(11).toFloat()
+                typeface = Typeface.DEFAULT_BOLD
+            }
+            val horizontalPaddingPerTab = dp2px(28) // 14dp start + 14dp end
+            val slotWidth = if (count > 0) availableWidth / count else 0
+            var totalContentWidth = 0
+            var anyTabExceedsSlot = false
+            for (i in 0 until count) {
+                val text = tabLayout.getTabAt(i)?.text?.toString().orEmpty()
+                val textWidth = textPaint.measureText(text).toInt()
+                val tabNeededWidth = textWidth + horizontalPaddingPerTab
+                totalContentWidth += tabNeededWidth
+                if (tabNeededWidth > slotWidth) {
+                    anyTabExceedsSlot = true
+                }
+            }
+
+            // 4. Tag 组自动适应：
+            // - 若总宽度超出可用宽度或任一 tag 超过均分槽位（会产生换行/挤压）：tag 组自适应为 SCROLLABLE 滚动模式，按内容撑开并支持横向左右拖动
+            // - 若所有 tag 都能舒适放下：tag 组自适应为 FIXED 均分模式，铺满固定长短的 tag 栏
+            val shouldScroll = (totalContentWidth > availableWidth) || anyTabExceedsSlot
+            val targetMode = if (shouldScroll) TabLayout.MODE_SCROLLABLE else TabLayout.MODE_FIXED
+            val targetGravity = if (shouldScroll) TabLayout.GRAVITY_START else TabLayout.GRAVITY_FILL
+
+            if (tabLayout.tabMode != targetMode) {
+                tabLayout.tabMode = targetMode
+            }
+            if (tabLayout.tabGravity != targetGravity) {
+                tabLayout.tabGravity = targetGravity
+            }
+
+            // 5. 确保所有 Tab 的 TextView 保持严格单行，避免在任何情况下文字折行挤压
+            for (i in 0 until count) {
+                val tab = tabLayout.getTabAt(i) ?: continue
+                val tabView = tab.view
+                for (j in 0 until tabView.childCount) {
+                    val child = tabView.getChildAt(j)
+                    if (child is TextView) {
+                        child.isSingleLine = true
+                        child.maxLines = 1
+                        if (shouldScroll) {
+                            child.ellipsize = null
+                        } else {
+                            child.ellipsize = TextUtils.TruncateAt.END
+                        }
+                    }
+                }
+            }
+
+            tabLayout.requestLayout()
+            val current = tabLayout.selectedTabPosition
+            if (current in 0 until count) {
+                tabLayout.setScrollPosition(current, 0f, true)
+            }
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        updateTabLayoutMode()
     }
 
     override fun onKeyDown(ketCode: Int, event: KeyEvent): Boolean {
@@ -1037,14 +1148,17 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     fun stateChanged(state: BaseService.State, profileName: String?) {
+        if (!::adapter.isInitialized) return
         adapter.dashboardFragment?.stateChanged(state, profileName)
     }
 
     fun trafficUpdated(stats: TrafficStats) {
+        if (!::adapter.isInitialized) return
         adapter.dashboardFragment?.trafficUpdated(stats)
     }
 
     fun appStatsUpdated(stats: List<AppStats>) {
+        if (!::adapter.isInitialized) return
         adapter.dashboardFragment?.appStatsUpdated(stats)
     }
 
@@ -1104,6 +1218,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     if (!select) {
                         groupPager.registerOnPageChangeCallback(updateSelectedCallback)
                     }
+                    updateTabLayoutMode()
                 }
             }
         }
@@ -1150,6 +1265,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
                 notifyItemInserted(groupList.size - 1)
                 tabLayout.getTabAt(groupList.size - 1)?.select()
+                updateTabLayoutMode()
             }
         }
 
@@ -1159,6 +1275,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                 if (index == -1) return@post
                 groupList.removeAt(index)
                 notifyItemRemoved(index)
+                updateTabLayoutMode()
             }
         }
 
@@ -1167,7 +1284,8 @@ class ConfigurationFragment @JvmOverloads constructor(
             if (index == -1) return
 
             tabLayout.post {
-                tabLayout.getTabAt(index)?.text = group.displayName()
+                tabLayout.getTabAt(index + 1)?.text = group.displayName()
+                updateTabLayoutMode()
             }
         }
 

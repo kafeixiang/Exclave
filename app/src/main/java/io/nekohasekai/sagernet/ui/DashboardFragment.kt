@@ -3,6 +3,9 @@ package io.nekohasekai.sagernet.ui
 import io.nekohasekai.sagernet.aidl.AppStats
 import kotlin.time.Duration.Companion.seconds
 
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.SystemClock
@@ -13,6 +16,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isGone
@@ -64,6 +68,17 @@ import kotlin.system.measureTimeMillis
 private const val MENU_ID_EDIT = 1001
 private const val MENU_ID_ADD = 1002
 private const val MENU_ID_DONE = 1003
+
+// 局部增量刷新 Payload 常量
+private const val PAYLOAD_STATUS = 1
+private const val PAYLOAD_SPEED = 2
+private const val PAYLOAD_TRAFFIC = 3
+private const val PAYLOAD_GEOIP = 4
+private const val PAYLOAD_LATENCY = 5
+private const val PAYLOAD_CONNECTIONS = 6
+private const val PAYLOAD_RUNTIME = 7
+private const val PAYLOAD_MEMORY = 8
+private const val PAYLOAD_PROFILES = 9
 
 data class ServiceTarget(
     val id: String,
@@ -131,9 +146,20 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
     private var editModeFloatingBar: View? = null
     private var btnAddCard: View? = null
+    private var btnPresetTemplates: View? = null
     private var btnDoneEdit: View? = null
 
-    data class GeoIpData(var ip: String = "", var location: String = "", var isp: String = "", var asn: String = "")
+    var isDashboardVisible = true
+        private set
+    private var hasPendingUpdate = false
+
+    data class GeoIpData(
+        var ip: String = "",
+        var location: String = "",
+        var isp: String = "",
+        var asn: String = "",
+        var countryCode: String = ""
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -153,9 +179,14 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             bar.strokeWidth = ctx.resources.getDimensionPixelSize(R.dimen.card_stroke_width)
         }
         btnAddCard = view.findViewById(R.id.btn_add_card)
+        btnPresetTemplates = view.findViewById(R.id.btn_preset_templates)
         btnDoneEdit = view.findViewById(R.id.btn_done_edit)
 
         btnAddCard?.setOnClickListener { openAddCardSheet() }
+        btnPresetTemplates?.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            showPresetTemplatesDialog()
+        }
         btnDoneEdit?.setOnClickListener { toggleEditMode(false) }
 
         adapter = DashboardAdapter()
@@ -207,9 +238,13 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             override suspend fun onUpdated(profile: ProxyEntity) {
                 runOnMainDispatcher {
                     if (isAdded) {
-                        adapter.updateItem(ItemType.TRAFFIC)
-                        adapter.updateItem(ItemType.STATUS)
-                        adapter.updateItem(ItemType.PROFILES)
+                        if (isDashboardVisible && isResumed) {
+                            adapter.updateItemWithPayload(ItemType.TRAFFIC, PAYLOAD_TRAFFIC)
+                            adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
+                            adapter.updateItemWithPayload(ItemType.PROFILES, PAYLOAD_PROFILES)
+                        } else {
+                            hasPendingUpdate = true
+                        }
                     }
                 }
             }
@@ -217,6 +252,131 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         })
 
         startUptimeTimer()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val parentPager = (parentFragment as? ConfigurationFragment)?.groupPager
+        val isVisibleInPager = parentPager?.currentItem == 0
+        onVisibilityInPagerChanged(isVisibleInPager)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        onVisibilityInPagerChanged(false)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        recyclerView = null
+        editModeFloatingBar = null
+        btnAddCard = null
+        btnPresetTemplates = null
+        btnDoneEdit = null
+    }
+
+    fun onVisibilityInPagerChanged(visible: Boolean) {
+        if (isDashboardVisible == visible) return
+        isDashboardVisible = visible
+        if (visible) {
+            if (hasPendingUpdate && ::adapter.isInitialized) {
+                hasPendingUpdate = false
+                adapter.notifyItemRangeChanged(0, adapter.itemCount)
+            } else if (::adapter.isInitialized) {
+                val statusIndex = adapter.items.indexOf(ItemType.STATUS)
+                if (statusIndex != -1) {
+                    val holder = recyclerView?.findViewHolderForAdapterPosition(statusIndex) as? DashboardAdapter.StatusViewHolder
+                    if (lastState == BaseService.State.Connected) {
+                        holder?.binding?.statusIcon?.let { holder.startBreathing(it) }
+                    }
+                }
+            }
+        } else {
+            val statusIndex = if (::adapter.isInitialized) adapter.items.indexOf(ItemType.STATUS) else -1
+            if (statusIndex != -1) {
+                val holder = recyclerView?.findViewHolderForAdapterPosition(statusIndex) as? DashboardAdapter.StatusViewHolder
+                holder?.stopBreathing()
+            }
+        }
+    }
+
+    fun showPresetTemplatesDialog() {
+        val context = context ?: return
+        val templateNames = arrayOf(
+            getString(R.string.dashboard_template_default),
+            getString(R.string.dashboard_template_minimal),
+            getString(R.string.dashboard_template_pro)
+        )
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle(R.string.dashboard_templates)
+            .setItems(templateNames) { _, which ->
+                when (which) {
+                    0 -> { // Default Balanced
+                        val order = listOf(
+                            ItemType.STATUS, ItemType.SPEED, ItemType.TRAFFIC, ItemType.GEOIP,
+                            ItemType.LATENCY, ItemType.QUICK_TOOLS, ItemType.PROFILES,
+                            ItemType.CONNECTIONS, ItemType.RUN_TIME, ItemType.DNS_QUERIES, ItemType.MEMORY_INFO
+                        )
+                        val sizes = mapOf(
+                            "status" to 2, "speed" to 2, "traffic" to 1, "geoip" to 1,
+                            "latency" to 2, "quick_tools" to 2, "profiles" to 1,
+                            "connections" to 1, "run_time" to 1, "dns_queries" to 1, "memory_info" to 1
+                        )
+                        applyPresetTemplate(order, sizes)
+                    }
+                    1 -> { // Minimalist
+                        val order = listOf(
+                            ItemType.STATUS, ItemType.SPEED, ItemType.TRAFFIC,
+                            ItemType.PROFILES, ItemType.QUICK_TOOLS
+                        )
+                        val sizes = mapOf(
+                            "status" to 2, "speed" to 2, "traffic" to 2,
+                            "profiles" to 2, "quick_tools" to 2
+                        )
+                        applyPresetTemplate(order, sizes)
+                    }
+                    2 -> { // Pro Monitor
+                        val order = listOf(
+                            ItemType.SPEED, ItemType.CONNECTIONS, ItemType.TRAFFIC,
+                            ItemType.GEOIP, ItemType.RUN_TIME, ItemType.MEMORY_INFO,
+                            ItemType.DNS_QUERIES, ItemType.LATENCY, ItemType.STATUS
+                        )
+                        val sizes = mapOf(
+                            "speed" to 2, "connections" to 1, "traffic" to 1,
+                            "geoip" to 1, "run_time" to 1, "memory_info" to 1,
+                            "dns_queries" to 1, "latency" to 2, "status" to 2
+                        )
+                        applyPresetTemplate(order, sizes)
+                    }
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+            .apply { applyGlassBlur() }
+            .show()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun applyPresetTemplate(orderList: List<ItemType>, spanMap: Map<String, Int>) {
+        saveCardSpans(spanMap)
+        adapter.items.clear()
+        adapter.items.addAll(orderList)
+        saveDashboardOrder()
+        recyclerView?.layoutManager?.requestLayout()
+        adapter.notifyDataSetChanged()
+        (activity as? MainActivity)?.snackbar(getString(R.string.dashboard_template_applied))?.show()
+    }
+
+    fun countryCodeToEmoji(countryCode: String?): String {
+        if (countryCode.isNullOrEmpty() || countryCode.length != 2) return ""
+        val code = countryCode.uppercase(Locale.ROOT)
+        val firstChar = code[0]
+        val secondChar = code[1]
+        if (firstChar !in 'A'..'Z' || secondChar !in 'A'..'Z') return ""
+        val firstCodePoint = 0x1F1E6 + (firstChar - 'A')
+        val secondCodePoint = 0x1F1E6 + (secondChar - 'A')
+        return String(Character.toChars(firstCodePoint)) + String(Character.toChars(secondCodePoint))
     }
 
     @Deprecated("Deprecated in Java")
@@ -384,10 +544,14 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     private fun startUptimeTimer() {
         lifecycleScope.launch(Dispatchers.Main) {
             while (isAdded) {
-                if (lastState == BaseService.State.Connected) {
-                    adapter.updateItem(ItemType.RUN_TIME)
+                if (isDashboardVisible && isResumed) {
+                    if (lastState == BaseService.State.Connected) {
+                        adapter.updateItemWithPayload(ItemType.RUN_TIME, PAYLOAD_RUNTIME)
+                    }
+                    adapter.updateItemWithPayload(ItemType.MEMORY_INFO, PAYLOAD_MEMORY)
+                } else {
+                    hasPendingUpdate = true
                 }
-                adapter.updateItem(ItemType.MEMORY_INFO)
                 delay(2.seconds)
             }
         }
@@ -403,7 +567,8 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         geoIpInfo.location = "正在精准定位外网 IP 与地理位置..."
         geoIpInfo.isp = ""
         geoIpInfo.asn = ""
-        adapter.updateItem(ItemType.GEOIP)
+        geoIpInfo.countryCode = ""
+        adapter.updateItemWithPayload(ItemType.GEOIP, PAYLOAD_GEOIP)
 
         lifecycleScope.launch(Dispatchers.IO) {
             var success = false
@@ -426,6 +591,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         geoIpInfo.isp = json.optString("isp", "")
                         val asn = json.optInt("asn", 0)
                         geoIpInfo.asn = if (asn != 0) "AS$asn" else ""
+                        geoIpInfo.countryCode = json.optString("country_code", "")
                         success = true
                     }
                 }
@@ -449,6 +615,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                             geoIpInfo.location = if (city.isNotEmpty()) "$country, $city" else country
                             geoIpInfo.isp = json.optString("isp", "")
                             geoIpInfo.asn = json.optString("as", "")
+                            geoIpInfo.countryCode = json.optString("countryCode", "")
                             success = true
                         }
                     }
@@ -460,11 +627,18 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 geoIpInfo.location = getString(R.string.unavailable)
                 geoIpInfo.isp = ""
                 geoIpInfo.asn = ""
+                geoIpInfo.countryCode = ""
             }
 
             isFetchingGeoIP = false
             withContext(Dispatchers.Main) {
-                if (isAdded) adapter.updateItem(ItemType.GEOIP)
+                if (isAdded) {
+                    if (isDashboardVisible && isResumed) {
+                        adapter.updateItemWithPayload(ItemType.GEOIP, PAYLOAD_GEOIP)
+                    } else {
+                        hasPendingUpdate = true
+                    }
+                }
             }
         }
     }
@@ -474,7 +648,11 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         targetsToTest.forEach { target ->
             latencyMap[target.id] = -2
         }
-        adapter.updateItem(ItemType.LATENCY)
+        if (isDashboardVisible && isResumed) {
+            adapter.updateItemWithPayload(ItemType.LATENCY, PAYLOAD_LATENCY)
+        } else {
+            hasPendingUpdate = true
+        }
 
         targetsToTest.forEach { target ->
             lifecycleScope.launch(Dispatchers.IO) {
@@ -489,8 +667,8 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         } else {
                             URL(target.testUrl).openConnection() as HttpURLConnection
                         }
-                        connection.connectTimeout = 4000
-                        connection.readTimeout = 4000
+                        connection.connectTimeout = 3500
+                        connection.readTimeout = 3500
                         connection.instanceFollowRedirects = true
                         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
                         connection.connect()
@@ -503,7 +681,11 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 withContext(Dispatchers.Main) {
                     if (isAdded) {
                         latencyMap[target.id] = time.toInt()
-                        adapter.updateItem(ItemType.LATENCY)
+                        if (isDashboardVisible && isResumed) {
+                            adapter.updateItemWithPayload(ItemType.LATENCY, PAYLOAD_LATENCY)
+                        } else {
+                            hasPendingUpdate = true
+                        }
                     }
                 }
             }
@@ -525,9 +707,13 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             } else {
                 serviceConnectedTime = 0L
             }
-            adapter.updateItem(ItemType.STATUS)
-            adapter.updateItem(ItemType.RUN_TIME)
-            adapter.updateItem(ItemType.TRAFFIC)
+            if (isDashboardVisible && isResumed) {
+                adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
+                adapter.updateItemWithPayload(ItemType.RUN_TIME, PAYLOAD_RUNTIME)
+                adapter.updateItemWithPayload(ItemType.TRAFFIC, PAYLOAD_TRAFFIC)
+            } else {
+                hasPendingUpdate = true
+            }
         }
     }
 
@@ -539,9 +725,13 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             speedHistory.add(currentRate)
             if (speedHistory.size > 30) speedHistory.removeAt(0)
 
-            adapter.updateItem(ItemType.SPEED)
-            adapter.updateItem(ItemType.TRAFFIC)
-            adapter.updateItem(ItemType.CONNECTIONS)
+            if (isDashboardVisible && isResumed) {
+                adapter.updateItemWithPayload(ItemType.SPEED, PAYLOAD_SPEED)
+                adapter.updateItemWithPayload(ItemType.TRAFFIC, PAYLOAD_TRAFFIC)
+                adapter.updateItemWithPayload(ItemType.CONNECTIONS, PAYLOAD_CONNECTIONS)
+            } else {
+                hasPendingUpdate = true
+            }
         }
     }
 
@@ -718,17 +908,42 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
             if (payloads.isNotEmpty()) {
-                onBindViewHolder(holder, position)
+                // 局部高效增量刷新，跳过重新设置卡片样式和重新绑定点击事件
+                when (holder) {
+                    is StatusViewHolder -> holder.updatePartial()
+                    is SpeedViewHolder -> holder.updatePartial()
+                    is TrafficViewHolder -> holder.updatePartial()
+                    is GeoIpViewHolder -> holder.updatePartial()
+                    is LatencyViewHolder -> holder.updatePartial()
+                    is ProfilesViewHolder -> holder.updatePartial()
+                    is ConnectionsViewHolder -> holder.updatePartial()
+                    is RunTimeViewHolder -> holder.updatePartial()
+                    is DnsQueriesViewHolder -> holder.updatePartial()
+                    is MemoryInfoViewHolder -> holder.updatePartial()
+                    else -> onBindViewHolder(holder, position)
+                }
             } else {
                 super.onBindViewHolder(holder, position, payloads)
             }
+        }
+
+        override fun onViewRecycled(holder: RecyclerView.ViewHolder) {
+            if (holder is StatusViewHolder) {
+                holder.stopBreathing()
+            }
+            super.onViewRecycled(holder)
         }
 
         override fun getItemCount(): Int = items.size
 
         fun updateItem(type: ItemType) {
             val index = items.indexOf(type)
-            if (index != -1) notifyItemChanged(index, Unit)
+            if (index != -1) notifyItemChanged(index)
+        }
+
+        fun updateItemWithPayload(type: ItemType, payload: Any) {
+            val index = items.indexOf(type)
+            if (index != -1) notifyItemChanged(index, payload)
         }
 
         private fun setupEditControls(
@@ -765,9 +980,35 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         }
 
         inner class StatusViewHolder(val binding: ItemDashboardStatusBinding) : RecyclerView.ViewHolder(binding.root) {
+            private var breathingAnimator: ObjectAnimator? = null
+
+            fun startBreathing(view: View) {
+                if (breathingAnimator != null) return
+                val alphaAnim = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.72f, 1.0f)
+                val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 1.08f, 1.0f)
+                val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 1.08f, 1.0f)
+                breathingAnimator = ObjectAnimator.ofPropertyValuesHolder(view, alphaAnim, scaleX, scaleY).apply {
+                    duration = 2000L
+                    repeatCount = ValueAnimator.INFINITE
+                    interpolator = AccelerateDecelerateInterpolator()
+                    start()
+                }
+            }
+
+            fun stopBreathing() {
+                breathingAnimator?.cancel()
+                breathingAnimator = null
+                binding.statusIcon.alpha = 1.0f
+                binding.statusIcon.scaleX = 1.0f
+                binding.statusIcon.scaleY = 1.0f
+            }
+
             fun bind() {
                 setupEditControls(ItemType.STATUS, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
+                updatePartial()
+            }
 
+            fun updatePartial() {
                 val profile = ProfileManager.getProfile(DataStore.currentProfile)
                 val name = lastProfileName ?: profile?.displayName() ?: getString(R.string.group_status_empty)
                 val type = profile?.displayType() ?: ""
@@ -784,8 +1025,14 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     BaseService.State.Connected -> {
                         binding.statusText.setText(R.string.connected)
                         binding.statusIcon.setImageResource(R.drawable.ic_service_active)
+                        if (isDashboardVisible) {
+                            startBreathing(binding.statusIcon)
+                        } else {
+                            stopBreathing()
+                        }
                     }
                     else -> {
+                        stopBreathing()
                         binding.statusText.setText(R.string.disconnected)
                         binding.statusIcon.setImageResource(R.drawable.ic_service_idle)
                     }
@@ -796,20 +1043,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         inner class SpeedViewHolder(val binding: ItemDashboardSpeedBinding) : RecyclerView.ViewHolder(binding.root) {
             fun bind() {
                 setupEditControls(ItemType.SPEED, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
-
-                val stats = lastTrafficStats
-                val context = itemView.context
-                binding.speedChart.setSpeedData(speedHistory)
-
-                if (stats != null) {
-                    val rxSpeed = FormatFileSizeCompat.formatFileSize(context, stats.rxRateProxy, DataStore.useIECUnit)
-                    val txSpeed = FormatFileSizeCompat.formatFileSize(context, stats.txRateProxy, DataStore.useIECUnit)
-                    binding.downloadSpeed.text = context.getString(R.string.speed, rxSpeed)
-                    binding.uploadSpeed.text = context.getString(R.string.speed, txSpeed)
-                } else {
-                    binding.downloadSpeed.setText(R.string.speed_zero)
-                    binding.uploadSpeed.setText(R.string.speed_zero)
-                }
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
@@ -823,14 +1056,34 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 } else {
                     binding.root.setOnClickListener(null)
                 }
+                updatePartial()
+            }
+
+            fun updatePartial() {
+                val stats = lastTrafficStats
+                val context = itemView.context
+                binding.speedChart.setSpeedData(speedHistory, animate = true)
+
+                if (stats != null) {
+                    val rxSpeed = FormatFileSizeCompat.formatFileSize(context, stats.rxRateProxy, DataStore.useIECUnit)
+                    val txSpeed = FormatFileSizeCompat.formatFileSize(context, stats.txRateProxy, DataStore.useIECUnit)
+                    binding.downloadSpeed.text = context.getString(R.string.speed, rxSpeed)
+                    binding.uploadSpeed.text = context.getString(R.string.speed, txSpeed)
+                } else {
+                    binding.downloadSpeed.setText(R.string.speed_zero)
+                    binding.uploadSpeed.setText(R.string.speed_zero)
+                }
             }
         }
 
         inner class TrafficViewHolder(val binding: ItemDashboardTrafficBinding) : RecyclerView.ViewHolder(binding.root) {
-            @SuppressLint("SetTextI18n")
             fun bind() {
                 setupEditControls(ItemType.TRAFFIC, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
+                updatePartial()
+            }
 
+            @SuppressLint("SetTextI18n")
+            fun updatePartial() {
                 val context = itemView.context
                 val stats = lastTrafficStats
 
@@ -898,6 +1151,35 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             fun bind() {
                 setupEditControls(ItemType.GEOIP, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
 
+                if (!isEditMode) {
+                    binding.root.setOnClickListener {
+                        binding.root.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        if (isGeoIpHidden) {
+                            isGeoIpHidden = false
+                            updatePartial()
+                        } else {
+                            fetchGeoIP()
+                        }
+                    }
+                    binding.root.setOnLongClickListener {
+                        val ip = geoIpInfo.ip
+                        if (ip.isNotEmpty() && ip != getString(R.string.unavailable) && !isGeoIpHidden) {
+                            binding.root.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                            SagerNet.trySetPrimaryClip(ip)
+                            (activity as? MainActivity)?.snackbar(getString(R.string.copied_ip))?.show()
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                } else {
+                    binding.root.setOnClickListener(null)
+                    binding.root.setOnLongClickListener(null)
+                }
+                updatePartial()
+            }
+
+            fun updatePartial() {
                 if (isGeoIpHidden) {
                     binding.geoipIp.text = "* * * * * * * *"
                     binding.geoipLocation.text = "* * * * *"
@@ -905,23 +1187,12 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     binding.geoipIsp.isVisible = true
                 } else {
                     binding.geoipIp.text = geoIpInfo.ip.ifEmpty { getString(R.string.unavailable) }
-                    binding.geoipLocation.text = geoIpInfo.location.ifEmpty { getString(R.string.unavailable) }
+                    val flag = countryCodeToEmoji(geoIpInfo.countryCode)
+                    val loc = geoIpInfo.location.ifEmpty { getString(R.string.unavailable) }
+                    binding.geoipLocation.text = if (flag.isNotEmpty()) "$flag  $loc" else loc
                     val ispInfo = listOf(geoIpInfo.asn, geoIpInfo.isp).filter { it.isNotEmpty() }.joinToString(" - ")
                     binding.geoipIsp.text = ispInfo
                     binding.geoipIsp.isVisible = ispInfo.isNotEmpty()
-                }
-
-                if (!isEditMode) {
-                    binding.root.setOnClickListener {
-                        if (isGeoIpHidden) {
-                            isGeoIpHidden = false
-                            adapter.updateItem(ItemType.GEOIP)
-                        } else {
-                            fetchGeoIP()
-                        }
-                    }
-                } else {
-                    binding.root.setOnClickListener(null)
                 }
             }
         }
@@ -971,11 +1242,13 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 binding.latencyCardTitle.setOnClickListener(openSheetAction)
 
                 binding.btnTestAll.setOnClickListener {
+                    binding.btnTestAll.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     testLatency(null)
                 }
 
                 binding.summaryRow.setOnClickListener {
                     if (isEditMode) return@setOnClickListener
+                    binding.summaryRow.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     val target = SERVICE_TARGETS.getOrNull(selectedIndex)
                     if (target != null) testLatency(target)
                 }
@@ -983,6 +1256,10 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
             fun bind() {
                 setupEditControls(ItemType.LATENCY, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
+                updatePartial()
+            }
+
+            fun updatePartial() {
                 iconPickerAdapter.notifyItemRangeChanged(0, SERVICE_TARGETS.size)
                 updateSummary()
             }
@@ -1016,10 +1293,15 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         binding.selectedServiceLatency.setTextColor(ContextCompat.getColor(context, R.color.material_grey_500))
                     }
                     latency > 0 -> {
+                        val color = when {
+                            latency < 150 -> ContextCompat.getColor(context, R.color.cupertino_green)
+                            latency < 350 -> ContextCompat.getColor(context, R.color.material_amber_500)
+                            else -> ContextCompat.getColor(context, R.color.material_orange_500)
+                        }
                         binding.selectedServiceStatusPill.text = context.getString(R.string.service_available)
-                        binding.selectedServiceStatusPill.setTextColor(ContextCompat.getColor(context, R.color.cupertino_green))
+                        binding.selectedServiceStatusPill.setTextColor(color)
                         binding.selectedServiceLatency.text = context.getString(R.string.available, latency)
-                        binding.selectedServiceLatency.setTextColor(ContextCompat.getColor(context, R.color.cupertino_green))
+                        binding.selectedServiceLatency.setTextColor(color)
                     }
                     latency == -1 -> {
                         binding.selectedServiceStatusPill.text = context.getString(R.string.untested)
@@ -1028,10 +1310,11 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         binding.selectedServiceLatency.setTextColor(ContextCompat.getColor(context, R.color.material_grey_500))
                     }
                     else -> {
+                        val redColor = ContextCompat.getColor(context, R.color.material_red_500)
                         binding.selectedServiceStatusPill.text = context.getString(R.string.unavailable)
-                        binding.selectedServiceStatusPill.setTextColor(ContextCompat.getColor(context, R.color.material_red_500))
+                        binding.selectedServiceStatusPill.setTextColor(redColor)
                         binding.selectedServiceLatency.text = context.getString(R.string.unavailable)
-                        binding.selectedServiceLatency.setTextColor(ContextCompat.getColor(context, R.color.material_red_500))
+                        binding.selectedServiceLatency.setTextColor(redColor)
                     }
                 }
 
@@ -1103,23 +1386,12 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             fun bind() {
                 setupEditControls(ItemType.PROFILES, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
 
-                val profile = ProfileManager.getProfile(DataStore.currentProfile)
-                if (profile != null) {
-                    binding.profileTitle.text = profile.displayName()
-                    val groupName = SagerDatabase.groupDao.getById(profile.groupId)?.displayName() ?: ""
-                    val type = profile.displayType()
-                    binding.profileGroupName.text = if (type.isNotEmpty()) "$groupName · $type" else groupName
-                } else {
-                    binding.profileTitle.setText(R.string.group_status_empty)
-                    binding.profileGroupName.text = ""
-                }
-
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
                         if (parentFragmentManager.findFragmentByTag("ProfileNodeSheet") != null) return@setOnClickListener
                         val sheet = ProfileNodeBottomSheet {
-                            adapter.updateItem(ItemType.PROFILES)
-                            adapter.updateItem(ItemType.STATUS)
+                            adapter.updateItemWithPayload(ItemType.PROFILES, PAYLOAD_PROFILES)
+                            adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
                             lifecycleScope.launch {
                                 delay(1.seconds)
                                 fetchGeoIP()
@@ -1131,23 +1403,26 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 } else {
                     binding.root.setOnClickListener(null)
                 }
+                updatePartial()
+            }
+
+            fun updatePartial() {
+                val profile = ProfileManager.getProfile(DataStore.currentProfile)
+                if (profile != null) {
+                    binding.profileTitle.text = profile.displayName()
+                    val groupName = SagerDatabase.groupDao.getById(profile.groupId)?.displayName() ?: ""
+                    val type = profile.displayType()
+                    binding.profileGroupName.text = if (type.isNotEmpty()) "$groupName · $type" else groupName
+                } else {
+                    binding.profileTitle.setText(R.string.group_status_empty)
+                    binding.profileGroupName.text = ""
+                }
             }
         }
 
         inner class ConnectionsViewHolder(val binding: ItemDashboardConnectionsBinding) : RecyclerView.ViewHolder(binding.root) {
             fun bind() {
                 setupEditControls(ItemType.CONNECTIONS, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
-
-                val context = itemView.context
-                val stats = lastTrafficStats
-                if (stats != null) {
-                    val totalSpeed = FormatFileSizeCompat.formatFileSize(context, stats.rxRateProxy + stats.txRateProxy, DataStore.useIECUnit)
-                    binding.connectionCount.text = context.getString(R.string.speed, totalSpeed)
-                    binding.connectionStatus.setText(R.string.connected)
-                } else {
-                    binding.connectionCount.setText(R.string.speed_zero)
-                    binding.connectionStatus.setText(R.string.disconnected)
-                }
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
@@ -1161,13 +1436,30 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 } else {
                     binding.root.setOnClickListener(null)
                 }
+                updatePartial()
+            }
+
+            fun updatePartial() {
+                val context = itemView.context
+                val stats = lastTrafficStats
+                if (stats != null) {
+                    val totalSpeed = FormatFileSizeCompat.formatFileSize(context, stats.rxRateProxy + stats.txRateProxy, DataStore.useIECUnit)
+                    binding.connectionCount.text = context.getString(R.string.speed, totalSpeed)
+                    binding.connectionStatus.setText(R.string.connected)
+                } else {
+                    binding.connectionCount.setText(R.string.speed_zero)
+                    binding.connectionStatus.setText(R.string.disconnected)
+                }
             }
         }
 
         inner class RunTimeViewHolder(val binding: ItemDashboardRuntimeBinding) : RecyclerView.ViewHolder(binding.root) {
             fun bind() {
                 setupEditControls(ItemType.RUN_TIME, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
+                updatePartial()
+            }
 
+            fun updatePartial() {
                 if (lastState == BaseService.State.Connected && serviceConnectedTime > 0L) {
                     val seconds = ((SystemClock.elapsedRealtime() - serviceConnectedTime) / 1000L).coerceAtLeast(0L)
                     val hrs = seconds / 3600
@@ -1187,7 +1479,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 setupEditControls(ItemType.DNS_QUERIES, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
 
                 binding.dnsTitle.setText(R.string.dashboard_card_dns)
-                binding.dnsStatus.text = if (SagerNet.started) "点击查看 DNS 详情与实时解析" else "服务未启动 (点击查看配置)"
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
@@ -1200,14 +1491,34 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 } else {
                     binding.root.setOnClickListener(null)
                 }
+                updatePartial()
+            }
+
+            fun updatePartial() {
+                binding.dnsStatus.text = if (SagerNet.started) "点击查看 DNS 详情与实时解析" else "服务未启动 (点击查看配置)"
             }
         }
 
         inner class MemoryInfoViewHolder(val binding: ItemDashboardMemoryBinding) : RecyclerView.ViewHolder(binding.root) {
-            @SuppressLint("SetTextI18n")
             fun bind() {
                 setupEditControls(ItemType.MEMORY_INFO, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
 
+                if (!isEditMode) {
+                    binding.root.setOnClickListener {
+                        if (parentFragmentManager.findFragmentByTag("MemoryStatsSheet") != null) return@setOnClickListener
+                        val sheet = MemoryStatsBottomSheet {
+                            adapter.updateItemWithPayload(ItemType.MEMORY_INFO, PAYLOAD_MEMORY)
+                        }
+                        sheet.show(parentFragmentManager, "MemoryStatsSheet")
+                    }
+                } else {
+                    binding.root.setOnClickListener(null)
+                }
+                updatePartial()
+            }
+
+            @SuppressLint("SetTextI18n")
+            fun updatePartial() {
                 val runtime = Runtime.getRuntime()
                 val usedMemMB = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
                 val maxMemMB = runtime.maxMemory() / (1024 * 1024)
@@ -1215,18 +1526,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 val context = itemView.context
                 binding.memoryText.text = context.getString(R.string.dashboard_traffic_total, "$usedMemMB MB").replace("/", "").trim()
                 binding.memoryStatus.text = "JVM Heap $usedMemMB / $maxMemMB MB"
-
-                if (!isEditMode) {
-                    binding.root.setOnClickListener {
-                        if (parentFragmentManager.findFragmentByTag("MemoryStatsSheet") != null) return@setOnClickListener
-                        val sheet = MemoryStatsBottomSheet {
-                            adapter.updateItem(ItemType.MEMORY_INFO)
-                        }
-                        sheet.show(parentFragmentManager, "MemoryStatsSheet")
-                    }
-                } else {
-                    binding.root.setOnClickListener(null)
-                }
             }
         }
     }
