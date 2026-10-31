@@ -165,6 +165,13 @@ class ConfigurationFragment @JvmOverloads constructor(
                 DataStore.selectedGroup = adapter.groupList[position - 1].id
             }
         }
+
+        override fun onPageSelected(position: Int) {
+            super.onPageSelected(position)
+            if (::adapter.isInitialized) {
+                adapter.dashboardFragment?.onVisibilityInPagerChanged(position == 0)
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
