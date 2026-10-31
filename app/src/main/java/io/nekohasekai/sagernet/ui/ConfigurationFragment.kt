@@ -131,8 +131,8 @@ class ConfigurationFragment @JvmOverloads constructor(
     lateinit var groupPager: ViewPager2
     var searchView: SearchView? = null
     val selectedGroup
-        get() = if (adapter.groupList.size > 0) {
-            val position = groupPager.currentItem
+        get() = if (::adapter.isInitialized && adapter.groupList.size > 0) {
+            val position = if (::groupPager.isInitialized) groupPager.currentItem else 0
             if (position > 0 && position <= adapter.groupList.size) {
                 adapter.groupList[position - 1]
             } else {
@@ -149,6 +149,7 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     fun switchAllGroupFragmentsLayout() {
+        if (!::adapter.isInitialized) return
         adapter.groupFragments.values.forEach { fragment ->
             if (fragment.isAdded && fragment.view != null) {
                 fragment.switchLayoutMode()
@@ -160,7 +161,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         override fun onPageScrolled(
             position: Int, positionOffset: Float, positionOffsetPixels: Int
         ) {
-            if (position > 0 && adapter.groupList.size > position - 1) {
+            if (::adapter.isInitialized && position > 0 && adapter.groupList.size > position - 1) {
                 DataStore.selectedGroup = adapter.groupList[position - 1].id
             }
         }
@@ -1140,14 +1141,17 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     fun stateChanged(state: BaseService.State, profileName: String?) {
+        if (!::adapter.isInitialized) return
         adapter.dashboardFragment?.stateChanged(state, profileName)
     }
 
     fun trafficUpdated(stats: TrafficStats) {
+        if (!::adapter.isInitialized) return
         adapter.dashboardFragment?.trafficUpdated(stats)
     }
 
     fun appStatsUpdated(stats: List<AppStats>) {
+        if (!::adapter.isInitialized) return
         adapter.dashboardFragment?.appStatsUpdated(stats)
     }
 
