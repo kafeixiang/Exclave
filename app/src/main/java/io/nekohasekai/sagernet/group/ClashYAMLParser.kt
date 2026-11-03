@@ -58,6 +58,11 @@ import kotlin.io.encoding.Base64
 import libexclavecore.Libexclavecore
 import kotlin.uuid.Uuid
 
+private fun isCertSha256(str: String): Boolean {
+    val clean = str.replace(":", "").replace(" ", "")
+    return clean.length == 64 && clean.all { it in "0123456789abcdefABCDEF" }
+}
+
 fun parseClashProxies(proxies: List<Map<String, Any?>>): List<AbstractBean> {
     val beans = mutableListOf<AbstractBean>()
     proxies.forEach {
@@ -80,9 +85,18 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                     if (proxy.getBoolean("skip-cert-verify") == true) {
                         allowInsecure = true
                     }
-                    proxy.getString("fingerprint")?.replace(":", "")?.trim()?.takeIf { it.isNotEmpty() }?.also {
-                        pinnedPeerCertificateSha256 = it
-                        allowInsecure = true
+                    val clientFp = proxy.getString("client-fingerprint") ?: proxy.getString("client_fingerprint")
+                    val rawFp = proxy.getString("fingerprint")?.trim()?.takeIf { it.isNotEmpty() }
+                    if (!clientFp.isNullOrEmpty()) {
+                        utlsFingerprint = clientFp
+                    }
+                    if (rawFp != null) {
+                        if (isCertSha256(rawFp)) {
+                            pinnedPeerCertificateSha256 = rawFp.replace(":", "").replace(" ", "")
+                            allowInsecure = true
+                        } else {
+                            utlsFingerprint = rawFp
+                        }
                     }
                     val cert = proxy.getString("certificate")?.takeIf {
                         it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
@@ -112,9 +126,18 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                     if (proxy.getBoolean("skip-cert-verify") == true) {
                         allowInsecure = true
                     }
-                    proxy.getString("fingerprint")?.replace(":", "")?.trim()?.takeIf { it.isNotEmpty() }?.also {
-                        pinnedPeerCertificateSha256 = it
-                        allowInsecure = true
+                    val clientFp = proxy.getString("client-fingerprint") ?: proxy.getString("client_fingerprint")
+                    val rawFp = proxy.getString("fingerprint")?.trim()?.takeIf { it.isNotEmpty() }
+                    if (!clientFp.isNullOrEmpty()) {
+                        utlsFingerprint = clientFp
+                    }
+                    if (rawFp != null) {
+                        if (isCertSha256(rawFp)) {
+                            pinnedPeerCertificateSha256 = rawFp.replace(":", "").replace(" ", "")
+                            allowInsecure = true
+                        } else {
+                            utlsFingerprint = rawFp
+                        }
                     }
                     val cert = proxy.getString("certificate")?.takeIf {
                         it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
@@ -246,12 +269,16 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
 
             if (bean is TrojanBean) {
                 bean.security = "tls"
-                bean.sni = proxy.getString("sni")
+                val serverName = proxy.getString("sni") ?: proxy.getString("servername")
+                if (!serverName.isNullOrEmpty()) {
+                    bean.sni = serverName
+                }
                 bean.password = proxy.getString("password")
             } else {
                 bean.security = if (proxy.getBoolean("tls") == true) "tls" else "none"
-                if (bean.security == "tls") {
-                    bean.sni = proxy.getString("servername")
+                val serverName = proxy.getString("servername") ?: proxy.getString("sni")
+                if (!serverName.isNullOrEmpty()) {
+                    bean.sni = serverName
                 }
                 // https://github.com/MetaCubeX/mihomo/blob/68ec4fae652318bb1474bdfca3918191b167806d/transport/vless/vless.go#L60
                 // https://github.com/MetaCubeX/mihomo/blob/68ec4fae652318bb1474bdfca3918191b167806d/transport/vmess/vmess.go#L87
@@ -260,11 +287,28 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                     bean.uuid = parseUUID(it)?.toHexDashString() ?: uuid5(it)
                 }
             }
+
+            val clientFp = (proxy.getString("client-fingerprint") ?: proxy.getString("client_fingerprint"))?.trim()?.takeIf { it.isNotEmpty() }
+            val rawFp = proxy.getString("fingerprint")?.trim()?.takeIf { it.isNotEmpty() }
+
+            if (clientFp != null) {
+                bean.utlsFingerprint = clientFp
+                bean.realityFingerprint = clientFp
+            }
+
+            if (rawFp != null) {
+                if (isCertSha256(rawFp)) {
+                    bean.pinnedPeerCertificateSha256 = rawFp.replace(":", "").replace(" ", "")
+                    bean.allowInsecure = true
+                } else {
+                    bean.utlsFingerprint = rawFp
+                    bean.realityFingerprint = rawFp
+                }
+            }
+
             if (bean.security == "tls") {
                 bean.alpn = proxy.getStringArray("alpn")?.joinToString("\n")
-                bean.allowInsecure = proxy.getBoolean("skip-cert-verify") == true
-                proxy.getString("fingerprint")?.replace(":", "")?.trim()?.takeIf { it.isNotEmpty() }?.also {
-                    bean.pinnedPeerCertificateSha256 = it
+                if (proxy.getBoolean("skip-cert-verify") == true) {
                     bean.allowInsecure = true
                 }
                 val cert = proxy.getString("certificate")?.takeIf {
@@ -292,64 +336,46 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                     else -> return listOf()
                 }
                 bean.experimentalAuthenticatedLength = proxy.getBoolean("authenticated-length") == true
-                var isPacket = false
-                var isXUDP = false
-                if (proxy.getBoolean("packet-addr") == true) {
-                    isPacket = true
-                    isXUDP = false
-                }
-                if (proxy.getBoolean("xudp") == true) {
-                    isXUDP = true
-                    isPacket = false
-                }
-                when (proxy.getString("packet-encoding")) {
-                    "packetaddr", "packet" -> {
-                        isPacket = true
-                        isXUDP = false
+                val pe = proxy.getString("packet-encoding") ?: proxy.getString("packet_encoding")
+                if (pe != null) {
+                    bean.packetEncoding = when (pe.lowercase()) {
+                        "packetaddr", "packet" -> "packet"
+                        "xudp" -> "xudp"
+                        "none" -> "none"
+                        else -> pe
                     }
-                    "xudp" -> {
-                        isXUDP = true
-                        isPacket = false
-                    }
-                }
-                bean.packetEncoding = when {
-                    isPacket -> "packet"
-                    isXUDP -> "xudp"
-                    else -> "none"
+                } else if (proxy.getBoolean("packet-addr") == true) {
+                    bean.packetEncoding = "packet"
+                } else if (proxy.getBoolean("xudp") == true) {
+                    bean.packetEncoding = "xudp"
+                } else {
+                    bean.packetEncoding = "none"
                 }
             }
 
             if (bean is VLESSBean) {
-                var isPacket = false
-                var isXUDP = true
-                if (proxy.getBoolean("packet-addr") == true) {
-                    isPacket = true
-                    isXUDP = false
-                }
-                if (proxy.getBoolean("xudp") == true) {
-                    isXUDP = true
-                    isPacket = false
-                }
-                when (proxy.getString("packet-encoding")) {
-                    "packetaddr", "packet" -> {
-                        isPacket = true
-                        isXUDP = false
+                val pe = proxy.getString("packet-encoding") ?: proxy.getString("packet_encoding")
+                if (pe != null) {
+                    bean.packetEncoding = when (pe.lowercase()) {
+                        "packetaddr", "packet" -> "packet"
+                        "xudp" -> "xudp"
+                        "none" -> "none"
+                        else -> pe
                     }
-                    "xudp" -> {
-                        isXUDP = true
-                        isPacket = false
+                } else if (proxy.getBoolean("packet-addr") == true) {
+                    bean.packetEncoding = "packet"
+                } else if (proxy.getBoolean("xudp") == true) {
+                    bean.packetEncoding = "xudp"
+                } else {
+                    bean.packetEncoding = "xudp"
+                }
+                proxy.getString("flow")?.takeIf { it.isNotEmpty() }?.also { flow ->
+                    when (flow) {
+                        "xtls-rprx-vision", "xtls-rprx-vision-udp443" -> {
+                            bean.flow = flow
+                        }
+                        else -> return listOf()
                     }
-                }
-                bean.packetEncoding = when {
-                    isPacket -> "packet"
-                    isXUDP -> "xudp"
-                    else -> "xudp"
-                }
-                (proxy.getString("flow"))?.takeIf { it.isNotEmpty() }?.also {
-                    if (it.startsWith("xtls-rprx-vision")) {
-                        bean.flow = "xtls-rprx-vision-udp443"
-                        bean.packetEncoding = "xudp"
-                    } else return listOf()
                 }
                 when (val encryption = proxy.getString("encryption")) {
                     "", "none", null -> bean.encryption = "none"
@@ -369,10 +395,21 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
             proxy.getObject("restls-opts")?.also { return listOf() }
             proxy.getObject("jls-opts")?.also { return listOf() }
 
-            proxy.getObject("reality-opts")?.also {
+            proxy.getObject("reality-opts")?.also { realityOpts ->
                 bean.security = "reality"
-                bean.realityPublicKey = it.getString("public-key")?.ifEmpty { return listOf() }
-                bean.realityShortId = it.getString("short-id")
+                bean.realityPublicKey = realityOpts.getString("public-key")?.ifEmpty { return listOf() }
+                bean.realityShortId = realityOpts.getString("short-id")
+                val realityFp = realityOpts.getString("client-fingerprint")
+                    ?: realityOpts.getString("client_fingerprint")
+                    ?: realityOpts.getString("fingerprint")
+                if (!realityFp.isNullOrEmpty()) {
+                    bean.realityFingerprint = realityFp
+                    bean.utlsFingerprint = realityFp
+                }
+                val realitySni = realityOpts.getString("server-name") ?: realityOpts.getString("sni")
+                if (!realitySni.isNullOrEmpty() && bean.sni.isNullOrEmpty()) {
+                    bean.sni = realitySni
+                }
             }
 
             if (bean.type == "tcp" && bean.headerType != null && bean.headerType == "http") {
@@ -575,7 +612,7 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                 }
             }
 
-            if (bean is VLESSBean && bean.security != "none" && bean.flow == "xtls-rprx-vision-udp443"
+            if (bean is VLESSBean && bean.security != "none" && bean.flow?.startsWith("xtls-rprx-vision") == true
                 && bean.type != "tcp" && bean.encryption == "none") {
                 return listOf()
             }
@@ -640,8 +677,8 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                 auth = proxy.getString("password")
                 sni = proxy.getString("sni")
                 allowInsecure = proxy.getBoolean("skip-cert-verify") == true
-                proxy.getString("fingerprint")?.replace(":", "")?.trim()?.takeIf { it.isNotEmpty() }?.also {
-                    pinnedPeerCertificateSha256 = it
+                proxy.getString("fingerprint")?.takeIf { it.isNotEmpty() && isCertSha256(it) }?.also {
+                    pinnedPeerCertificateSha256 = it.replace(":", "").replace(" ", "")
                     allowInsecure = true
                 }
                 // https://github.com/MetaCubeX/mihomo/commit/6786705212f67eebe25151778b86ab4d2793c7d9
@@ -772,8 +809,8 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                         ?: (if (proxy.getString("ip") != null) proxy.getString("server") else null)
                     // https://github.com/MetaCubeX/mihomo/blob/d5243adf8911563677d3bd190b82623c93e554b7/adapter/outbound/tuic.go#L174-L178
                     alpn = if (!proxy.contains("alpn")) "h3" else proxy.getStringArray("alpn")?.joinToString("\n")
-                    proxy.getString("fingerprint")?.replace(":", "")?.trim()?.takeIf { it.isNotEmpty() }?.also {
-                        pinnedPeerCertificateSha256 = it
+                    proxy.getString("fingerprint")?.takeIf { it.isNotEmpty() && isCertSha256(it) }?.also {
+                        pinnedPeerCertificateSha256 = it.replace(":", "").replace(" ", "")
                         allowInsecure = true
                     }
                     // https://github.com/MetaCubeX/mihomo/commit/6786705212f67eebe25151778b86ab4d2793c7d9
@@ -904,9 +941,18 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                 sni = proxy.getString("sni")
                 alpn = proxy.getStringArray("alpn")?.joinToString("\n")
                 allowInsecure = proxy.getBoolean("skip-cert-verify") == true
-                proxy.getString("fingerprint")?.replace(":", "")?.trim()?.takeIf { it.isNotEmpty() }?.also {
-                    pinnedPeerCertificateSha256 = it
-                    allowInsecure = true
+                val clientFp = proxy.getString("client-fingerprint") ?: proxy.getString("client_fingerprint")
+                val rawFp = proxy.getString("fingerprint")?.trim()?.takeIf { it.isNotEmpty() }
+                if (!clientFp.isNullOrEmpty()) {
+                    utlsFingerprint = clientFp
+                }
+                if (rawFp != null) {
+                    if (isCertSha256(rawFp)) {
+                        pinnedPeerCertificateSha256 = rawFp.replace(":", "").replace(" ", "")
+                        allowInsecure = true
+                    } else {
+                        utlsFingerprint = rawFp
+                    }
                 }
                 val cert = proxy.getString("certificate")?.takeIf {
                     it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
@@ -939,9 +985,18 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                 sni = proxy.getString("sni")
                 allowInsecure = proxy.getBoolean("skip-cert-verify") == true
                 protocol = if (proxy.getBoolean("quic") == true) "quic" else "https"
-                proxy.getString("fingerprint")?.replace(":", "")?.trim()?.takeIf { it.isNotEmpty() }?.also {
-                    pinnedPeerCertificateSha256 = it
-                    allowInsecure = true
+                val clientFp = proxy.getString("client-fingerprint") ?: proxy.getString("client_fingerprint")
+                val rawFp = proxy.getString("fingerprint")?.trim()?.takeIf { it.isNotEmpty() }
+                if (!clientFp.isNullOrEmpty()) {
+                    utlsFingerprint = clientFp
+                }
+                if (rawFp != null) {
+                    if (isCertSha256(rawFp)) {
+                        pinnedPeerCertificateSha256 = rawFp.replace(":", "").replace(" ", "")
+                        allowInsecure = true
+                    } else {
+                        utlsFingerprint = rawFp
+                    }
                 }
                 val cert = proxy.getString("certificate")?.takeIf {
                     it.contains("-----BEGIN ") && it.contains("-----END ") && it.contains(" CERTIFICATE-----")
