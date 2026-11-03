@@ -456,6 +456,17 @@
 
     <string-array name="utls_entry">
         <item>@string/disable</item>
+        <item>chrome</item>
+        <item>firefox</item>
+        <item>safari</item>
+        <item>ios</item>
+        <item>edge</item>
+        <item>android</item>
+        <item>360</item>
+        <item>qq</item>
+        <item>random</item>
+        <item>randomized</item>
+        <item>randomizednoalpn</item>
         <item>Chrome_Auto</item>
         <item>Firefox_Auto</item>
         <item>Safari_Auto</item>
@@ -507,6 +518,17 @@
 
     <string-array name="utls_value">
         <item />
+        <item>chrome</item>
+        <item>firefox</item>
+        <item>safari</item>
+        <item>ios</item>
+        <item>edge</item>
+        <item>android</item>
+        <item>360</item>
+        <item>qq</item>
+        <item>random</item>
+        <item>randomized</item>
+        <item>randomizednoalpn</item>
         <item>hellochrome_auto</item>
         <item>hellofirefox_auto</item>
         <item>hellosafari_auto</item>

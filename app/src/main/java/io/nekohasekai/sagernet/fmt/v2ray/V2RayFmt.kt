@@ -158,8 +158,7 @@ fun parseV2Ray(link: String): StandardV2RayBean {
                 url.queryParameter("flow")?.let {
                     when (it) {
                         in supportedVlessFlow -> {
-                            bean.flow = "xtls-rprx-vision-udp443"
-                            bean.packetEncoding = "xudp"
+                            bean.flow = it
                         }
                         in legacyVlessFlow, "", "none" -> null
                         else -> error("unsupported vless flow")
@@ -174,12 +173,14 @@ fun parseV2Ray(link: String): StandardV2RayBean {
             url.queryParameter("alpn")?.let {
                 bean.alpn = it.split(",").joinToString("\n")
             }
+            (url.queryParameter("fp") ?: url.queryParameter("fingerprint"))?.takeIf { it.isNotEmpty() }?.let {
+                bean.utlsFingerprint = it
+            }
             if (bean is VLESSBean) {
                 url.queryParameter("flow")?.let {
                     when (it) {
                         in supportedVlessFlow -> {
-                            bean.flow = "xtls-rprx-vision-udp443"
-                            bean.packetEncoding = "xudp"
+                            bean.flow = it
                         }
                         in legacyVlessFlow, "", "none" -> null
                         else -> error("unsupported vless flow")
@@ -267,18 +268,34 @@ fun parseV2Ray(link: String): StandardV2RayBean {
                 }
                 bean.realityMldsa65Verify = it
             }
+            (url.queryParameter("fp") ?: url.queryParameter("fingerprint"))?.takeIf { it.isNotEmpty() }?.let {
+                bean.realityFingerprint = it
+                bean.utlsFingerprint = it
+            }
             if (bean is VLESSBean) {
                 url.queryParameter("flow")?.let {
                     when (it) {
                         in supportedVlessFlow -> {
-                            bean.flow = "xtls-rprx-vision-udp443"
-                            bean.packetEncoding = "xudp"
+                            bean.flow = it
                         }
-                        "", "none" -> null
+                        in legacyVlessFlow, "", "none" -> null
                         else -> error("unsupported vless flow")
                     }
                 }
             }
+        }
+    }
+
+    (url.queryParameter("packetEncoding") ?: url.queryParameter("packet_encoding"))?.takeIf { it.isNotEmpty() }?.let { pe ->
+        bean.packetEncoding = when (pe.lowercase()) {
+            "xudp" -> "xudp"
+            "packet", "packetaddr" -> "packet"
+            "none", "0", "false" -> "none"
+            else -> pe
+        }
+    } ?: run {
+        if (bean is VLESSBean && bean.flow in supportedVlessFlow) {
+            bean.packetEncoding = "xudp"
         }
     }
 
@@ -542,7 +559,7 @@ fun parseV2Ray(link: String): StandardV2RayBean {
             else -> error("reality does not support ${bean.type}")
         }
     }
-    if (bean is VLESSBean && bean.security != "none" && bean.flow == "xtls-rprx-vision-udp443"
+    if (bean is VLESSBean && bean.security != "none" && bean.flow?.startsWith("xtls-rprx-vision") == true
         && bean.type != "tcp" && bean.encryption == "none") {
         error("vision does not support ${bean.type}")
     }
@@ -665,6 +682,9 @@ private fun parseV2RayN(json: JsonObject): VMessBean {
             // See https://github.com/2dust/v2rayNG/blob/5db2df77a01144b8f3d40116f8c183153f181d05/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt#L1077-L1242
             bean.sni = json.getString("sni")?.takeIf { it.isNotEmpty() } ?: host?.split(",")?.get(0)
             bean.alpn = json.getString("alpn")?.takeIf { it.isNotEmpty() }?.split(",")?.joinToString("\n")
+            (json.getString("fp") ?: json.getString("fingerprint"))?.takeIf { it.isNotEmpty() }?.let {
+                bean.utlsFingerprint = it
+            }
             json.getString("insecure")?.takeIf { it == "1" }?.let {
                 bean.allowInsecure = true
             }
@@ -946,31 +966,36 @@ fun StandardV2RayBean.toUri(): String? {
 
     when (security) {
         "none" -> {
-            if (this is VLESSBean && flow.isNotEmpty()) {
-                builder.addQueryParameter("flow", flow.removeSuffix("-udp443"))
+            if (this is VLESSBean && !flow.isNullOrEmpty()) {
+                builder.addQueryParameter("flow", flow)
             }
         }
         "tls" -> {
-            if (sni.isNotEmpty()) {
+            if (!sni.isNullOrEmpty()) {
                 if (this !is TrojanBean || sni != serverAddress) {
                     // do not add `sni` for Trojan if possible
                     builder.addQueryParameter("sni", sni)
                 }
             }
-            if (type == "quic" && (alpn.isEmpty() || alpn.listByLineOrComma().isEmpty())) {
+            val fp = utlsFingerprint?.takeIf { it.isNotEmpty() }
+                ?: realityFingerprint?.takeIf { it.isNotEmpty() }
+            if (fp != null) {
+                builder.addQueryParameter("fp", fp)
+            }
+            if (type == "quic" && (alpn.isNullOrEmpty() || alpn.listByLineOrComma().isEmpty())) {
                 // https://github.com/ExclaveNetwork/Exclave/issues/488
                 builder.addQueryParameter("alpn", "h3")
-            } else if (alpn.isNotEmpty()) {
+            } else if (!alpn.isNullOrEmpty()) {
                 builder.addQueryParameter("alpn", alpn.listByLineOrComma().joinToString(","))
             }
             // as pinned certificate is not exportable, only add `allowInsecure=1` if pinned certificate is not used
-            if (allowInsecure && pinnedPeerCertificateSha256.isEmpty() &&
-                pinnedPeerCertificatePublicKeySha256.isEmpty() && pinnedPeerCertificateChainSha256.isEmpty() &&
+            if (allowInsecure && pinnedPeerCertificateSha256.isNullOrEmpty() &&
+                pinnedPeerCertificatePublicKeySha256.isNullOrEmpty() && pinnedPeerCertificateChainSha256.isNullOrEmpty() &&
                 serverNameToVerify.listByLineOrComma().isEmpty()) {
                 // bad format from where?
                 builder.addQueryParameter("allowInsecure", "1")
             }
-            if (pinnedPeerCertificateSha256.isNotEmpty()) {
+            if (!pinnedPeerCertificateSha256.isNullOrEmpty()) {
                 val hashes = pinnedPeerCertificateSha256.listByLineOrComma()
                 for (hash in hashes) {
                     try {
@@ -981,13 +1006,13 @@ fun StandardV2RayBean.toUri(): String? {
                 }
                 builder.addQueryParameter("pcs", hashes.joinToString(","))
             }
-            if (serverNameToVerify.isNotEmpty()) {
+            if (!serverNameToVerify.isNullOrEmpty()) {
                 val serverNames = serverNameToVerify.listByLineOrComma()
                 if (serverNames.contains("")) error("serverNameToVerify contains empty value")
                 builder.addQueryParameter("vcn", serverNames.joinToString(","))
             }
-            if (this is VLESSBean && flow.isNotEmpty()) {
-                builder.addQueryParameter("flow", flow.removeSuffix("-udp443"))
+            if (this is VLESSBean && !flow.isNullOrEmpty()) {
+                builder.addQueryParameter("flow", flow)
             }
             if (echEnabled && echConfigList.isNotEmpty()) {
                 // The `example.com+https://1.1.1.1/dns-query` is shit,
@@ -1002,16 +1027,16 @@ fun StandardV2RayBean.toUri(): String? {
             }
         }
         "reality" -> {
-            if (sni.isNotEmpty()) {
+            if (!sni.isNullOrEmpty()) {
                 builder.addQueryParameter("sni", sni)
             }
             try {
-                require(Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT).decode(realityPublicKey).size == 32)
+                require(Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT).decode(realityPublicKey.orEmpty()).size == 32)
             } catch (_: Exception) {
                 throw IllegalArgumentException("invalid pbk")
             }
             builder.addQueryParameter("pbk", realityPublicKey)
-            if (realityShortId.isNotEmpty()) {
+            if (!realityShortId.isNullOrEmpty()) {
                 try {
                     require(realityShortId.hexToByteArray().size <= 8)
                 } catch (_: Exception) {
@@ -1019,7 +1044,7 @@ fun StandardV2RayBean.toUri(): String? {
                 }
                 builder.addQueryParameter("sid", realityShortId)
             }
-            if (realityMldsa65Verify.isNotEmpty()) {
+            if (!realityMldsa65Verify.isNullOrEmpty()) {
                 try {
                     require(Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT).decode(realityMldsa65Verify).size == 1952)
                 } catch (_: Exception) {
@@ -1027,11 +1052,18 @@ fun StandardV2RayBean.toUri(): String? {
                 }
                 builder.addQueryParameter("pqv", realityMldsa65Verify)
             }
-            // builder.addQueryParameter("fp", "chrome") // "chrome" is only a placeholder because "若使用 REALITY，此项不可省略。".
-            if (this is VLESSBean && flow.isNotEmpty()) {
-                builder.addQueryParameter("flow", flow.removeSuffix("-udp443"))
+            val fp = realityFingerprint?.takeIf { it.isNotEmpty() }
+                ?: utlsFingerprint?.takeIf { it.isNotEmpty() }
+                ?: "chrome"
+            builder.addQueryParameter("fp", fp)
+            if (this is VLESSBean && !flow.isNullOrEmpty()) {
+                builder.addQueryParameter("flow", flow)
             }
         }
+    }
+
+    if (!packetEncoding.isNullOrEmpty() && packetEncoding != "none") {
+        builder.addQueryParameter("packetEncoding", packetEncoding)
     }
 
     if (security == "reality") {
