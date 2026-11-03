@@ -546,24 +546,20 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
         findPreference<PreferenceCategory>(Key.SERVER_PLUGIN_CATEGORY)!!.isVisible = bean is ShadowsocksBean
 
         xtlsFlow.isVisible = bean is VLESSBean
-        val fv = resources.getStringArray(R.array.xtls_flow_value)
         packetEncoding = findPreference(Key.SERVER_PACKET_ENCODING)!!
         packetEncoding.isVisible = bean is VMessBean || bean is VLESSBean
-        packetEncoding.isEnabled = bean is VMessBean || (bean is VLESSBean && xtlsFlow.value == fv[0])
+        packetEncoding.isEnabled = bean is VMessBean || bean is VLESSBean
         val pev = resources.getStringArray(R.array.packet_encoding_value)
         if (packetEncoding.value !in pev) {
             packetEncoding.value = pev[0]
         }
-        if (bean is VLESSBean && xtlsFlow.value != fv[0]) {
-            packetEncoding.value = pev[2]
-        }
+        val fv = resources.getStringArray(R.array.xtls_flow_value)
         xtlsFlow.setOnPreferenceChangeListener { _, newValue ->
             newValue as String
             val visionEnabled = newValue != fv[0]
-            packetEncoding.isEnabled = !visionEnabled
             updateMux(!visionEnabled)
             mux.isEnabled = !visionEnabled
-            if (visionEnabled) {
+            if (newValue.isNotEmpty() && packetEncoding.value == pev[0]) {
                 packetEncoding.value = pev[2]
                 mux.isChecked = false
             }

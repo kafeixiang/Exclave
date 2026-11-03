@@ -105,6 +105,7 @@ import io.nekohasekai.sagernet.fmt.v2ray.V2RayConfig.WebSocketObject
 import io.nekohasekai.sagernet.fmt.v2ray.V2RayConfig.WireGuardOutboundConfigurationObject
 import io.nekohasekai.sagernet.fmt.v2ray.VLESSBean
 import io.nekohasekai.sagernet.fmt.v2ray.VMessBean
+import io.nekohasekai.sagernet.fmt.v2ray.supportedVlessFlow
 import io.nekohasekai.sagernet.fmt.v2ray.getXrayRange
 import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.ktx.app
@@ -718,6 +719,11 @@ fun buildV2RayConfig(
                                                 "xudp" -> {
                                                     packetEncoding = "xudp"
                                                 }
+                                                else -> {
+                                                    if (bean.flow?.isNotEmpty() == true && bean.flow in supportedVlessFlow && bean.packetEncoding != "none") {
+                                                        packetEncoding = "xudp"
+                                                    }
+                                                }
                                             }
                                         })
                                 } else if (bean is TrojanBean) {
@@ -938,6 +944,10 @@ fun buildV2RayConfig(
                                                         fingerprint = overrideFingerprint
                                                     } else if (bean.realityFingerprint.isNotEmpty()) {
                                                         fingerprint = bean.realityFingerprint
+                                                    } else if (bean.utlsFingerprint.isNotEmpty()) {
+                                                        fingerprint = bean.utlsFingerprint
+                                                    } else {
+                                                        fingerprint = "chrome"
                                                     }
                                                 }
                                                 if (DataStore.realityDisableX25519Mlkem768 || bean.realityDisableX25519Mlkem768 && !forExport) {
@@ -1743,6 +1753,10 @@ fun buildV2RayConfig(
                                                     fingerprint = overrideFingerprint
                                                 } else if (bean.realityFingerprint.isNotEmpty()) {
                                                     fingerprint = bean.realityFingerprint
+                                                } else if (bean.utlsFingerprint.isNotEmpty()) {
+                                                    fingerprint = bean.utlsFingerprint
+                                                } else {
+                                                    fingerprint = "chrome"
                                                 }
                                                 if (DataStore.realityDisableX25519Mlkem768 || bean.realityDisableX25519Mlkem768 && !forExport) {
                                                     disableX25519MLKEM768 = true
