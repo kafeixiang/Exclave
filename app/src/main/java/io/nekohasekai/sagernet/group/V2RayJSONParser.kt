@@ -758,7 +758,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                             settings.getString("flow")?.also {
                                 when (it) {
                                     in supportedVlessFlow -> {
-                                        v2rayBean.flow = "xtls-rprx-vision-udp443"
+                                        v2rayBean.flow = if (it == "xtls-rprx-vision-udp") "xtls-rprx-vision-udp443" else it
                                         v2rayBean.packetEncoding = "xudp"
                                     }
                                     in legacyVlessFlow,  "", "none" -> {}
@@ -795,7 +795,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                                 user.getString("flow")?.also {
                                     when (it) {
                                         in supportedVlessFlow -> {
-                                            v2rayBean.flow = "xtls-rprx-vision-udp443"
+                                            v2rayBean.flow = if (it == "xtls-rprx-vision-udp") "xtls-rprx-vision-udp443" else it
                                             v2rayBean.packetEncoding = "xudp"
                                         }
                                         in legacyVlessFlow,  "", "none" -> {}
@@ -1072,7 +1072,7 @@ fun parseV2RayOutbound(outbound: JsonObject): List<AbstractBean> {
                     else -> return listOf()
                 }
             }
-            if (v2rayBean is VLESSBean && v2rayBean.security != "none"&& v2rayBean.flow == "xtls-rprx-vision-udp443"
+            if (v2rayBean is VLESSBean && v2rayBean.security != "none" && v2rayBean.flow?.startsWith("xtls-rprx-vision") == true
                 && v2rayBean.type != "tcp" && v2rayBean.encryption == "none") {
                 return listOf()
             }
