@@ -37,7 +37,7 @@ val supportedVmessMethod = arrayOf(
 )
 
 val supportedVlessFlow = arrayOf(
-    "xtls-rprx-vision", "xtls-rprx-vision-udp443"
+    "xtls-rprx-vision", "xtls-rprx-vision-udp443", "xtls-rprx-vision-udp"
 )
 
 val legacyVlessFlow = arrayOf(
@@ -158,7 +158,7 @@ fun parseV2Ray(link: String): StandardV2RayBean {
                 url.queryParameter("flow")?.let {
                     when (it) {
                         in supportedVlessFlow -> {
-                            bean.flow = it
+                            bean.flow = if (it == "xtls-rprx-vision-udp") "xtls-rprx-vision-udp443" else it
                         }
                         in legacyVlessFlow, "", "none" -> null
                         else -> error("unsupported vless flow")
@@ -180,7 +180,7 @@ fun parseV2Ray(link: String): StandardV2RayBean {
                 url.queryParameter("flow")?.let {
                     when (it) {
                         in supportedVlessFlow -> {
-                            bean.flow = it
+                            bean.flow = if (it == "xtls-rprx-vision-udp") "xtls-rprx-vision-udp443" else it
                         }
                         in legacyVlessFlow, "", "none" -> null
                         else -> error("unsupported vless flow")
@@ -276,7 +276,7 @@ fun parseV2Ray(link: String): StandardV2RayBean {
                 url.queryParameter("flow")?.let {
                     when (it) {
                         in supportedVlessFlow -> {
-                            bean.flow = it
+                            bean.flow = if (it == "xtls-rprx-vision-udp") "xtls-rprx-vision-udp443" else it
                         }
                         in legacyVlessFlow, "", "none" -> null
                         else -> error("unsupported vless flow")
