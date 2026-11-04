@@ -374,6 +374,9 @@ fun parseClashProxy(proxy: Map<String, Any?>): List<AbstractBean> {
                         "xtls-rprx-vision", "xtls-rprx-vision-udp443" -> {
                             bean.flow = flow
                         }
+                        "xtls-rprx-vision-udp" -> {
+                            bean.flow = "xtls-rprx-vision-udp443"
+                        }
                         else -> return listOf()
                     }
                 }

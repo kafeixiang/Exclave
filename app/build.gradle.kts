@@ -74,7 +74,6 @@ dependencies {
     implementation(libs.editorkit)
     implementation(libs.editorkit.language.json)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
-    testImplementation("junit:junit:4.13.2")
 
     "legacyImplementation"(libs.core.ktx.minSdk21)
     "legacyImplementation"(libs.activity.ktx.minSdk21)

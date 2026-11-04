@@ -397,7 +397,11 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                     outbound.getString("flow")?.also {
                         when (it) {
                             "" -> {}
-                            "xtls-rprx-vision" -> {
+                            "xtls-rprx-vision", "xtls-rprx-vision-udp443" -> {
+                                v2rayBean.flow = it
+                                v2rayBean.packetEncoding = "xudp"
+                            }
+                            "xtls-rprx-vision-udp" -> {
                                 v2rayBean.flow = "xtls-rprx-vision-udp443"
                                 v2rayBean.packetEncoding = "xudp"
                             }
@@ -412,7 +416,7 @@ fun parseSingBoxOutbound(outbound: JsonObject): List<AbstractBean> {
                     else -> return listOf()
                 }
             }
-            if (v2rayBean is VLESSBean && v2rayBean.flow == "xtls-rprx-vision-udp443"
+            if (v2rayBean is VLESSBean && v2rayBean.flow?.startsWith("xtls-rprx-vision") == true
                 && v2rayBean.security != null && v2rayBean.security != "none"
                 && v2rayBean.type != null && v2rayBean.type != "tcp") {
                 return listOf()
