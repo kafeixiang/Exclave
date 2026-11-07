@@ -26,4 +26,6 @@ import (
 	// a remote module (`gomobile bind "example.com/module"`) instead.
 	_ "github.com/exclavenetwork/libexclavecore"
 	_ "github.com/exclavenetwork/sing-tuicv4"
+	_ "golang.org/x/mobile/bind"
+	_ "libexclavecore/tuicv4"
 )

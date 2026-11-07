@@ -2,7 +2,15 @@ module libexclavecore
 
 go 1.27
 
+tool golang.org/x/mobile/cmd/gobind
+
 require github.com/exclavenetwork/libexclavecore v0.0.0-20261110173507-f48d93ac8a80
+
+require (
+	golang.org/x/mod v0.42.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
+	golang.org/x/tools v0.52.0 // indirect
+)
 
 require (
 	filippo.io/age v1.3.2 // indirect
