@@ -8,8 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.aidl.AppStats
@@ -45,6 +47,7 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         binding.root.applyGlassBlur()
 
         binding.sheetRecycler.layoutManager = LinearLayoutManager(context)
+        (binding.sheetRecycler.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         binding.sheetRecycler.adapter = adapter
 
         processAndDisplayStats(rawStatsList)
@@ -55,6 +58,11 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         (activity as? MainActivity)?.connection?.trafficTimeout = 1000
     }
 
+    override fun onStop() {
+        super.onStop()
+        (activity as? MainActivity)?.connection?.trafficTimeout = 0
+    }
+
     fun updateStats(statsList: List<AppStats>) {
         rawStatsList = statsList
         if (_binding != null) {
@@ -62,8 +70,8 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private fun processAndDisplayStats(statsList: List<AppStats>) {
+        val oldList = adapter.data
         runOnDefaultDispatcher {
             val map = statsList.associate { it.uid to it.copy() }.toMutableMap()
 
@@ -89,26 +97,65 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
             }
 
             val sortedList = map.values.sortedByDescending { it.uplinkTotal + it.downlinkTotal }
+            val diffResult = DiffUtil.calculateDiff(SpeedStatsDiffCallback(oldList, sortedList))
 
             runOnMainDispatcher {
                 if (_binding == null) return@runOnMainDispatcher
-                if (sortedList.isEmpty()) {
-                    binding.emptyText.isVisible = true
-                    binding.sheetRecycler.isVisible = false
-                    adapter.data = emptyList()
-                } else {
-                    binding.emptyText.isVisible = false
-                    binding.sheetRecycler.isVisible = true
-                    adapter.data = sortedList
+                val isEmpty = sortedList.isEmpty()
+                if (binding.emptyText.isVisible != isEmpty) {
+                    binding.emptyText.isVisible = isEmpty
                 }
-                adapter.notifyDataSetChanged()
+                if (binding.sheetRecycler.isVisible == isEmpty) {
+                    binding.sheetRecycler.isVisible = !isEmpty
+                }
+                adapter.updateData(sortedList, diffResult)
             }
+        }
+    }
+
+    private class SpeedStatsDiffCallback(
+        private val oldList: List<AppStats>,
+        private val newList: List<AppStats>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize(): Int = oldList.size
+        override fun getNewListSize(): Int = newList.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition].uid == newList[newItemPosition].uid
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            val old = oldList[oldItemPosition]
+            val new = newList[newItemPosition]
+            return old.tcpConnectionsTotal == new.tcpConnectionsTotal &&
+                    old.udpConnectionsTotal == new.udpConnectionsTotal &&
+                    old.uplinkTotal == new.uplinkTotal &&
+                    old.downlinkTotal == new.downlinkTotal
+        }
+
+        override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
+            return PAYLOAD_STATS_CHANGE
         }
     }
 
     private class SpeedStatsAdapter : RecyclerView.Adapter<SpeedStatsAdapter.ViewHolder>() {
 
+        private val animatedUids = hashSetOf<Int>()
         var data: List<AppStats> = emptyList()
+            private set
+
+        init {
+            setHasStableIds(true)
+        }
+
+        override fun getItemId(position: Int): Long {
+            return data.getOrNull(position)?.uid?.toLong() ?: RecyclerView.NO_ID
+        }
+
+        fun updateData(newList: List<AppStats>, diffResult: DiffUtil.DiffResult) {
+            data = newList
+            diffResult.dispatchUpdatesTo(this)
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val inflater = LayoutInflater.from(parent.context)
@@ -116,9 +163,20 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
             return ViewHolder(binding)
         }
 
+        override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
+            if (payloads.isNotEmpty()) {
+                holder.updateStatsOnly(data[position])
+            } else {
+                super.onBindViewHolder(holder, position, payloads)
+            }
+        }
+
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.itemView.applyItemEntryAnimation(position)
-            holder.bind(data[position])
+            val stats = data[position]
+            if (animatedUids.add(stats.uid)) {
+                holder.itemView.applyItemEntryAnimation(position)
+            }
+            holder.bind(stats)
         }
 
         override fun getItemCount(): Int = data.size
@@ -126,7 +184,6 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         class ViewHolder(val binding: ItemSpeedStatRowBinding) :
             RecyclerView.ViewHolder(binding.root) {
 
-            @SuppressLint("SetTextI18n")
             fun bind(stats: AppStats) {
                 val context = itemView.context
                 val packageName = PackageCache.uidMap[stats.uid]?.firstOrNull()
@@ -149,6 +206,12 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
                     )
                 }
 
+                updateStatsOnly(stats)
+            }
+
+            @SuppressLint("SetTextI18n")
+            fun updateStatsOnly(stats: AppStats) {
+                val context = itemView.context
                 val tcpTotal = stats.tcpConnectionsTotal
                 val udpTotal = stats.udpConnectionsTotal
                 binding.connectionCount.text = "TCP: $tcpTotal · UDP: $udpTotal"
@@ -164,5 +227,9 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val PAYLOAD_STATS_CHANGE = "payload_stats_change"
     }
 }
