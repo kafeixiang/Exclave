@@ -8,8 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.aidl.AppStats
@@ -18,6 +20,7 @@ import io.nekohasekai.sagernet.databinding.ItemConnectionRowBinding
 import io.nekohasekai.sagernet.databinding.LayoutConnectionsSheetBinding
 import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.applyItemEntryAnimation
+import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.ktx.runOnMainDispatcher
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.utils.PackageCache
@@ -27,6 +30,7 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
     private var _binding: LayoutConnectionsSheetBinding? = null
     private val binding get() = _binding!!
     private val adapter = ConnectionsAdapter()
+    private var rawStatsList: List<AppStats> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,7 +46,10 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
         binding.root.applyGlassBlur()
 
         binding.sheetRecycler.layoutManager = LinearLayoutManager(context)
+        (binding.sheetRecycler.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         binding.sheetRecycler.adapter = adapter
+
+        processAndDisplayStats(rawStatsList)
     }
 
     override fun onStart() {
@@ -50,26 +57,86 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
         (activity as? MainActivity)?.connection?.trafficTimeout = 1000
     }
 
-    @SuppressLint("NotifyDataSetChanged")
+    override fun onStop() {
+        super.onStop()
+        (activity as? MainActivity)?.connection?.trafficTimeout = 0
+    }
+
     fun updateStats(statsList: List<AppStats>) {
-        runOnMainDispatcher {
-            if (_binding == null) return@runOnMainDispatcher
-            if (statsList.isEmpty()) {
-                binding.emptyText.isVisible = true
-                binding.sheetRecycler.isVisible = false
-                adapter.data = emptyList()
-            } else {
-                binding.emptyText.isVisible = false
-                binding.sheetRecycler.isVisible = true
-                adapter.data = statsList
+        rawStatsList = statsList
+        if (_binding != null) {
+            processAndDisplayStats(statsList)
+        }
+    }
+
+    private fun processAndDisplayStats(statsList: List<AppStats>) {
+        val oldList = adapter.data
+        runOnDefaultDispatcher {
+            val copiedList = statsList.map { it.copy() }
+            val sortedList = copiedList.sortedWith(
+                compareByDescending<AppStats> { it.tcpConnections + it.udpConnections }
+                    .thenByDescending { it.uplink + it.downlink }
+                    .thenBy { it.uid }
+            )
+            val diffResult = DiffUtil.calculateDiff(ConnectionsDiffCallback(oldList, sortedList))
+
+            runOnMainDispatcher {
+                if (_binding == null) return@runOnMainDispatcher
+                val isEmpty = sortedList.isEmpty()
+                if (binding.emptyText.isVisible != isEmpty) {
+                    binding.emptyText.isVisible = isEmpty
+                }
+                if (binding.sheetRecycler.isVisible == isEmpty) {
+                    binding.sheetRecycler.isVisible = !isEmpty
+                }
+                adapter.updateData(sortedList, diffResult)
             }
-            adapter.notifyDataSetChanged()
+        }
+    }
+
+    private class ConnectionsDiffCallback(
+        private val oldList: List<AppStats>,
+        private val newList: List<AppStats>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize(): Int = oldList.size
+        override fun getNewListSize(): Int = newList.size
+
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            return oldList[oldItemPosition].uid == newList[newItemPosition].uid
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            val old = oldList[oldItemPosition]
+            val new = newList[newItemPosition]
+            return old.tcpConnections == new.tcpConnections &&
+                    old.udpConnections == new.udpConnections &&
+                    old.uplink == new.uplink &&
+                    old.downlink == new.downlink
+        }
+
+        override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
+            return PAYLOAD_CONNECTIONS_CHANGE
         }
     }
 
     private class ConnectionsAdapter : RecyclerView.Adapter<ConnectionsAdapter.ViewHolder>() {
 
+        private val animatedUids = hashSetOf<Int>()
         var data: List<AppStats> = emptyList()
+            private set
+
+        init {
+            setHasStableIds(true)
+        }
+
+        override fun getItemId(position: Int): Long {
+            return data.getOrNull(position)?.uid?.toLong() ?: RecyclerView.NO_ID
+        }
+
+        fun updateData(newList: List<AppStats>, diffResult: DiffUtil.DiffResult) {
+            data = newList
+            diffResult.dispatchUpdatesTo(this)
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val inflater = LayoutInflater.from(parent.context)
@@ -77,9 +144,20 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
             return ViewHolder(binding)
         }
 
+        override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
+            if (payloads.isNotEmpty()) {
+                holder.updateStatsOnly(data[position])
+            } else {
+                super.onBindViewHolder(holder, position, payloads)
+            }
+        }
+
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.itemView.applyItemEntryAnimation(position)
-            holder.bind(data[position])
+            val stats = data[position]
+            if (animatedUids.add(stats.uid)) {
+                holder.itemView.applyItemEntryAnimation(position)
+            }
+            holder.bind(stats)
         }
 
         override fun getItemCount(): Int = data.size
@@ -87,7 +165,6 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
         class ViewHolder(val binding: ItemConnectionRowBinding) :
             RecyclerView.ViewHolder(binding.root) {
 
-            @SuppressLint("SetTextI18n")
             fun bind(stats: AppStats) {
                 val context = itemView.context
                 val packageName = PackageCache.uidMap[stats.uid]?.firstOrNull()
@@ -110,6 +187,12 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
                     )
                 }
 
+                updateStatsOnly(stats)
+            }
+
+            @SuppressLint("SetTextI18n")
+            fun updateStatsOnly(stats: AppStats) {
+                val context = itemView.context
                 val tcp = stats.tcpConnections
                 val udp = stats.udpConnections
                 binding.connectionDetails.text = "TCP: $tcp · UDP: $udp"
@@ -125,5 +208,9 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val PAYLOAD_CONNECTIONS_CHANGE = "payload_connections_change"
     }
 }

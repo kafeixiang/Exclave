@@ -28,7 +28,9 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import io.nekohasekai.sagernet.Key
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
@@ -76,6 +78,7 @@ class ActiveFragment : Fragment(R.layout.layout_traffic_list) {
         }
         adapter = ActiveAdapter()
         binding.trafficList.layoutManager = FixedLinearLayoutManager(binding.trafficList)
+        (binding.trafficList.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
         binding.trafficList.applyGlassBlur()
         binding.trafficList.adapter = adapter
         (parentFragment as TrafficFragment).listeners.add(::emitStats)
@@ -97,36 +100,57 @@ class ActiveFragment : Fragment(R.layout.layout_traffic_list) {
                 }
             }
             binding.trafficList.post {
-                adapter.data = emptyList()
-                adapter.notifyDataSetChanged()
+                adapter.setData(emptyList(), null)
             }
         } else {
-            runOnMainDispatcher {
-                binding.holder.isVisible = false
-                binding.trafficList.isVisible = true
-            }
-
-            val now = System.currentTimeMillis() / 1000
-            val list = statsList.filter { it.deactivateAt == 0 || now - it.deactivateAt < 5 }
-                .toSortedSet { a, b ->
-                    val dataA = a.uplink + a.downlink
-                    val dataB = b.uplink + b.downlink
-                    if (dataA != dataB) {
-                        dataB.compareTo(dataA)
-                    } else {
-                        val connA = a.tcpConnections + a.udpConnections
-                        val connB = b.tcpConnections + b.udpConnections
-                        if (connA != connB) {
-                            connB.compareTo(connA)
+            val oldList = if (::adapter.isInitialized && adapter.isDataInitialized) adapter.data else emptyList()
+            runOnDefaultDispatcher {
+                val now = System.currentTimeMillis() / 1000
+                val list = statsList.filter { it.deactivateAt == 0 || now - it.deactivateAt < 5 }
+                    .map { it.copy() }
+                    .sortedWith { a, b ->
+                        val dataA = a.uplink + a.downlink
+                        val dataB = b.uplink + b.downlink
+                        if (dataA != dataB) {
+                            dataB.compareTo(dataA)
                         } else {
-                            b.uid.compareTo(a.uid)
+                            val connA = a.tcpConnections + a.udpConnections
+                            val connB = b.tcpConnections + b.udpConnections
+                            if (connA != connB) {
+                                connB.compareTo(connA)
+                            } else {
+                                b.uid.compareTo(a.uid)
+                            }
                         }
                     }
+
+                val diffResult = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+                    override fun getOldListSize(): Int = oldList.size
+                    override fun getNewListSize(): Int = list.size
+                    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                        return oldList[oldItemPosition].uid == list[newItemPosition].uid
+                    }
+                    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                        val o = oldList[oldItemPosition]
+                        val n = list[newItemPosition]
+                        return o.tcpConnections == n.tcpConnections &&
+                               o.udpConnections == n.udpConnections &&
+                               o.uplink == n.uplink &&
+                               o.downlink == n.downlink &&
+                               o.uplinkTotal == n.uplinkTotal &&
+                               o.downlinkTotal == n.downlinkTotal
+                    }
+                    override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
+                        return "payload_traffic_update"
+                    }
+                })
+
+                runOnMainDispatcher {
+                    if (!isAdded) return@runOnMainDispatcher
+                    binding.holder.isVisible = false
+                    binding.trafficList.isVisible = true
+                    adapter.setData(list, diffResult)
                 }
-                .toList()
-            binding.trafficList.post {
-                adapter.data = list
-                adapter.notifyDataSetChanged()
             }
         }
     }
@@ -137,10 +161,21 @@ class ActiveFragment : Fragment(R.layout.layout_traffic_list) {
             setHasStableIds(true)
         }
 
-        lateinit var data: List<AppStats>
+        var data: List<AppStats> = emptyList()
+            private set
+        val isDataInitialized get() = data.isNotEmpty()
+
+        fun setData(newList: List<AppStats>, diffResult: DiffUtil.DiffResult?) {
+            data = newList
+            if (diffResult != null) {
+                diffResult.dispatchUpdatesTo(this)
+            } else {
+                notifyDataSetChanged()
+            }
+        }
 
         override fun getItemId(position: Int): Long {
-            return data[position].uid.toLong()
+            return data.getOrNull(position)?.uid?.toLong() ?: RecyclerView.NO_ID
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActiveViewHolder {
@@ -149,19 +184,39 @@ class ActiveFragment : Fragment(R.layout.layout_traffic_list) {
             )
         }
 
+        override fun onBindViewHolder(holder: ActiveViewHolder, position: Int, payloads: MutableList<Any>) {
+            if (payloads.isNotEmpty()) {
+                holder.updateTrafficStats(data[position])
+            } else {
+                super.onBindViewHolder(holder, position, payloads)
+            }
+        }
+
         override fun onBindViewHolder(holder: ActiveViewHolder, position: Int) {
             holder.bind(data[position])
         }
 
-        override fun getItemCount(): Int {
-            if (!::data.isInitialized) return 0
-            return data.size
-        }
+        override fun getItemCount(): Int = data.size
     }
 
     inner class ActiveViewHolder(val binding: LayoutTrafficItemBinding) : RecyclerView.ViewHolder(
         binding.root
     ) {
+
+        fun updateTrafficStats(stats: AppStats) {
+            binding.tcpConnections.text = resources.getQuantityString(R.plurals.tcp_connections, stats.tcpConnections, stats.tcpConnections)
+            binding.udpConnections.text = resources.getQuantityString(R.plurals.udp_connections, stats.udpConnections, stats.udpConnections)
+            binding.trafficUplink.text = getString(
+                R.string.traffic_uplink,
+                FormatFileSizeCompat.formatFileSize(requireContext(), stats.uplinkTotal, DataStore.useIECUnit),
+                FormatFileSizeCompat.formatFileSize(requireContext(), stats.uplink, DataStore.useIECUnit)
+            )
+            binding.trafficDownlink.text = getString(
+                R.string.traffic_downlink,
+                FormatFileSizeCompat.formatFileSize(requireContext(), stats.downlinkTotal, DataStore.useIECUnit),
+                FormatFileSizeCompat.formatFileSize(requireContext(), stats.downlink, DataStore.useIECUnit)
+            )
+        }
 
         fun bind(stats: AppStats) {
             PackageCache.awaitLoadSync()
@@ -186,18 +241,9 @@ class ActiveFragment : Fragment(R.layout.layout_traffic_list) {
             binding.desc.text = packageName?.let {
                 "$packageName (${stats.uid})"
             } ?: "UID ${stats.uid} (${stats.uid})"
-            binding.tcpConnections.text = resources.getQuantityString(R.plurals.tcp_connections, stats.tcpConnections, stats.tcpConnections)
-            binding.udpConnections.text = resources.getQuantityString(R.plurals.udp_connections, stats.udpConnections, stats.udpConnections)
-            binding.trafficUplink.text = getString(
-                R.string.traffic_uplink,
-                FormatFileSizeCompat.formatFileSize(requireContext(), stats.uplinkTotal, DataStore.useIECUnit),
-                FormatFileSizeCompat.formatFileSize(requireContext(), stats.uplink, DataStore.useIECUnit)
-            )
-            binding.trafficDownlink.text = getString(
-                R.string.traffic_downlink,
-                FormatFileSizeCompat.formatFileSize(requireContext(), stats.downlinkTotal, DataStore.useIECUnit),
-                FormatFileSizeCompat.formatFileSize(requireContext(), stats.downlink, DataStore.useIECUnit)
-            )
+
+            updateTrafficStats(stats)
+
             val info = packageName?.let {
                 PackageCache.installedApps[packageName]
             } ?: PackageCache.installedApps["android"]
