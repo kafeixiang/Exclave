@@ -24,24 +24,36 @@ import android.annotation.SuppressLint
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.os.Build
+import android.util.LruCache
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.app
 import io.nekohasekai.sagernet.ktx.listenForPackageChanges
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 object PackageCache {
 
+    @Volatile
     lateinit var installedPackages: Map<String, PackageInfo>
+    @Volatile
     lateinit var installedPluginPackages: Map<String, PackageInfo>
+    @Volatile
     lateinit var installedApps: Map<String, ApplicationInfo>
+    @Volatile
     lateinit var packageMap: Map<String, Int>
-    val uidMap = HashMap<Int, HashSet<String>>()
+    @Volatile
+    var uidMap = HashMap<Int, HashSet<String>>()
+        private set
     val loaded = Mutex(true)
     var registered = AtomicBoolean(false)
+
+    private val labelMap = ConcurrentHashMap<String, String>()
+    private val iconCache = LruCache<String, Drawable>(64)
 
     fun register() {
         if (registered.getAndSet(true)) return
@@ -49,6 +61,7 @@ object PackageCache {
         app.listenForPackageChanges(false) {
             reload()
             labelMap.clear()
+            iconCache.evictAll()
         }
         loaded.unlock()
     }
@@ -101,15 +114,21 @@ object PackageCache {
         }
         installedApps = installed.associateBy { it.packageName }
         packageMap = installed.associate { it.packageName to it.uid }
-        uidMap.clear()
+        val newUidMap = HashMap<Int, HashSet<String>>()
         for (info in installed) {
             val uid = info.uid
-            uidMap.getOrPut(uid) { HashSet() }.add(info.packageName)
+            newUidMap.getOrPut(uid) { HashSet() }.add(info.packageName)
         }
+        uidMap = newUidMap
     }
 
     operator fun get(uid: Int) = uidMap[uid]
     operator fun get(packageName: String) = packageMap[packageName]
+
+    fun resolvePackageName(uid: Int): String? = when (uid) {
+        1000 -> "android"
+        else -> uidMap[uid]?.firstOrNull()
+    }
 
     fun awaitLoadSync() {
         if (::packageMap.isInitialized) {
@@ -126,14 +145,32 @@ object PackageCache {
         }
     }
 
-    private val labelMap = mutableMapOf<String, String>()
     fun loadLabel(packageName: String): String {
-        var label = labelMap[packageName]
-        if (label != null) return label
-        val info = installedApps[packageName] ?: return packageName
-        label = info.loadLabel(app.packageManager).toString()
+        labelMap[packageName]?.let { return it }
+        val info = if (::installedApps.isInitialized) installedApps[packageName] else null
+        val label = info?.loadLabel(app.packageManager)?.toString() ?: packageName
         labelMap[packageName] = label
         return label
+    }
+
+    fun getCachedIcon(packageName: String): Drawable? {
+        val cached = iconCache.get(packageName) ?: return null
+        return cached.constantState?.newDrawable(app.resources) ?: cached
+    }
+
+    fun loadIconCached(packageName: String): Drawable? {
+        getCachedIcon(packageName)?.let { return it }
+        val icon = try {
+            val info = if (::installedApps.isInitialized) installedApps[packageName] else null
+            info?.loadIcon(app.packageManager)
+                ?: app.packageManager.getApplicationIcon(packageName)
+        } catch (_: Exception) {
+            null
+        }
+        if (icon != null) {
+            iconCache.put(packageName, icon)
+        }
+        return icon?.constantState?.newDrawable(app.resources) ?: icon
     }
 
 }
