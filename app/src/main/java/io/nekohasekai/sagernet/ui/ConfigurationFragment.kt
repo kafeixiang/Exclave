@@ -276,8 +276,9 @@ class ConfigurationFragment @JvmOverloads constructor(
         })
 
         TabLayoutMediator(tabLayout, groupPager) { tab, position ->
+            val ctx = context ?: return@TabLayoutMediator
             if (position == 0) {
-                tab.text = getString(R.string.nav_dashboard)
+                tab.text = ctx.getString(R.string.nav_dashboard)
             } else if (adapter.groupList.size > position - 1) {
                 tab.text = adapter.groupList[position - 1].displayName()
             }
@@ -1207,8 +1208,8 @@ class ConfigurationFragment @JvmOverloads constructor(
                 }
 
                 try {
-                    val runFunc = if (now) requireActivity()::runOnUiThread else groupPager::post
-                    runFunc {
+                    val postUpdate = Runnable {
+                        if (!isAdded || view == null) return@Runnable
                         groupList = newGroupList
                         notifyDataSetChanged()
                         if (set) groupPager.setCurrentItem(selectedGroupIndex + 1, false)
@@ -1220,6 +1221,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                         }
                         updateTabLayoutMode()
                     }
+                    if (now) activity?.runOnUiThread(postUpdate) else groupPager.post(postUpdate)
                 } catch (e: Exception) {
                     Logs.w(e)
                     return@runOnDefaultDispatcher
