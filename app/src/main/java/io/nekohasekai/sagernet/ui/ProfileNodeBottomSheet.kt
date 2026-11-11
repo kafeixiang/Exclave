@@ -88,6 +88,9 @@ class ProfileNodeBottomSheet(
     }
 
     private fun loadData() {
+        val ctx = context ?: return
+        val groupHeader = ctx.getString(R.string.menu_group)
+        val configHeader = ctx.getString(R.string.menu_configuration)
         runOnDefaultDispatcher {
             val groups = SagerDatabase.groupDao.allGroups()
             val currentGroupId = DataStore.selectedGroup.takeIf { it > 0L } ?: groups.firstOrNull()?.id ?: 0L
@@ -97,18 +100,18 @@ class ProfileNodeBottomSheet(
 
             val items = mutableListOf<ListItem>()
 
-            items.add(ListItem.Header(getString(R.string.menu_group)))
+            items.add(ListItem.Header(groupHeader))
             groups.forEach { group ->
                 items.add(ListItem.GroupItem(group, group.id == currentGroupId))
             }
 
-            items.add(ListItem.Header(getString(R.string.menu_configuration)))
+            items.add(ListItem.Header(configHeader))
             proxies.forEach { proxy ->
                 items.add(ListItem.ProxyItem(proxy, proxy.id == selectedProxyId))
             }
 
             runOnMainDispatcher {
-                if (_binding != null) {
+                if (_binding != null && isAdded) {
                     binding.sheetRecycler.adapter = SheetAdapter(items)
                 }
             }
