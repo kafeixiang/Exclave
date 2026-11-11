@@ -176,6 +176,7 @@ class BalancerSettingsActivity : ProfileSettingsActivity<BalancerBean>(R.layout.
         configurationList.layoutManager = layoutManager
         configurationAdapter = ProxiesAdapter()
         configurationList.adapter = configurationAdapter
+        configurationList.applyGlassBlur()
 
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.START

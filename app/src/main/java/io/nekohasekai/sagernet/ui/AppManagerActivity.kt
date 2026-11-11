@@ -49,6 +49,7 @@ import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.databinding.LayoutAppsBinding
 import io.nekohasekai.sagernet.databinding.LayoutAppsItemBinding
+import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.crossFadeFrom
 import io.nekohasekai.sagernet.ktx.dp2px
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
@@ -263,6 +264,7 @@ class AppManagerActivity : ThemedActivity() {
         binding.list.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         binding.list.itemAnimator = DefaultItemAnimator()
         binding.list.adapter = appsAdapter
+        binding.list.applyGlassBlur()
 
         instance = this
         loadApps()
