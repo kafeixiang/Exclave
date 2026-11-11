@@ -292,7 +292,7 @@ object RawUpdater : GroupUpdater() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun parseRaw(text: String): List<AbstractBean>? {
+    suspend fun parseRaw(text: String): List<AbstractBean>? {
         try {
             val options = DumperOptions()
             val yaml = Yaml(YAMLConstructor(LoaderOptions()), Representer(options), options, object : Resolver() {

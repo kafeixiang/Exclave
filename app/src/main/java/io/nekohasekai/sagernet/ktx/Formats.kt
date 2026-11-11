@@ -58,14 +58,14 @@ fun String.decodeBase64(): String {
     return String(Base64.withPadding(Base64.PaddingOption.PRESENT_OPTIONAL).decode(this))
 }
 
-fun parseShareLinks(text: String): List<AbstractBean> {
+suspend fun parseShareLinks(text: String): List<AbstractBean> {
     val linksByLine = text.split('\n').mapNotNull { it.trim().takeIf { !it.startsWith('#') } }
     val links = linksByLine.flatMap { it.trim().split(' ') }
 
     val entities = ArrayList<AbstractBean>()
     val entitiesByLine = ArrayList<AbstractBean>()
 
-    fun String.parseLink(entities: ArrayList<AbstractBean>) {
+    suspend fun String.parseLink(entities: ArrayList<AbstractBean>) {
         if (startsWith("socks://", ignoreCase = true)
             || startsWith("socks4://", ignoreCase = true)
             || startsWith("socks4a://", ignoreCase = true)
@@ -136,19 +136,18 @@ fun parseShareLinks(text: String): List<AbstractBean> {
                 entities.add(parseShadowQUIC(this))
             }
         } else { // Matsuri plugins
-            MatsuriPluginManager.getProtocols().forEach { obj ->
-                obj.protocolConfig.getStringArray("links")?.forEach { any ->
-                    if (startsWith(any)) {
-                        runOnDefaultDispatcher {
-                            runCatching {
-                                entities.add(
-                                    parseShareLink(
-                                        obj.plgId, obj.protocolId, this@parseLink
-                                    )
+            for (obj in MatsuriPluginManager.getProtocols()) {
+                val linkPrefixes = obj.protocolConfig.getStringArray("links") ?: continue
+                for (prefix in linkPrefixes) {
+                    if (startsWith(prefix)) {
+                        runCatching {
+                            entities.add(
+                                parseShareLink(
+                                    obj.plgId, obj.protocolId, this@parseLink
                                 )
-                            }.onFailure {
-                                Logs.w(it)
-                            }
+                            )
+                        }.onFailure {
+                            Logs.w(it)
                         }
                     }
                 }
@@ -163,9 +162,7 @@ fun parseShareLinks(text: String): List<AbstractBean> {
         link.parseLink(entitiesByLine)
     }
 
-    runOnDefaultDispatcher {
-        MatsuriJSInterface.Default.destroyAllJsi()
-    }
+    MatsuriJSInterface.Default.destroyAllJsi()
 
     return if (entities.size > entitiesByLine.size) entities else entitiesByLine
 }
