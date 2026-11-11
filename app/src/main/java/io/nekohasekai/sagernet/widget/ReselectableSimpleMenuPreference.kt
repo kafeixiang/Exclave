@@ -59,6 +59,7 @@ open class ReselectableSimpleMenuPreference
         val mSpinner = holder.itemView.findViewById<Spinner>(androidx.preference.R.id.spinner)
         mSpinner.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
         mSpinner.setPadding(dp2px(2))
+        mSpinner.setPopupBackgroundResource(R.drawable.bg_spinner_dropdown)
 
         val listener = mSpinner.onItemSelectedListener
         mSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
