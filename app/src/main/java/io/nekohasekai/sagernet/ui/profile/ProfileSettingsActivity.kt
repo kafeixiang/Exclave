@@ -108,7 +108,8 @@ abstract class ProfileSettingsActivity<T : AbstractBean>(
             DataStore.editingGroup = savedInstanceState.getLong(KEY_EDITING_GROUP, DataStore.editingGroup)
             savedInstanceState.getByteArray(KEY_TEMP_BEAN_BYTES)?.let {
                 bean = createEntity().apply {
-                    deserialize(ByteBufferInput(it))
+                    deserializeFromBuffer(ByteBufferInput(it))
+                    initializeDefaultValues()
                     init()
                 }
             }
