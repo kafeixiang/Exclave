@@ -83,6 +83,7 @@ class AssetsActivity : ThemedActivity() {
         binding.recyclerView.layoutManager = FixedLinearLayoutManager(binding.recyclerView)
         adapter = AssetAdapter()
         binding.recyclerView.adapter = adapter
+        binding.recyclerView.applyGlassBlur()
 
         binding.refreshLayout.setOnRefreshListener {
             adapter.reloadAssets()
