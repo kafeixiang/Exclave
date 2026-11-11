@@ -443,7 +443,7 @@ class MainActivity : ThemedActivity(),
             container = binding.coordinator,
             bgImage = bgImage,
             ambientGlow = ambientGlow,
-            showMeshWhenDefault = true,
+            showMeshWhenDefault = Theme.isCupertino(),
         )
         if (Theme.usingNightMode() && DataStore.amoledPureBlack && !Theme.isWallpaperTheme()) {
             window.setBackgroundDrawable(ColorDrawable(Color.BLACK))
