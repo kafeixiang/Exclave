@@ -137,6 +137,7 @@
     <string name="dashboard_card_memory">内存与系统</string>
     <string name="dashboard_card_memory_desc">展示 App 内存使用与系统堆内存</string>
     <string name="dashboard_test_all">全部测速</string>
+    <string name="dashboard_quick_tools">快捷工具</string>
     <string name="dashboard_import_sub">导入订阅</string>
     <string name="dashboard_refresh_dns">刷新 DNS</string>
     <string name="dashboard_share_config">分享配置</string>
