@@ -89,7 +89,7 @@
 
         </RelativeLayout>
 
-        <!-- 2. Chart Section: Donut Ring on Left + Legend & Subscription on Right (Inspired by FlClash) -->
+        <!-- 2. Chart Section: Donut Ring on Left + Legend on Right -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -98,104 +98,99 @@
 
             <io.nekohasekai.sagernet.ui.widget.TrafficRingView
                 android:id="@+id/traffic_ring_view"
-                android:layout_width="56dp"
-                android:layout_height="56dp" />
+                android:layout_width="48dp"
+                android:layout_height="48dp" />
 
-            <!-- Legend & Overview Info -->
+            <!-- Stacked Legend Rows (fits cleanly in both 1-col and 2-col widths) -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="14dp"
+                android:layout_marginStart="12dp"
                 android:orientation="vertical">
 
-                <!-- Legend Row: Upload & Download pills -->
+                <!-- Upload legend pill -->
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <!-- Upload legend pill -->
-                    <LinearLayout
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="5dp"
+                        android:background="@drawable/bg_traffic_legend_orange" />
+
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:layout_width="14dp"
-                            android:layout_height="6dp"
-                            android:background="@drawable/bg_traffic_legend_orange" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:text="@string/upload"
-                            android:textAppearance="?attr/textAppearanceCaption"
-                            android:textColor="?android:attr/textColorSecondary" />
-                    </LinearLayout>
-
-                    <!-- Download legend pill -->
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:layout_width="14dp"
-                            android:layout_height="6dp"
-                            android:background="@drawable/bg_traffic_legend_blue" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            android:text="@string/download"
-                            android:textAppearance="?attr/textAppearanceCaption"
-                            android:textColor="?android:attr/textColorSecondary" />
-                    </LinearLayout>
-
+                        android:layout_marginStart="6dp"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:text="@string/upload"
+                        android:textSize="11sp"
+                        android:textColor="?android:attr/textColorSecondary" />
                 </LinearLayout>
 
-                <!-- Subscription / Total Traffic Usage text -->
-                <TextView
-                    android:id="@+id/traffic_usage"
-                    android:layout_width="match_parent"
+                <!-- Download legend pill -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:textAppearance="?attr/textAppearanceCaption"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textStyle="bold"
-                    android:singleLine="true"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    tools:text="已用: 16.0 GB / 500 GB" />
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <!-- Slim Progress Bar -->
-                <ProgressBar
-                    android:id="@+id/traffic_progress"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="4dp"
-                    android:layout_marginTop="6dp"
-                    android:progress="0"
-                    android:progressTint="?attr/colorAccent" />
+                    <View
+                        android:layout_width="12dp"
+                        android:layout_height="5dp"
+                        android:background="@drawable/bg_traffic_legend_blue" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:text="@string/download"
+                        android:textSize="11sp"
+                        android:textColor="?android:attr/textColorSecondary" />
+                </LinearLayout>
 
             </LinearLayout>
 
         </LinearLayout>
 
+        <!-- Subscription / Total Traffic Usage text (Full card width) -->
+        <TextView
+            android:id="@+id/traffic_usage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:maxLines="1"
+            android:ellipsize="end"
+            tools:text="已用: 16.0 GB / 500 GB" />
+
+        <!-- Slim Progress Bar -->
+        <ProgressBar
+            android:id="@+id/traffic_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="5dp"
+            android:progress="0"
+            android:progressTint="?attr/colorAccent" />
+
         <!-- 3. Realtime Speeds: Card-inset Stats Box with Dedicated Upload/Download Rows -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:background="@drawable/bg_traffic_stats_box"
-            android:paddingHorizontal="12dp"
+            android:paddingHorizontal="8dp"
             android:paddingVertical="8dp"
             android:orientation="vertical">
 
@@ -207,8 +202,8 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:src="@drawable/ic_file_file_upload"
                     app:tint="@color/cupertino_orange"
                     android:contentDescription="@string/upload" />
@@ -216,9 +211,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="4dp"
                     android:text="@string/upload"
-                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textSize="11sp"
                     android:textColor="?android:attr/textColorSecondary" />
 
                 <TextView
@@ -227,7 +222,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textSize="12sp"
                     android:textColor="@color/cupertino_orange"
                     android:textStyle="bold"
                     android:singleLine="true"
@@ -245,8 +240,8 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
                     android:src="@drawable/ic_baseline_download_24"
                     app:tint="@color/cupertino_blue"
                     android:contentDescription="@string/download" />
@@ -254,9 +249,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="4dp"
                     android:text="@string/download"
-                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textSize="11sp"
                     android:textColor="?android:attr/textColorSecondary" />
 
                 <TextView
@@ -265,7 +260,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="end"
-                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textSize="12sp"
                     android:textColor="@color/cupertino_blue"
                     android:textStyle="bold"
                     android:singleLine="true"

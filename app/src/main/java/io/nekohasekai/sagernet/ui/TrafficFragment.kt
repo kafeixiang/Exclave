@@ -40,11 +40,13 @@ import io.nekohasekai.sagernet.databinding.LayoutTrafficBinding
 import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.PackageCache
 import io.nekohasekai.sagernet.utils.Theme
+import java.util.concurrent.CopyOnWriteArrayList
 
 class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
     Toolbar.OnMenuItemClickListener {
 
-    lateinit var binding: LayoutTrafficBinding
+    private var _binding: LayoutTrafficBinding? = null
+    val binding get() = _binding!!
     lateinit var adapter: TrafficAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -65,7 +67,7 @@ class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
             insets
         }
 
-        binding = LayoutTrafficBinding.bind(view)
+        _binding = LayoutTrafficBinding.bind(view)
         if (!Theme.isCupertino()) {
             binding.trafficPager.setBackgroundColor(Theme.getClassicListBackgroundColor())
         }
@@ -82,24 +84,22 @@ class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
             }
         }.attach()
 
-        (requireActivity() as MainActivity).connection.trafficTimeout = 1500
+        (activity as? MainActivity)?.connection?.trafficTimeout = 1500
 
-        (requireActivity() as? MainActivity)?.onBackPressedCallback?.isEnabled = true
+        (activity as? MainActivity)?.onBackPressedCallback?.isEnabled = true
     }
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_clear_traffic_statistics -> {
-                (requireActivity() as MainActivity).connection.service?.resetTrafficStats()
-                runOnDefaultDispatcher {
-                    emitStats(emptyList())
-                }
+                (activity as? MainActivity)?.connection?.service?.resetTrafficStats()
+                emitStats(emptyList())
             }
         }
         return true
     }
 
-    inner class TrafficAdapter() : FragmentStateAdapter(this) {
+    inner class TrafficAdapter : FragmentStateAdapter(this) {
 
         override fun getItemCount(): Int {
             return 2
@@ -114,30 +114,33 @@ class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
 
     }
 
-    val listeners = mutableListOf<(List<AppStats>) -> Unit>()
+    val listeners = CopyOnWriteArrayList<(List<AppStats>) -> Unit>()
 
     fun emitStats(statsList: List<AppStats>) {
-        runOnDefaultDispatcher {
+        runOnMainDispatcher {
+            if (!isAdded) return@runOnMainDispatcher
             for (listener in listeners) listener(statsList)
         }
     }
 
     override fun onStart() {
         super.onStart()
-
-        (requireActivity() as MainActivity).connection.trafficTimeout = 1500
+        (activity as? MainActivity)?.updateTrafficTimeout()
     }
 
     override fun onStop() {
         super.onStop()
+        (activity as? MainActivity)?.updateTrafficTimeout()
+    }
 
-        (requireActivity() as MainActivity).connection.trafficTimeout = 0
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onDestroy() {
         super.onDestroy()
-
-        (requireActivity() as MainActivity).connection.trafficTimeout = 0
+        (activity as? MainActivity)?.updateTrafficTimeout()
     }
 
     val createRule = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {

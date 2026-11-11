@@ -476,6 +476,7 @@ class MainActivity : ThemedActivity(),
 
     fun displayFragment(fragment: ToolbarFragment) {
         binding.cupertinoDock.animate().translationY(0f).setDuration(225).start()
+        binding.cupertinoDock.showPanel()
         updateWallpaperBackground()
 
         supportFragmentManager.beginTransaction()
@@ -581,6 +582,29 @@ class MainActivity : ThemedActivity(),
         (fragment as? ConfigurationFragment)?.apply {
             stateChanged(state, profileName)
             refreshAllSelections()
+        }
+    }
+
+    private fun hasActiveStatsSheet(fm: androidx.fragment.app.FragmentManager): Boolean {
+        return fm.fragments.any { fragment ->
+            ((fragment is SpeedStatsBottomSheet || fragment is ConnectionsBottomSheet) &&
+                fragment.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) ||
+                (fragment.isAdded && hasActiveStatsSheet(fragment.childFragmentManager))
+        }
+    }
+
+    fun updateTrafficTimeout() {
+        val fragment = supportFragmentManager.findFragmentById(R.id.fragment_holder)
+        val hasActiveSheet = hasActiveStatsSheet(supportFragmentManager)
+        val desired = when {
+            hasActiveSheet -> 1000L
+            fragment is TrafficFragment && fragment.isResumed -> 1500L
+            fragment is ConfigurationFragment &&
+                fragment.adapter.dashboardFragment?.needsAppStatsUpdates() == true -> 1500L
+            else -> 0L
+        }
+        if (connection.trafficTimeout != desired) {
+            connection.trafficTimeout = desired
         }
     }
 

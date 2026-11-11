@@ -1,13 +1,12 @@
 package io.nekohasekai.sagernet.ui
 
 import android.annotation.SuppressLint
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,7 +19,6 @@ import io.nekohasekai.sagernet.databinding.ItemConnectionRowBinding
 import io.nekohasekai.sagernet.databinding.LayoutConnectionsSheetBinding
 import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.applyItemEntryAnimation
-import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.ktx.runOnMainDispatcher
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.utils.PackageCache
@@ -29,8 +27,26 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
 
     private var _binding: LayoutConnectionsSheetBinding? = null
     private val binding get() = _binding!!
-    private val adapter = ConnectionsAdapter()
+    private val lifecycleOwnerOrNull: () -> LifecycleOwner? = {
+        if (_binding != null && isAdded) viewLifecycleOwner else null
+    }
+    private val adapter = ConnectionsAdapter(lifecycleOwnerOrNull)
     private var rawStatsList: List<AppStats> = emptyList()
+    private val statsUpdater = AppStatsListUpdater(
+        lifecycleOwnerProvider = lifecycleOwnerOrNull,
+        currentDataProvider = { adapter.data },
+        applyResult = { sortedList, diffResult ->
+            val b = _binding ?: return@AppStatsListUpdater
+            val isEmpty = sortedList.isEmpty()
+            if (b.emptyText.isVisible != isEmpty) {
+                b.emptyText.isVisible = isEmpty
+            }
+            if (b.sheetRecycler.isVisible == isEmpty) {
+                b.sheetRecycler.isVisible = !isEmpty
+            }
+            adapter.updateData(sortedList, diffResult)
+        }
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,44 +70,47 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        (activity as? MainActivity)?.connection?.trafficTimeout = 1000
+        (activity as? MainActivity)?.updateTrafficTimeout()
     }
 
     override fun onStop() {
         super.onStop()
-        (activity as? MainActivity)?.connection?.trafficTimeout = 0
+        (activity as? MainActivity)?.updateTrafficTimeout()
     }
 
     fun updateStats(statsList: List<AppStats>) {
-        rawStatsList = statsList
-        if (_binding != null) {
-            processAndDisplayStats(statsList)
+        runOnMainDispatcher {
+            rawStatsList = statsList
+            if (_binding != null && isAdded) {
+                processAndDisplayStats(statsList)
+            }
         }
     }
 
     private fun processAndDisplayStats(statsList: List<AppStats>) {
-        val oldList = adapter.data
-        runOnDefaultDispatcher {
-            val copiedList = statsList.map { it.copy() }
-            val sortedList = copiedList.sortedWith(
-                compareByDescending<AppStats> { it.tcpConnections + it.udpConnections }
-                    .thenByDescending { it.uplink + it.downlink }
-                    .thenBy { it.uid }
-            )
-            val diffResult = DiffUtil.calculateDiff(ConnectionsDiffCallback(oldList, sortedList))
-
-            runOnMainDispatcher {
-                if (_binding == null) return@runOnMainDispatcher
-                val isEmpty = sortedList.isEmpty()
-                if (binding.emptyText.isVisible != isEmpty) {
-                    binding.emptyText.isVisible = isEmpty
+        val snapshot = statsList.toList()
+        statsUpdater.submit(
+            computeList = {
+                val merged = LinkedHashMap<Int, AppStats>(snapshot.size)
+                for (entry in snapshot) {
+                    val existing = merged[entry.uid]
+                    if (existing != null) {
+                        existing.tcpConnections += entry.tcpConnections
+                        existing.udpConnections += entry.udpConnections
+                        existing.uplink += entry.uplink
+                        existing.downlink += entry.downlink
+                    } else {
+                        merged[entry.uid] = entry.copy()
+                    }
                 }
-                if (binding.sheetRecycler.isVisible == isEmpty) {
-                    binding.sheetRecycler.isVisible = !isEmpty
-                }
-                adapter.updateData(sortedList, diffResult)
-            }
-        }
+                merged.values.sortedWith(
+                    compareByDescending<AppStats> { it.tcpConnections + it.udpConnections }
+                        .thenByDescending { it.uplink + it.downlink }
+                        .thenBy { it.uid }
+                )
+            },
+            diffCallbackFactory = { oldList, newList -> ConnectionsDiffCallback(oldList, newList) }
+        )
     }
 
     private class ConnectionsDiffCallback(
@@ -119,7 +138,9 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private class ConnectionsAdapter : RecyclerView.Adapter<ConnectionsAdapter.ViewHolder>() {
+    private class ConnectionsAdapter(
+        private val lifecycleOwnerProvider: () -> LifecycleOwner?
+    ) : RecyclerView.Adapter<ConnectionsAdapter.ViewHolder>() {
 
         private val animatedUids = hashSetOf<Int>()
         var data: List<AppStats> = emptyList()
@@ -133,15 +154,19 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
             return data.getOrNull(position)?.uid?.toLong() ?: RecyclerView.NO_ID
         }
 
-        fun updateData(newList: List<AppStats>, diffResult: DiffUtil.DiffResult) {
+        fun updateData(newList: List<AppStats>, diffResult: DiffUtil.DiffResult?) {
             data = newList
-            diffResult.dispatchUpdatesTo(this)
+            if (diffResult != null) {
+                diffResult.dispatchUpdatesTo(this)
+            } else {
+                notifyDataSetChanged()
+            }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val inflater = LayoutInflater.from(parent.context)
             val binding = ItemConnectionRowBinding.inflate(inflater, parent, false)
-            return ViewHolder(binding)
+            return ViewHolder(binding, lifecycleOwnerProvider)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -162,30 +187,23 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
 
         override fun getItemCount(): Int = data.size
 
-        class ViewHolder(val binding: ItemConnectionRowBinding) :
-            RecyclerView.ViewHolder(binding.root) {
+        class ViewHolder(
+            val binding: ItemConnectionRowBinding,
+            private val lifecycleOwnerProvider: () -> LifecycleOwner?,
+        ) : RecyclerView.ViewHolder(binding.root) {
 
             fun bind(stats: AppStats) {
-                val context = itemView.context
-                val packageName = PackageCache.uidMap[stats.uid]?.firstOrNull()
+                val packageName = PackageCache.resolvePackageName(stats.uid)
                 val label = if (packageName != null) PackageCache.loadLabel(packageName) else "UID ${stats.uid}"
 
-                val icon = try {
-                    if (packageName != null) context.packageManager.getApplicationIcon(packageName) else null
-                } catch (_: Exception) {
-                    null
-                }
-
                 binding.appName.text = label
-                if (icon != null) {
-                    binding.appIcon.imageTintList = null
-                    binding.appIcon.setImageDrawable(icon)
-                } else {
-                    binding.appIcon.setImageResource(R.drawable.ic_baseline_compare_arrows_24)
-                    binding.appIcon.imageTintList = ColorStateList.valueOf(
-                        ContextCompat.getColor(context, R.color.material_grey_500)
-                    )
-                }
+                binding.appIcon.bindAppIcon(
+                    lifecycleOwnerProvider = lifecycleOwnerProvider,
+                    uid = stats.uid,
+                    packageName = packageName,
+                    fallbackRes = R.drawable.ic_baseline_compare_arrows_24,
+                    fallbackTintRes = R.color.material_grey_500,
+                )
 
                 updateStatsOnly(stats)
             }
@@ -206,6 +224,8 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
     }
 
     override fun onDestroyView() {
+        statsUpdater.cancel()
+        _binding?.sheetRecycler?.adapter = null
         super.onDestroyView()
         _binding = null
     }
