@@ -22,6 +22,7 @@ package io.nekohasekai.sagernet.widget
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Resources
@@ -48,6 +49,8 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.content.res.TypedArrayUtils
 import androidx.core.graphics.ColorUtils
@@ -128,11 +131,35 @@ class ColorPickerPreference
         return drawable
     }
 
+    private tailrec fun Context.findActivity(): Activity? = when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
+
     override fun onClick() {
         super.onClick()
 
         lateinit var dialog: AlertDialog
+        var activeSubDialog: AlertDialog? = null
         var currentSelectedTheme = DataStore.appTheme
+
+        fun applyThemeAndRecreate(themeId: Int) {
+            activeSubDialog?.takeIf { it.isShowing }?.dismiss()
+            activeSubDialog = null
+            if (dialog.isShowing) dialog.dismiss()
+            callChangeListener(themeId)
+            context.findActivity()?.let { act -> ActivityCompat.recreate(act) }
+        }
+
+        fun showSubDialog(subDialog: AlertDialog) {
+            activeSubDialog?.takeIf { it.isShowing }?.dismiss()
+            activeSubDialog = subDialog
+            subDialog.setOnDismissListener {
+                if (activeSubDialog === subDialog) activeSubDialog = null
+            }
+            subDialog.show()
+        }
 
         val container = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
@@ -767,14 +794,12 @@ class ColorPickerPreference
                     val closestTheme = Theme.findClosestTheme(currentColor)
                     DataStore.appTheme = closestTheme
                     persistInt(closestTheme)
-                    dialog.dismiss()
-                    callChangeListener(closestTheme)
-                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                    applyThemeAndRecreate(closestTheme)
                 }
                 .setNegativeButton(android.R.string.cancel, null)
                 .create()
             customDialog.applyGlassBlur()
-            customDialog.show()
+            showSubDialog(customDialog)
         }
 
         fun populateColors() {
@@ -822,21 +847,20 @@ class ColorPickerPreference
                     val closestTheme = Theme.findClosestTheme(color)
                     DataStore.appTheme = closestTheme
                     persistInt(closestTheme)
-                    dialog.dismiss()
-                    callChangeListener(closestTheme)
-                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                    applyThemeAndRecreate(closestTheme)
                 }
                 swatch.setOnLongClickListener {
-                    MaterialAlertDialogBuilder(context)
+                    val confirmDialog = MaterialAlertDialogBuilder(context)
                         .setTitle(R.string.delete_color_confirm)
                         .setPositiveButton(android.R.string.ok) { _, _ ->
                             Theme.deleteCustomColor(color)
                             populateColors()
                             refreshLivePreview()
-                            (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                            applyThemeAndRecreate(DataStore.appTheme)
                         }
                         .setNegativeButton(android.R.string.cancel, null)
-                        .show()
+                        .create()
+                    showSubDialog(confirmDialog)
                     true
                 }
                 customSwatchesFlex.addView(swatch)
@@ -854,9 +878,7 @@ class ColorPickerPreference
                     DataStore.customColorEnabled = false
                     persistInt(themeId)
                     DataStore.appTheme = themeId
-                    dialog.dismiss()
-                    callChangeListener(themeId)
-                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                    applyThemeAndRecreate(themeId)
                 }
                 cupertinoMainFlex.addView(swatch)
             }
@@ -870,9 +892,7 @@ class ColorPickerPreference
                     DataStore.customColorEnabled = false
                     persistInt(themeId)
                     DataStore.appTheme = themeId
-                    dialog.dismiss()
-                    callChangeListener(themeId)
-                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                    applyThemeAndRecreate(themeId)
                 }
                 cupertinoMoreFlex.addView(swatch)
             }
@@ -889,9 +909,7 @@ class ColorPickerPreference
                     DataStore.customColorEnabled = false
                     persistInt(themeId)
                     DataStore.appTheme = themeId
-                    dialog.dismiss()
-                    callChangeListener(themeId)
-                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                    applyThemeAndRecreate(themeId)
                 }
                 materialMainFlex.addView(swatch)
             }
@@ -905,9 +923,7 @@ class ColorPickerPreference
                     DataStore.customColorEnabled = false
                     persistInt(themeId)
                     DataStore.appTheme = themeId
-                    dialog.dismiss()
-                    callChangeListener(themeId)
-                    (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                    applyThemeAndRecreate(themeId)
                 }
                 materialMoreFlex.addView(swatch)
             }
@@ -1353,7 +1369,7 @@ class ColorPickerPreference
                         }
                         setPadding(dp2px(2))
                         setOnClickListener {
-                            MaterialAlertDialogBuilder(context)
+                            val confirmDialog = MaterialAlertDialogBuilder(context)
                                 .setTitle(R.string.delete_wallpaper_confirm)
                                 .setPositiveButton(android.R.string.ok) { _, _ ->
                                     WallpaperManager.deleteWallpaper(context, item.path)
@@ -1362,7 +1378,8 @@ class ColorPickerPreference
                                     (context as? MainActivity)?.updateWallpaperBackground()
                                 }
                                 .setNegativeButton(android.R.string.cancel, null)
-                                .show()
+                                .create()
+                            showSubDialog(confirmDialog)
                         }
                     }
                     frame.addView(deleteBtn)
@@ -1410,11 +1427,24 @@ class ColorPickerPreference
             .setTitle(title)
             .setView(scrollView)
             .setPositiveButton(android.R.string.ok) { _, _ ->
-                callChangeListener(DataStore.appTheme)
-                (context as? Activity)?.let { act -> ActivityCompat.recreate(act) }
+                applyThemeAndRecreate(DataStore.appTheme)
             }
             .setNegativeButton(android.R.string.cancel, null)
             .create()
+        val lifecycleOwner = context.findActivity() as? LifecycleOwner
+        val destroyObserver = object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                activeSubDialog?.takeIf { it.isShowing }?.dismiss()
+                activeSubDialog = null
+                if (dialog.isShowing) dialog.dismiss()
+            }
+        }
+        lifecycleOwner?.lifecycle?.addObserver(destroyObserver)
+        dialog.setOnDismissListener {
+            lifecycleOwner?.lifecycle?.removeObserver(destroyObserver)
+            activeSubDialog?.takeIf { it.isShowing }?.dismiss()
+            activeSubDialog = null
+        }
         dialog.applyGlassBlur()
         dialog.show()
     }

@@ -352,7 +352,7 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
     lateinit var plugin: PluginPreference
     lateinit var pluginConfigure: EditTextPreference
     lateinit var pluginConfiguration: PluginConfiguration
-    lateinit var receiver: BroadcastReceiver
+    private var receiver: BroadcastReceiver? = null
 
     lateinit var mux: SwitchPreference
     lateinit var muxConcurrency: EditTextPreference
@@ -830,10 +830,27 @@ abstract class StandardV2RaySettingsActivity : ProfileSettingsActivity<StandardV
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
+        unregisterPackageReceiver()
         receiver = listenForPackageChanges(false) {
             // wait until changes were flushed
             lifecycleScope.launch { initPlugins() }
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        unregisterPackageReceiver()
+        super.onDetachedFromWindow()
+    }
+
+    override fun onDestroy() {
+        unregisterPackageReceiver()
+        super.onDestroy()
+    }
+
+    private fun unregisterPackageReceiver() {
+        val current = receiver ?: return
+        receiver = null
+        runCatching { unregisterReceiver(current) }
     }
     override fun PreferenceFragmentCompat.viewCreated(view: View, savedInstanceState: Bundle?) {
         setFragmentResultListener(PluginPreferenceDialogFragment::class.java.name) { _, bundle ->

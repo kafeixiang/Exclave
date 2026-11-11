@@ -293,6 +293,13 @@ class ScannerActivity : ThemedActivity() {
         return super.shouldUpRecreateTask(targetIntent) || isTaskRoot
     }
 
+    override fun onDestroy() {
+        if (::analysisExecutor.isInitialized) {
+            analysisExecutor.shutdownNow()
+        }
+        super.onDestroy()
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         return binding.previewView.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event)
     }

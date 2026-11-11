@@ -753,9 +753,12 @@ class MainActivity : ThemedActivity(),
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        if (GroupManager.userInterface === userInterface) {
+            GroupManager.userInterface = null
+        }
         DataStore.configurationStore.unregisterChangeListener(this)
         connection.disconnect(this)
+        super.onDestroy()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
