@@ -168,6 +168,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         override fun onPageSelected(position: Int) {
             super.onPageSelected(position)
+            (activity as? MainActivity)?.binding?.cupertinoDock?.showPanel()
             if (::adapter.isInitialized) {
                 adapter.dashboardFragment?.onVisibilityInPagerChanged(position == 0)
             }
@@ -2317,14 +2318,17 @@ class ConfigurationFragment @JvmOverloads constructor(
                         val isInsecure = DataStore.profileSecurityAdvisory && proxyEntity.requireBean().isInsecure
                         onMainDispatcher {
                             if (isInsecure) {
-                                shareLayer.setBackgroundColor(Color.RED)
+                                shareLayer.background = android.graphics.drawable.GradientDrawable().apply {
+                                    shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                                    cornerRadius = dp2px(10).toFloat()
+                                    setColor(Color.parseColor("#24FF3B30"))
+                                }
                                 shareButton.setImageResource(R.drawable.ic_baseline_warning_24)
-                                shareButton.setColorFilter(Color.WHITE)
+                                shareButton.setColorFilter(Color.parseColor("#FFFF3B30"))
                             } else {
-                                shareLayer.setBackgroundColor(Color.TRANSPARENT)
+                                shareLayer.background = null
                                 shareButton.setImageResource(R.drawable.ic_social_share)
                                 shareButton.setColorFilter(Color.GRAY)
-
                             }
                             shareButton.isVisible = true
                             if (isInsecure) {

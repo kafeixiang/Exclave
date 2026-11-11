@@ -90,20 +90,36 @@ class CupertinoDock @JvmOverloads constructor(
         applyDockMode()
     }
 
+    private fun startIdleAnimations() {
+        if (windowVisibility != VISIBLE || !isAttachedToWindow || !isConnected) return
+        if (!pulseAnimator.isRunning) pulseAnimator.start()
+        if (!fabScaleAnimator.isRunning) fabScaleAnimator.start()
+        if (colorAnimator?.isRunning != true) startColorCycling()
+    }
+
+    private fun stopIdleAnimations() {
+        pulseAnimator.cancel()
+        fabScaleAnimator.cancel()
+        colorAnimator?.cancel()
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        if (isConnected) {
-            pulseAnimator.start()
-            fabScaleAnimator.start()
-            startColorCycling()
-        }
+        startIdleAnimations()
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        pulseAnimator.cancel()
-        fabScaleAnimator.cancel()
-        colorAnimator?.cancel()
+        stopIdleAnimations()
+    }
+
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
+        if (visibility == VISIBLE) {
+            startIdleAnimations()
+        } else {
+            stopIdleAnimations()
+        }
     }
 
     private fun applyDockMode() {
@@ -165,6 +181,8 @@ class CupertinoDock @JvmOverloads constructor(
     fun hidePanel() {
         if (isPanelHidden) return
         isPanelHidden = true
+        dockPanel.animate().cancel()
+        fabContainer.animate().cancel()
         dockPanel.animate()
             .translationY(dockPanel.height.toFloat().coerceAtLeast(200f))
             .setDuration(220)
@@ -176,8 +194,10 @@ class CupertinoDock @JvmOverloads constructor(
     }
 
     fun showPanel() {
-        if (!isPanelHidden) return
+        if (!isPanelHidden && dockPanel.translationY == 0f && fabContainer.translationY == 0f) return
         isPanelHidden = false
+        dockPanel.animate().cancel()
+        fabContainer.animate().cancel()
         dockPanel.animate()
             .translationY(0f)
             .setDuration(220)
@@ -271,13 +291,9 @@ class CupertinoDock @JvmOverloads constructor(
         updateFabColors()
 
         if (isConnected) {
-            pulseAnimator.start()
-            fabScaleAnimator.start()
-            startColorCycling()
+            startIdleAnimations()
         } else {
-            pulseAnimator.cancel()
-            fabScaleAnimator.cancel()
-            colorAnimator?.cancel()
+            stopIdleAnimations()
             fab.animate().scaleX(1.0f).scaleY(1.0f).setDuration(300).start()
         }
     }

@@ -341,7 +341,7 @@
     <color name="glass_card_stroke">#D9FFFFFF</color>
 
     <color name="surface_glass">#66FFFFFF</color>
-    <color name="surface_glass_heavy">#85F2F2F7</color>
+    <color name="surface_glass_heavy">#F2F2F2F7</color>
     <color name="cupertino_window_bg">#F2F2F7</color>
     <color name="card_stroke">#C4FFFFFF</color>
 
