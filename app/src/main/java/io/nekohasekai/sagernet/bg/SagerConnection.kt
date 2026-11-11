@@ -98,7 +98,9 @@ class SagerConnection(private var listenForDeath: Boolean = false) : ServiceConn
 
         override fun statsUpdated(statsList: AppStatsList) {
             val callback = callback ?: return
-            callback.statsUpdated(statsList.data)
+            runOnMainDispatcher {
+                callback.statsUpdated(statsList.data)
+            }
         }
 
         override fun routeAlert(type: Int, routeName: String) {

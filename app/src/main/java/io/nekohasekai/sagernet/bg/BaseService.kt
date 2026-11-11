@@ -155,7 +155,7 @@ class BaseService {
                 delay((delayMs ?: return).milliseconds)
                 if (delayMs == 0L) return
                 val queryTime = System.currentTimeMillis()
-                val sinceLastQueryInSeconds = (queryTime - lastQueryTime).toDouble() / 1000L
+                val sinceLastQueryInSeconds = ((queryTime - lastQueryTime).toDouble() / 1000L).coerceAtLeast(0.001)
                 val proxy = data?.proxy ?: return
                 lastQueryTime = queryTime
                 val (statsOut, outs) = proxy.outboundStats()
@@ -202,7 +202,7 @@ class BaseService {
                 val delayMs = statsListeners.values.minOrNull()
                 if (delayMs == 0L) return
                 val queryTime = System.currentTimeMillis()
-                val sinceLastQueryInSeconds = ((queryTime - lastQueryTime).toDouble() / 1000).toLong()
+                val sinceLastQueryInSeconds = ((queryTime - lastQueryTime) / 1000L).coerceAtLeast(1L)
                 lastQueryTime = queryTime
 
                 appStats.clear()
