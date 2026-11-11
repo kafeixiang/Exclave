@@ -49,14 +49,18 @@ class NonBlackEditTextPreference : EditTextPreference {
         val a = context.obtainStyledAttributes(
             attrs, androidx.preference.R.styleable.Preference, defStyleAttr, defStyleRes
         )
-        if (a.hasValue(androidx.preference.R.styleable.Preference_defaultValue)) {
-            defaultValue = onGetDefaultValue(
-                a, androidx.preference.R.styleable.Preference_defaultValue
-            )?.toString()
-        } else if (a.hasValue(androidx.preference.R.styleable.Preference_android_defaultValue)) {
-            defaultValue = onGetDefaultValue(
-                a, androidx.preference.R.styleable.Preference_android_defaultValue
-            )?.toString()
+        try {
+            if (a.hasValue(androidx.preference.R.styleable.Preference_defaultValue)) {
+                defaultValue = onGetDefaultValue(
+                    a, androidx.preference.R.styleable.Preference_defaultValue
+                )?.toString()
+            } else if (a.hasValue(androidx.preference.R.styleable.Preference_android_defaultValue)) {
+                defaultValue = onGetDefaultValue(
+                    a, androidx.preference.R.styleable.Preference_android_defaultValue
+                )?.toString()
+            }
+        } finally {
+            a.recycle()
         }
     }
 

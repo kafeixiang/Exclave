@@ -27,6 +27,7 @@ import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.lifecycleScope
 import io.nekohasekai.sagernet.BuildConfig
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
@@ -35,6 +36,11 @@ import io.nekohasekai.sagernet.ktx.*
 import io.nekohasekai.sagernet.utils.ColorUtils
 import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.utils.CrashHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileOutputStream
@@ -44,11 +50,15 @@ import java.io.InputStreamReader
 class LogcatFragment : ToolbarFragment(R.layout.layout_logcat),
     Toolbar.OnMenuItemClickListener {
 
-    lateinit var binding: LayoutLogcatBinding
+    private var _binding: LayoutLogcatBinding? = null
+    val binding get() = _binding!!
+    private var streamingJob: Job? = null
+    @Volatile
+    private var logProcess: Process? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding = LayoutLogcatBinding.bind(view)
+        _binding = LayoutLogcatBinding.bind(view)
         if (!Theme.isCupertino()) {
             binding.logsScrollView.setBackgroundColor(Theme.getClassicListBackgroundColor())
         }
@@ -71,97 +81,121 @@ class LogcatFragment : ToolbarFragment(R.layout.layout_logcat),
             insets
         }
 
-        (requireActivity() as? MainActivity)?.onBackPressedCallback?.isEnabled = true
+        (activity as? MainActivity)?.onBackPressedCallback?.isEnabled = true
 
-        runOnIoDispatcher {
-            streamingLog()
+        startStreamingLog()
+    }
+
+    private fun startStreamingLog() {
+        stopStreamingLog()
+        streamingJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            val process = try {
+                ProcessBuilder(
+                    listOf("logcat",
+                        "-T", "2048",
+                        "-v", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) "tag,color" else "tag",
+                        "-s", arrayOf(
+                            "AndroidRuntime:D",
+                            "ProxyInstance:D",
+                            "GuardedProcessPool:D",
+                            "VpnService:D",
+                            "Go:D",
+                            "exclave-core:D",
+                            "libexclavecore:D",
+                            "libnaive:D",
+                            "Exclave:D",
+                            "*:S",
+                        ).joinToString(",")
+                    )
+                ).start()
+            } catch (_: Exception) {
+                return@launch
+            }
+            logProcess = process
+            val bufferedLogLines = arrayListOf<String>()
+            var timeLastNotify = System.nanoTime()
+            // The timeout is initially small so that the view gets populated immediately.
+            var timeout = 1000000000L / 2
+            try {
+                BufferedReader(InputStreamReader(process.inputStream)).use { stdout ->
+                    while (isActive) {
+                        val line = stdout.readLine() ?: break
+                        bufferedLogLines.add(line)
+                        val timeNow = System.nanoTime()
+                        if (
+                            bufferedLogLines.size < (1 shl 14) - 1 &&
+                            (timeNow - timeLastNotify) < timeout && stdout.ready()
+                        ) continue
+
+                        // Increase the timeout after the initial view has something in it.
+                        timeout = 1000000000L * 5 / 2
+                        timeLastNotify = timeNow
+
+                        if (bufferedLogLines.size > 2048) {
+                            bufferedLogLines.subList(0, bufferedLogLines.size - 2048).clear()
+                        }
+                        val batchText = bufferedLogLines.joinToString(separator = "\n", postfix = "\n")
+                        bufferedLogLines.clear()
+
+                        withContext(Dispatchers.Main) {
+                            val b = _binding ?: return@withContext
+                            if (!isAdded) return@withContext
+                            if (b.logsTextView.lineCount + 2048 > 4096) {
+                                b.logsTextView.text = ""
+                            }
+                            b.logsTextView.append(
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    ColorUtils.ansiEscapeToSpannable(b.root.context, batchText)
+                                } else {
+                                    batchText
+                                }
+                            )
+                            b.logsScrollView.post {
+                                _binding?.logsScrollView?.fullScroll(View.FOCUS_DOWN)
+                            }
+                        }
+                    }
+                }
+            } catch (_: IOException) {
+            } finally {
+                process.destroy()
+                if (logProcess === process) {
+                    logProcess = null
+                }
+            }
         }
     }
 
-    private suspend fun streamingLog() = onIoDispatcher {
-        val process = try {
-            ProcessBuilder(
-                listOf("logcat",
-                    "-T", "2048",
-                    "-v", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) "tag,color" else "tag",
-                    "-s", arrayOf(
-                        "AndroidRuntime:D",
-                        "ProxyInstance:D",
-                        "GuardedProcessPool:D",
-                        "VpnService:D",
-                        "Go:D",
-                        "exclave-core:D",
-                        "libexclavecore:D",
-                        "libnaive:D",
-                        "Exclave:D",
-                        "*:S",
-                    ).joinToString(",")
-                )
-            ).start()
-        } catch (_: Exception) {
-            return@onIoDispatcher
-        }
-        val stdout = BufferedReader(InputStreamReader(process.inputStream))
-        val bufferedLogLines = arrayListOf<String>()
-        var timeLastNotify = System.nanoTime()
-        // The timeout is initially small so that the view gets populated immediately.
-        var timeout = 1000000000L / 2
-        try {
-            while (true) {
-                val line = stdout.readLine() ?: break
-                bufferedLogLines.add(line)
-                val timeNow = System.nanoTime()
-                if (
-                    bufferedLogLines.size < (1 shl 14) - 1 &&
-                    (timeNow - timeLastNotify) < timeout && stdout.ready()
-                ) continue
+    private fun stopStreamingLog() {
+        streamingJob?.cancel()
+        streamingJob = null
+        logProcess?.destroy()
+        logProcess = null
+    }
 
-                // Increase the timeout after the initial view has something in it.
-                timeout = 1000000000L * 5 / 2
-                timeLastNotify = timeNow
-
-                onMainDispatcher {
-                    if (binding.logsTextView.lineCount + bufferedLogLines.size > 2048) {
-                        binding.logsTextView.text = ""
-                        if (bufferedLogLines.size > 2048) {
-                            bufferedLogLines.drop(bufferedLogLines.size - 2048)
-                        }
-                    }
-                    binding.logsTextView.append(
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            ColorUtils.ansiEscapeToSpannable(binding.root.context,
-                                bufferedLogLines.joinToString(separator = "\n", postfix = "\n")
-                            )
-                        } else {
-                            bufferedLogLines.joinToString(separator = "\n", postfix = "\n")
-                        }
-                    )
-                    bufferedLogLines.clear()
-                    binding.logsScrollView.post {
-                        binding.logsScrollView.fullScroll(View.FOCUS_DOWN)
-                    }
-                }
-            }
-        } finally {
-            process?.destroy()
-        }
+    override fun onDestroyView() {
+        stopStreamingLog()
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_clear_logcat -> {
-                runOnIoDispatcher {
-                    val command = listOf("logcat", "-c")
-                    val process = ProcessBuilder(command).start()
-                    process.waitFor()
-                    onMainDispatcher {
-                        binding.logsTextView.text = ""
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val process = ProcessBuilder(listOf("logcat", "-c")).start()
+                        process.waitFor()
+                    } catch (_: IOException) {
+                    }
+                    withContext(Dispatchers.Main) {
+                        _binding?.logsTextView?.text = ""
                     }
                 }
             }
             R.id.action_send_logcat -> {
-                val context = requireContext()
-                runOnDefaultDispatcher {
+                val appContext = context?.applicationContext ?: return true
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     val logFile = File.createTempFile("Exclave ",
                         ".log",
                         File(app.externalCacheDir, "log").also { it.mkdirs() })
@@ -183,17 +217,21 @@ class LogcatFragment : ToolbarFragment(R.layout.layout_logcat),
                         logFile.appendText("Export logcat error: " + CrashHandler.formatThrowable(e))
                     }
 
-                    context.startActivity(
-                        Intent.createChooser(
-                            Intent(Intent.ACTION_SEND).setType("text/plain")
-                                .setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                .putExtra(
-                                    Intent.EXTRA_STREAM, FileProvider.getUriForFile(
-                                        context, BuildConfig.APPLICATION_ID + ".cache", logFile
-                                    )
-                                ), context.getString(androidx.appcompat.R.string.abc_shareactionprovider_share_with)
+                    withContext(Dispatchers.Main) {
+                        val ctx = context ?: return@withContext
+                        if (!isAdded) return@withContext
+                        ctx.startActivity(
+                            Intent.createChooser(
+                                Intent(Intent.ACTION_SEND).setType("text/plain")
+                                    .setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    .putExtra(
+                                        Intent.EXTRA_STREAM, FileProvider.getUriForFile(
+                                            appContext, BuildConfig.APPLICATION_ID + ".cache", logFile
+                                        )
+                                    ), ctx.getString(androidx.appcompat.R.string.abc_shareactionprovider_share_with)
+                            )
                         )
-                    )
+                    }
                 }
             }
         }

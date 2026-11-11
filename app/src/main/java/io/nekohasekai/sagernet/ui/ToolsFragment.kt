@@ -47,12 +47,8 @@ class ToolsFragment : ToolbarFragment(R.layout.layout_tools) {
             insets
         }
 
-        val tools = mutableListOf<NamedFragment>()
-        tools.add(NetworkFragment())
-        tools.add(BackupFragment())
-
         val binding = LayoutToolsBinding.bind(view)
-        binding.toolsPager.adapter = ToolsAdapter(tools)
+        binding.toolsPager.adapter = ToolsAdapter()
 
         TabLayoutMediator(binding.toolsTab, binding.toolsPager) { tab, position ->
             tab.text = when (position) {
@@ -67,11 +63,14 @@ class ToolsFragment : ToolbarFragment(R.layout.layout_tools) {
         (requireActivity() as? MainActivity)?.onBackPressedCallback?.isEnabled = true
     }
 
-    inner class ToolsAdapter(val tools: List<Fragment>) : FragmentStateAdapter(this) {
+    inner class ToolsAdapter : FragmentStateAdapter(this) {
 
-        override fun getItemCount() = tools.size
+        override fun getItemCount() = 2
 
-        override fun createFragment(position: Int) = tools[position]
+        override fun createFragment(position: Int): Fragment = when (position) {
+            0 -> NetworkFragment()
+            else -> BackupFragment()
+        }
     }
 
 }
