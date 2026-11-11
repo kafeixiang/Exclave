@@ -433,44 +433,15 @@ class MainActivity : ThemedActivity(),
 
     fun updateWallpaperBackground() {
         val bgImage = findViewById<ImageView>(R.id.global_bg_image) ?: return
-        val isNight = Theme.usingNightMode()
-        val isPureBlack = isNight && DataStore.amoledPureBlack
-        val blurRadius = DataStore.wallpaperBlurRadius.toFloat().coerceIn(0f, 80f)
-
-        if (isPureBlack && !Theme.isWallpaperTheme()) {
-            bgImage.setImageDrawable(null)
-            binding.coordinator.setBackgroundColor(Color.BLACK)
+        val ambientGlow = findViewById<View>(R.id.ambient_glow)
+        WallpaperManager.applyWindowBackdrop(
+            container = binding.coordinator,
+            bgImage = bgImage,
+            ambientGlow = ambientGlow,
+            showMeshWhenDefault = true,
+        )
+        if (Theme.usingNightMode() && DataStore.amoledPureBlack && !Theme.isWallpaperTheme()) {
             window.setBackgroundDrawable(ColorDrawable(Color.BLACK))
-            return
-        }
-
-        if (Theme.isWallpaperTheme()) {
-            val drawable = WallpaperManager.loadWallpaperDrawable(this, DataStore.currentWallpaperPath)
-            if (drawable != null) {
-                bgImage.setImageDrawable(drawable)
-                bgImage.alpha = if (isNight) 0.85f else 0.92f
-                binding.coordinator.setBackgroundColor(
-                    if (isNight) Color.parseColor("#33000000") else Color.parseColor("#1AFFFFFF")
-                )
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (blurRadius > 0f) {
-                        bgImage.setRenderEffect(RenderEffect.createBlurEffect(blurRadius, blurRadius, Shader.TileMode.CLAMP))
-                    } else {
-                        bgImage.setRenderEffect(null)
-                    }
-                }
-                return
-            }
-        }
-        bgImage.setImageResource(R.drawable.bg_mesh_gradient)
-        bgImage.alpha = if (isNight) 0.70f else 0.88f
-        binding.coordinator.setBackgroundResource(R.color.cupertino_window_bg)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (blurRadius > 0f) {
-                bgImage.setRenderEffect(RenderEffect.createBlurEffect(blurRadius, blurRadius, Shader.TileMode.CLAMP))
-            } else {
-                bgImage.setRenderEffect(null)
-            }
         }
     }
 

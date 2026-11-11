@@ -1,12 +1,20 @@
 package io.nekohasekai.sagernet.utils
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.RenderEffect
+import android.graphics.Shader
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.Build
+import android.view.View
+import android.widget.ImageView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.database.DataStore
 import java.io.File
@@ -233,6 +241,90 @@ object WallpaperManager {
             } else null
         } catch (e: Exception) {
             null
+        }
+    }
+
+    /**
+     * Applies the unified Cupertino / Wallpaper backdrop layer onto [container] + [bgImage] + [ambientGlow]
+     * so MainActivity and sub-activities share identical visuals, scrim, and blur behavior.
+     */
+    fun applyWindowBackdrop(
+        container: View,
+        bgImage: ImageView,
+        ambientGlow: View?,
+        showMeshWhenDefault: Boolean,
+    ) {
+        val isNight = Theme.usingNightMode()
+        val isWallpaper = Theme.isWallpaperTheme()
+        val isPureBlack = isNight && DataStore.amoledPureBlack
+        val blurRadius = DataStore.wallpaperBlurRadius.toFloat().coerceIn(0f, 80f)
+
+        if (isPureBlack && !isWallpaper) {
+            bgImage.setImageDrawable(null)
+            bgImage.isVisible = false
+            ambientGlow?.isVisible = false
+            container.setBackgroundColor(Color.BLACK)
+            applyBlurEffect(bgImage, 0f)
+            return
+        }
+
+        if (isWallpaper) {
+            val drawable = loadWallpaperDrawable(container.context, DataStore.currentWallpaperPath)
+            if (drawable != null) {
+                bgImage.isVisible = true
+                bgImage.setImageDrawable(drawable)
+                bgImage.alpha = if (isNight) 0.85f else 0.92f
+                configureAmbientGlow(ambientGlow, isNight, container.context)
+                container.setBackgroundColor(
+                    if (isNight) Color.parseColor("#33000000") else Color.parseColor("#1AFFFFFF")
+                )
+                applyBlurEffect(bgImage, blurRadius)
+                return
+            }
+        }
+
+        if (showMeshWhenDefault) {
+            bgImage.isVisible = true
+            bgImage.setImageResource(R.drawable.bg_mesh_gradient)
+            bgImage.alpha = if (isNight) 0.70f else 0.88f
+            configureAmbientGlow(ambientGlow, isNight, container.context)
+            container.setBackgroundResource(R.color.cupertino_window_bg)
+            applyBlurEffect(bgImage, blurRadius)
+        } else {
+            bgImage.setImageDrawable(null)
+            bgImage.isVisible = false
+            ambientGlow?.isVisible = false
+            container.setBackgroundColor(Theme.getClassicListBackgroundColor())
+            applyBlurEffect(bgImage, 0f)
+        }
+    }
+
+    private fun configureAmbientGlow(ambientGlow: View?, isNight: Boolean, context: Context) {
+        if (ambientGlow == null) return
+        if (isNight) {
+            ambientGlow.alpha = 0f
+            ambientGlow.visibility = View.GONE
+            return
+        }
+        ambientGlow.backgroundTintList = ColorStateList.valueOf(Theme.getAccentColor(context))
+        ambientGlow.alpha = 0.1f
+        ambientGlow.visibility = View.VISIBLE
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            ambientGlow.setRenderEffect(
+                RenderEffect.createBlurEffect(40f, 40f, Shader.TileMode.DECAL)
+            )
+        }
+    }
+
+    private fun applyBlurEffect(target: View, blurRadius: Float) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            target.setRenderEffect(
+                if (blurRadius > 0f) {
+                    RenderEffect.createBlurEffect(blurRadius, blurRadius, Shader.TileMode.CLAMP)
+                } else {
+                    null
+                }
+            )
         }
     }
 }

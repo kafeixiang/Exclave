@@ -22,26 +22,31 @@ package io.nekohasekai.sagernet.ui
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.LayerDrawable
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentManager
 import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
-import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.R
+import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.ktx.applyGlassBlur
+import io.nekohasekai.sagernet.ktx.dp2px
 import io.nekohasekai.sagernet.ktx.getBooleanProperty
 import io.nekohasekai.sagernet.ktx.getColorAttr
 import io.nekohasekai.sagernet.utils.Theme
@@ -60,6 +65,11 @@ abstract class ThemedActivity : AppCompatActivity {
 
     var themeResId = 0
     var uiMode = 0
+
+    private var backdropContainer: FrameLayout? = null
+    private var backdropImage: ImageView? = null
+    private var backdropGlow: View? = null
+    private var lastBackdropKey: String? = null
 
     private val setNavigationBarColor = DataStore.experimentalFlagsProperties.getBooleanProperty("setNavigationBarColor")
 
@@ -152,18 +162,76 @@ abstract class ThemedActivity : AppCompatActivity {
             }
             insets
         }
+    }
 
-        if (Theme.isWallpaperTheme() && this !is MainActivity) {
-            WallpaperManager.loadWallpaperDrawable(this, DataStore.currentWallpaperPath)?.let { drawable ->
-                val isNight = Theme.usingNightMode()
-                val scrimColor = if (isNight) Color.parseColor("#4D000000") else Color.parseColor("#33FFFFFF")
-                val layered = LayerDrawable(arrayOf(
-                    drawable,
-                    ColorDrawable(scrimColor)
-                ))
-                window.setBackgroundDrawable(layered)
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+        updateSubpageBackdrop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateSubpageBackdrop()
+    }
+
+    private fun updateSubpageBackdrop() {
+        if (type != Type.Default || this is MainActivity) return
+        val content = findViewById<ViewGroup>(android.R.id.content) ?: return
+
+        val key = listOf(
+            Theme.usingNightMode(),
+            DataStore.amoledPureBlack,
+            Theme.isWallpaperTheme(),
+            Theme.isCupertino(),
+            DataStore.currentWallpaperPath,
+            DataStore.wallpaperBlurRadius,
+            Theme.getAccentColor(this),
+            themeResId,
+        ).joinToString("|")
+        if (backdropContainer != null && lastBackdropKey == key) return
+        lastBackdropKey = key
+
+        if (backdropContainer == null) {
+            val container = FrameLayout(this).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                )
+                isClickable = false
+                isFocusable = false
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
             }
+            val bgImage = ImageView(this).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                )
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }
+            val glowSize = dp2px(400)
+            val glow = View(this).apply {
+                layoutParams = FrameLayout.LayoutParams(glowSize, glowSize, Gravity.CENTER)
+                setBackgroundResource(R.drawable.bg_ambient_glow)
+                alpha = 0.1f
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }
+            container.addView(bgImage)
+            container.addView(glow)
+            content.addView(container, 0)
+            backdropContainer = container
+            backdropImage = bgImage
+            backdropGlow = glow
         }
+
+        val container = backdropContainer ?: return
+        val bgImage = backdropImage ?: return
+        WallpaperManager.applyWindowBackdrop(
+            container = container,
+            bgImage = bgImage,
+            ambientGlow = backdropGlow,
+            showMeshWhenDefault = Theme.isCupertino(),
+        )
     }
 
     override fun setTheme(resId: Int) {

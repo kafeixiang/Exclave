@@ -217,7 +217,7 @@ class TaskerActivity : ThemedActivity(R.layout.layout_config_settings),
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
-            if (!Theme.isCupertino()) {
+            if (!Theme.isCupertino() && !Theme.isWallpaperTheme()) {
                 view.setBackgroundColor(Theme.getClassicListBackgroundColor())
                 listView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
             } else {
