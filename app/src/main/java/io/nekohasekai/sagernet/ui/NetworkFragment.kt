@@ -52,12 +52,17 @@ class NetworkFragment : NamedFragment(R.layout.layout_network) {
             )
             insets
         }
-        binding.stunTest.setOnClickListener {
+        val openStun = View.OnClickListener {
             startActivity(Intent(requireContext(), StunActivity::class.java))
         }
-        binding.probeCertificate.setOnClickListener {
+        binding.stunCard.setOnClickListener(openStun)
+        binding.stunTest.setOnClickListener(openStun)
+
+        val openProbeCert = View.OnClickListener {
             startActivity(Intent(requireContext(), ProbeCertActivity::class.java))
         }
+        binding.probeCard.setOnClickListener(openProbeCert)
+        binding.probeCertificate.setOnClickListener(openProbeCert)
 
     }
 
