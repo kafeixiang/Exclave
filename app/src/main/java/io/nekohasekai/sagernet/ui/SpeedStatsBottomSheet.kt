@@ -1,14 +1,13 @@
 package io.nekohasekai.sagernet.ui
 
 import android.annotation.SuppressLint
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
- import androidx.recyclerview.widget.DiffUtil
+import androidx.lifecycle.LifecycleOwner
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -21,7 +20,6 @@ import io.nekohasekai.sagernet.databinding.ItemSpeedStatRowBinding
 import io.nekohasekai.sagernet.databinding.LayoutSpeedStatsSheetBinding
 import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.applyItemEntryAnimation
-import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
 import io.nekohasekai.sagernet.ktx.runOnMainDispatcher
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.utils.PackageCache
@@ -30,8 +28,26 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
 
     private var _binding: LayoutSpeedStatsSheetBinding? = null
     private val binding get() = _binding!!
-    private val adapter = SpeedStatsAdapter()
+    private val lifecycleOwnerOrNull: () -> LifecycleOwner? = {
+        if (_binding != null && isAdded) viewLifecycleOwner else null
+    }
+    private val adapter = SpeedStatsAdapter(lifecycleOwnerOrNull)
     private var rawStatsList: List<AppStats> = emptyList()
+    private val statsUpdater = AppStatsListUpdater(
+        lifecycleOwnerProvider = lifecycleOwnerOrNull,
+        currentDataProvider = { adapter.data },
+        applyResult = { sortedList, diffResult ->
+            val b = _binding ?: return@AppStatsListUpdater
+            val isEmpty = sortedList.isEmpty()
+            if (b.emptyText.isVisible != isEmpty) {
+                b.emptyText.isVisible = isEmpty
+            }
+            if (b.sheetRecycler.isVisible == isEmpty) {
+                b.sheetRecycler.isVisible = !isEmpty
+            }
+            adapter.updateData(sortedList, diffResult)
+        }
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,62 +71,54 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        (activity as? MainActivity)?.connection?.trafficTimeout = 1000
+        (activity as? MainActivity)?.updateTrafficTimeout()
     }
 
     override fun onStop() {
         super.onStop()
-        (activity as? MainActivity)?.connection?.trafficTimeout = 0
+        (activity as? MainActivity)?.updateTrafficTimeout()
     }
 
     fun updateStats(statsList: List<AppStats>) {
-        rawStatsList = statsList
-        if (_binding != null) {
-            processAndDisplayStats(statsList)
+        runOnMainDispatcher {
+            rawStatsList = statsList
+            if (_binding != null && isAdded) {
+                processAndDisplayStats(statsList)
+            }
         }
     }
 
     private fun processAndDisplayStats(statsList: List<AppStats>) {
-        val oldList = adapter.data
-        runOnDefaultDispatcher {
-            val map = statsList.associate { it.uid to it.copy() }.toMutableMap()
+        val snapshot = statsList.toList()
+        statsUpdater.submit(
+            computeList = {
+                val map = snapshot.associate { it.uid to it.copy() }.toMutableMap()
 
-            val dbStatsList = try {
-                SagerDatabase.statsDao.all()
-            } catch (_: Exception) {
-                emptyList()
-            }
-
-            for (s in dbStatsList) {
-                if (map.containsKey(s.uid)) {
-                    map[s.uid]!! += s
-                } else {
-                    map[s.uid] = s.toStats()
+                val dbStatsList = try {
+                    SagerDatabase.statsDao.all()
+                } catch (_: Exception) {
+                    emptyList()
                 }
-            }
 
-            for (s in map.values) {
-                s.tcpConnectionsTotal += s.tcpConnections
-                s.udpConnectionsTotal += s.udpConnections
-                s.uplinkTotal += s.uplink
-                s.downlinkTotal += s.downlink
-            }
-
-            val sortedList = map.values.sortedByDescending { it.uplinkTotal + it.downlinkTotal }
-            val diffResult = DiffUtil.calculateDiff(SpeedStatsDiffCallback(oldList, sortedList))
-
-            runOnMainDispatcher {
-                if (_binding == null) return@runOnMainDispatcher
-                val isEmpty = sortedList.isEmpty()
-                if (binding.emptyText.isVisible != isEmpty) {
-                    binding.emptyText.isVisible = isEmpty
+                for (s in dbStatsList) {
+                    if (map.containsKey(s.uid)) {
+                        map[s.uid]!! += s
+                    } else {
+                        map[s.uid] = s.toStats()
+                    }
                 }
-                if (binding.sheetRecycler.isVisible == isEmpty) {
-                    binding.sheetRecycler.isVisible = !isEmpty
+
+                for (s in map.values) {
+                    s.tcpConnectionsTotal += s.tcpConnections
+                    s.udpConnectionsTotal += s.udpConnections
+                    s.uplinkTotal += s.uplink
+                    s.downlinkTotal += s.downlink
                 }
-                adapter.updateData(sortedList, diffResult)
-            }
-        }
+
+                map.values.sortedByDescending { it.uplinkTotal + it.downlinkTotal }
+            },
+            diffCallbackFactory = { oldList, newList -> SpeedStatsDiffCallback(oldList, newList) }
+        )
     }
 
     private class SpeedStatsDiffCallback(
@@ -138,7 +146,9 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
-    private class SpeedStatsAdapter : RecyclerView.Adapter<SpeedStatsAdapter.ViewHolder>() {
+    private class SpeedStatsAdapter(
+        private val lifecycleOwnerProvider: () -> LifecycleOwner?
+    ) : RecyclerView.Adapter<SpeedStatsAdapter.ViewHolder>() {
 
         private val animatedUids = hashSetOf<Int>()
         var data: List<AppStats> = emptyList()
@@ -152,15 +162,19 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
             return data.getOrNull(position)?.uid?.toLong() ?: RecyclerView.NO_ID
         }
 
-        fun updateData(newList: List<AppStats>, diffResult: DiffUtil.DiffResult) {
+        fun updateData(newList: List<AppStats>, diffResult: DiffUtil.DiffResult?) {
             data = newList
-            diffResult.dispatchUpdatesTo(this)
+            if (diffResult != null) {
+                diffResult.dispatchUpdatesTo(this)
+            } else {
+                notifyDataSetChanged()
+            }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val inflater = LayoutInflater.from(parent.context)
             val binding = ItemSpeedStatRowBinding.inflate(inflater, parent, false)
-            return ViewHolder(binding)
+            return ViewHolder(binding, lifecycleOwnerProvider)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
@@ -181,30 +195,23 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
 
         override fun getItemCount(): Int = data.size
 
-        class ViewHolder(val binding: ItemSpeedStatRowBinding) :
-            RecyclerView.ViewHolder(binding.root) {
+        class ViewHolder(
+            val binding: ItemSpeedStatRowBinding,
+            private val lifecycleOwnerProvider: () -> LifecycleOwner?,
+        ) : RecyclerView.ViewHolder(binding.root) {
 
             fun bind(stats: AppStats) {
-                val context = itemView.context
-                val packageName = PackageCache.uidMap[stats.uid]?.firstOrNull()
+                val packageName = PackageCache.resolvePackageName(stats.uid)
                 val label = if (packageName != null) PackageCache.loadLabel(packageName) else "UID ${stats.uid}"
 
-                val icon = try {
-                    if (packageName != null) context.packageManager.getApplicationIcon(packageName) else null
-                } catch (_: Exception) {
-                    null
-                }
-
                 binding.appName.text = label
-                if (icon != null) {
-                    binding.appIcon.imageTintList = null
-                    binding.appIcon.setImageDrawable(icon)
-                } else {
-                    binding.appIcon.setImageResource(R.drawable.ic_baseline_speed_24)
-                    binding.appIcon.imageTintList = ColorStateList.valueOf(
-                        ContextCompat.getColor(context, R.color.material_grey_500)
-                    )
-                }
+                binding.appIcon.bindAppIcon(
+                    lifecycleOwnerProvider = lifecycleOwnerProvider,
+                    uid = stats.uid,
+                    packageName = packageName,
+                    fallbackRes = R.drawable.ic_baseline_speed_24,
+                    fallbackTintRes = R.color.material_grey_500,
+                )
 
                 updateStatsOnly(stats)
             }
@@ -225,6 +232,8 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
     }
 
     override fun onDestroyView() {
+        statsUpdater.cancel()
+        _binding?.sheetRecycler?.adapter = null
         super.onDestroyView()
         _binding = null
     }

@@ -53,7 +53,9 @@ import io.nekohasekai.sagernet.utils.Theme
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.widget.QRCodeDialog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -152,6 +154,35 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     var isDashboardVisible = true
         private set
     private var hasPendingUpdate = false
+    private var dbSnapshot = DashboardDbSnapshot()
+    private var dbSnapshotJob: Job? = null
+
+    private data class DashboardDbSnapshot(
+        val profileId: Long = 0L,
+        val profileName: String? = null,
+        val profileType: String = "",
+        val profileStatus: Int = 0,
+        val profilePing: Int = 0,
+        val groupName: String = "",
+        val hasGroup: Boolean = false,
+        val groupTx: Long = 0L,
+        val groupRx: Long = 0L,
+        val subUsed: Long = 0L,
+        val subTotal: Long = 0L,
+    )
+
+    private val profileListener = object : ProfileManager.Listener {
+        override suspend fun onAdd(profile: ProxyEntity) {
+            runOnMainDispatcher { if (isAdded) refreshDbSnapshot() }
+        }
+        override suspend fun onUpdated(profileId: Long, trafficStats: TrafficStats) {}
+        override suspend fun onUpdated(profile: ProxyEntity) {
+            runOnMainDispatcher { if (isAdded) refreshDbSnapshot() }
+        }
+        override suspend fun onRemoved(groupId: Long, profileId: Long) {
+            runOnMainDispatcher { if (isAdded) refreshDbSnapshot() }
+        }
+    }
 
     data class GeoIpData(
         var ip: String = "",
@@ -232,30 +263,15 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             }
         }
 
-        ProfileManager.addListener(object : ProfileManager.Listener {
-            override suspend fun onAdd(profile: ProxyEntity) {}
-            override suspend fun onUpdated(profileId: Long, trafficStats: TrafficStats) {}
-            override suspend fun onUpdated(profile: ProxyEntity) {
-                runOnMainDispatcher {
-                    if (isAdded) {
-                        if (isDashboardVisible && isResumed) {
-                            adapter.updateItemWithPayload(ItemType.TRAFFIC, PAYLOAD_TRAFFIC)
-                            adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
-                            adapter.updateItemWithPayload(ItemType.PROFILES, PAYLOAD_PROFILES)
-                        } else {
-                            hasPendingUpdate = true
-                        }
-                    }
-                }
-            }
-            override suspend fun onRemoved(groupId: Long, profileId: Long) {}
-        })
+        ProfileManager.addListener(profileListener)
+        refreshDbSnapshot()
 
         startUptimeTimer()
     }
 
     override fun onResume() {
         super.onResume()
+        refreshDbSnapshot()
         val parentPager = (parentFragment as? ConfigurationFragment)?.groupPager
         val isVisibleInPager = parentPager?.currentItem == 0
         onVisibilityInPagerChanged(isVisibleInPager)
@@ -267,6 +283,12 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     }
 
     override fun onDestroyView() {
+        ProfileManager.removeListener(profileListener)
+        dbSnapshotJob?.cancel()
+        dbSnapshotJob = null
+        activeConnectionsSheet = null
+        activeSpeedStatsSheet = null
+        recyclerView?.adapter = null
         super.onDestroyView()
         recyclerView = null
         editModeFloatingBar = null
@@ -275,10 +297,68 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         btnDoneEdit = null
     }
 
+    private fun refreshDbSnapshot() {
+        if (!isAdded || view == null) return
+        dbSnapshotJob?.cancel()
+        dbSnapshotJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main.immediate) {
+            val snapshot = withContext(Dispatchers.IO) {
+                val profileId = DataStore.currentProfile
+                val profile = ProfileManager.getProfile(profileId)
+                val group = if (profile != null) {
+                    try { SagerDatabase.groupDao.getById(profile.groupId) } catch (_: Exception) { null }
+                } else null
+                val sub = group?.subscription
+                val profiles = if (group != null) {
+                    try { SagerDatabase.proxyDao.getByGroup(group.id) } catch (_: Exception) { emptyList() }
+                } else emptyList()
+                val used = sub?.bytesUsed ?: 0L
+                val remaining = sub?.bytesRemaining ?: 0L
+                DashboardDbSnapshot(
+                    profileId = profileId,
+                    profileName = profile?.displayName(),
+                    profileType = profile?.displayType() ?: "",
+                    profileStatus = profile?.status ?: 0,
+                    profilePing = profile?.ping ?: 0,
+                    groupName = group?.displayName() ?: "",
+                    hasGroup = group != null,
+                    groupTx = profiles.sumOf { it.tx },
+                    groupRx = profiles.sumOf { it.rx },
+                    subUsed = used,
+                    subTotal = used + remaining,
+                )
+            }
+            if (!isActive || !isAdded) return@launch
+            dbSnapshot = snapshot
+            if (::adapter.isInitialized) {
+                if (isDashboardVisible && isResumed) {
+                    adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
+                    adapter.updateItemWithPayload(ItemType.TRAFFIC, PAYLOAD_TRAFFIC)
+                    adapter.updateItemWithPayload(ItemType.PROFILES, PAYLOAD_PROFILES)
+                } else {
+                    hasPendingUpdate = true
+                }
+            }
+        }
+    }
+
+    fun needsAppStatsUpdates(): Boolean {
+        return isAdded &&
+            isResumed &&
+            isDashboardVisible &&
+            DataStore.appTrafficStatistics &&
+            ::adapter.isInitialized &&
+            ItemType.CONNECTIONS in adapter.items
+    }
+
     fun onVisibilityInPagerChanged(visible: Boolean) {
-        if (isDashboardVisible == visible) return
+        if (isDashboardVisible == visible) {
+            (activity as? MainActivity)?.updateTrafficTimeout()
+            return
+        }
         isDashboardVisible = visible
+        (activity as? MainActivity)?.updateTrafficTimeout()
         if (visible) {
+            refreshDbSnapshot()
             if (hasPendingUpdate && ::adapter.isInitialized) {
                 hasPendingUpdate = false
                 adapter.notifyItemRangeChanged(0, adapter.itemCount)
@@ -480,6 +560,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             adapter.items.add(type)
             saveDashboardOrder()
             adapter.notifyDataSetChanged()
+            (activity as? MainActivity)?.updateTrafficTimeout()
         }
     }
 
@@ -490,6 +571,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             adapter.items.removeAt(index)
             saveDashboardOrder()
             adapter.notifyDataSetChanged()
+            (activity as? MainActivity)?.updateTrafficTimeout()
         }
     }
 
@@ -711,9 +793,11 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
                 adapter.updateItemWithPayload(ItemType.RUN_TIME, PAYLOAD_RUNTIME)
                 adapter.updateItemWithPayload(ItemType.TRAFFIC, PAYLOAD_TRAFFIC)
+                adapter.updateItemWithPayload(ItemType.CONNECTIONS, PAYLOAD_CONNECTIONS)
             } else {
                 hasPendingUpdate = true
             }
+            refreshDbSnapshot()
         }
     }
 
@@ -741,6 +825,11 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             lastAppStatsList = statsList
             activeConnectionsSheet?.takeIf { it.isAdded }?.updateStats(statsList)
             activeSpeedStatsSheet?.takeIf { it.isAdded }?.updateStats(statsList)
+            if (isDashboardVisible && isResumed && ::adapter.isInitialized) {
+                adapter.updateItemWithPayload(ItemType.CONNECTIONS, PAYLOAD_CONNECTIONS)
+            } else {
+                hasPendingUpdate = true
+            }
         }
     }
 
@@ -761,8 +850,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 withContext(Dispatchers.Main) {
                     if (isAdded) {
                         (activity as? MainActivity)?.snackbar("已解析剪贴板订阅链接并开始更新！")?.show()
-                        adapter.updateItem(ItemType.PROFILES)
-                        adapter.updateItem(ItemType.TRAFFIC)
+                        refreshDbSnapshot()
                     }
                 }
             }
@@ -778,7 +866,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         withContext(Dispatchers.Main) {
                             if (isAdded) {
                                 (activity as? MainActivity)?.snackbar("成功从剪贴板导入 ${proxies.size} 个节点配置！")?.show()
-                                adapter.updateItem(ItemType.PROFILES)
+                                refreshDbSnapshot()
                             }
                         }
                         return@launch
@@ -824,8 +912,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         withContext(Dispatchers.Main) {
                             if (isAdded) {
                                 (activity as? MainActivity)?.snackbar("已成功添加订阅并更新！")?.show()
-                                adapter.updateItem(ItemType.PROFILES)
-                                adapter.updateItem(ItemType.TRAFFIC)
+                                refreshDbSnapshot()
                             }
                         }
                     }
@@ -1009,14 +1096,14 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             }
 
             fun updatePartial() {
-                val profile = ProfileManager.getProfile(DataStore.currentProfile)
-                val name = lastProfileName ?: profile?.displayName() ?: getString(R.string.group_status_empty)
-                val type = profile?.displayType() ?: ""
+                val snapshot = dbSnapshot
+                val name = lastProfileName ?: snapshot.profileName ?: getString(R.string.group_status_empty)
+                val type = snapshot.profileType
                 binding.profileName.text = if (type.isNotEmpty()) "$name ($type)" else name
 
-                if (profile != null && profile.status > 0 && profile.ping > 0) {
+                if (snapshot.profileName != null && snapshot.profileStatus > 0 && snapshot.profilePing > 0) {
                     binding.currentPing.isVisible = true
-                    binding.currentPing.text = getString(R.string.available, profile.ping)
+                    binding.currentPing.text = getString(R.string.available, snapshot.profilePing)
                 } else {
                     binding.currentPing.isGone = true
                 }
@@ -1046,7 +1133,10 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
-                        if (!DataStore.appTrafficStatistics) return@setOnClickListener
+                        if (!DataStore.appTrafficStatistics) {
+                            (activity as? MainActivity)?.snackbar(getString(R.string.app_statistics_disabled))?.show()
+                            return@setOnClickListener
+                        }
                         if (parentFragmentManager.findFragmentByTag("SpeedStatsSheet") != null) return@setOnClickListener
                         val sheet = SpeedStatsBottomSheet()
                         activeSpeedStatsSheet = sheet
@@ -1093,41 +1183,32 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 binding.trafficUploadText.text = context.getString(R.string.speed, txSpeedStr)
                 binding.trafficDownloadText.text = context.getString(R.string.speed, rxSpeedStr)
 
-                val profile = ProfileManager.getProfile(DataStore.currentProfile)
-                val group = if (profile != null) SagerDatabase.groupDao.getById(profile.groupId) else null
-                val sub = group?.subscription
-
-                val profiles = if (group != null) SagerDatabase.proxyDao.getByGroup(group.id) else emptyList()
-                val groupTx = profiles.sumOf { it.tx }
-                val groupRx = profiles.sumOf { it.rx }
+                val snapshot = dbSnapshot
                 val sessionTx = lastTrafficStats?.txTotal ?: 0L
                 val sessionRx = lastTrafficStats?.rxTotal ?: 0L
 
-                val uploadBytes = (groupTx + sessionTx).coerceAtLeast(0L)
-                val downloadBytes = (groupRx + sessionRx).coerceAtLeast(0L)
+                val uploadBytes = (snapshot.groupTx + sessionTx).coerceAtLeast(0L)
+                val downloadBytes = (snapshot.groupRx + sessionRx).coerceAtLeast(0L)
 
-                if (sub != null) {
-                    val used = sub.bytesUsed ?: 0L
-                    val remaining = sub.bytesRemaining ?: 0L
-                    val total = used + remaining
-                    if (total > 0) {
-                        val usedStr = FormatFileSizeCompat.formatFileSize(context, used, DataStore.useIECUnit)
-                        val totalStr = FormatFileSizeCompat.formatFileSize(context, total, DataStore.useIECUnit)
-                        binding.trafficUsage.text = "已用: $usedStr / $totalStr"
-                        val percent = (used.toFloat() / total.toFloat()).coerceIn(0f, 1f)
-                        binding.trafficProgress.progress = (percent * 100).toInt()
-                        binding.trafficRingView.setTrafficData(
-                            uploadBytes = uploadBytes,
-                            downloadBytes = downloadBytes,
-                            totalUsedBytes = used,
-                            totalQuotaBytes = total,
-                            animate = false
-                        )
-                        return
-                    }
+                if (snapshot.hasGroup && snapshot.subTotal > 0L) {
+                    val used = snapshot.subUsed
+                    val total = snapshot.subTotal
+                    val usedStr = FormatFileSizeCompat.formatFileSize(context, used, DataStore.useIECUnit)
+                    val totalStr = FormatFileSizeCompat.formatFileSize(context, total, DataStore.useIECUnit)
+                    binding.trafficUsage.text = "已用: $usedStr / $totalStr"
+                    val percent = (used.toFloat() / total.toFloat()).coerceIn(0f, 1f)
+                    binding.trafficProgress.progress = (percent * 100).toInt()
+                    binding.trafficRingView.setTrafficData(
+                        uploadBytes = uploadBytes,
+                        downloadBytes = downloadBytes,
+                        totalUsedBytes = used,
+                        totalQuotaBytes = total,
+                        animate = false
+                    )
+                    return
                 }
 
-                if (group != null) {
+                if (snapshot.hasGroup) {
                     val totalTraffic = uploadBytes + downloadBytes
                     val totalStr = FormatFileSizeCompat.formatFileSize(context, totalTraffic, DataStore.useIECUnit)
                     binding.trafficUsage.text = "总计使用: $totalStr"
@@ -1372,11 +1453,16 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 }
                 binding.btnShareConfig.setOnClickListener {
                     if (isEditMode) return@setOnClickListener
-                    val profile = ProfileManager.getProfile(DataStore.currentProfile)
-                    profile?.toLink()?.let { link ->
-                        QRCodeDialog(link).showAllowingStateLoss(parentFragmentManager)
-                    } ?: run {
-                        (requireActivity() as MainActivity).snackbar(getString(R.string.profile_empty)).show()
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        val link = ProfileManager.getProfile(DataStore.currentProfile)?.toLink()
+                        withContext(Dispatchers.Main) {
+                            if (!isAdded) return@withContext
+                            if (link != null) {
+                                QRCodeDialog(link).showAllowingStateLoss(parentFragmentManager)
+                            } else {
+                                (activity as? MainActivity)?.snackbar(getString(R.string.profile_empty))?.show()
+                            }
+                        }
                     }
                 }
             }
@@ -1390,8 +1476,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     binding.root.setOnClickListener {
                         if (parentFragmentManager.findFragmentByTag("ProfileNodeSheet") != null) return@setOnClickListener
                         val sheet = ProfileNodeBottomSheet {
-                            adapter.updateItemWithPayload(ItemType.PROFILES, PAYLOAD_PROFILES)
-                            adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
+                            refreshDbSnapshot()
                             lifecycleScope.launch {
                                 delay(1.seconds)
                                 fetchGeoIP()
@@ -1407,11 +1492,11 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             }
 
             fun updatePartial() {
-                val profile = ProfileManager.getProfile(DataStore.currentProfile)
-                if (profile != null) {
-                    binding.profileTitle.text = profile.displayName()
-                    val groupName = SagerDatabase.groupDao.getById(profile.groupId)?.displayName() ?: ""
-                    val type = profile.displayType()
+                val snapshot = dbSnapshot
+                if (snapshot.profileName != null) {
+                    binding.profileTitle.text = snapshot.profileName
+                    val groupName = snapshot.groupName
+                    val type = snapshot.profileType
                     binding.profileGroupName.text = if (type.isNotEmpty()) "$groupName · $type" else groupName
                 } else {
                     binding.profileTitle.setText(R.string.group_status_empty)
@@ -1426,7 +1511,10 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
-                        if (!DataStore.appTrafficStatistics) return@setOnClickListener
+                        if (!DataStore.appTrafficStatistics) {
+                            (activity as? MainActivity)?.snackbar(getString(R.string.app_statistics_disabled))?.show()
+                            return@setOnClickListener
+                        }
                         if (parentFragmentManager.findFragmentByTag("ConnectionsSheet") != null) return@setOnClickListener
                         val sheet = ConnectionsBottomSheet()
                         activeConnectionsSheet = sheet
@@ -1439,16 +1527,26 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 updatePartial()
             }
 
+            @SuppressLint("SetTextI18n")
             fun updatePartial() {
-                val context = itemView.context
-                val stats = lastTrafficStats
-                if (stats != null) {
-                    val totalSpeed = FormatFileSizeCompat.formatFileSize(context, stats.rxRateProxy + stats.txRateProxy, DataStore.useIECUnit)
-                    binding.connectionCount.text = context.getString(R.string.speed, totalSpeed)
-                    binding.connectionStatus.setText(R.string.connected)
-                } else {
-                    binding.connectionCount.setText(R.string.speed_zero)
+                if (lastState != BaseService.State.Connected) {
+                    binding.connectionCount.text = "0"
                     binding.connectionStatus.setText(R.string.disconnected)
+                    return
+                }
+                if (!DataStore.appTrafficStatistics) {
+                    binding.connectionCount.text = "--"
+                    binding.connectionStatus.setText(R.string.app_statistics_disabled)
+                    return
+                }
+                val activeTcp = lastAppStatsList.sumOf { it.tcpConnections }
+                val activeUdp = lastAppStatsList.sumOf { it.udpConnections }
+                val totalConn = activeTcp + activeUdp
+                binding.connectionCount.text = totalConn.toString()
+                binding.connectionStatus.text = if (totalConn > 0) {
+                    "TCP: $activeTcp · UDP: $activeUdp"
+                } else {
+                    itemView.context.getString(R.string.connected)
                 }
             }
         }
