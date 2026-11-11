@@ -30,15 +30,20 @@ class WaveView @JvmOverloads constructor(
     private val speedBuffer = FloatArray(32) { 0f }
     private var isConnected = false
     private var accentColor = Color.RED
+    private var isAnimating = false
 
     private val waveRunnable = object : Runnable {
         override fun run() {
-            if (isAttachedToWindow && isShown) {
-                updateWave()
-                invalidate()
+            if (!isAttachedToWindow || !isShown || windowVisibility != VISIBLE) {
+                isAnimating = false
+                return
             }
-            if (isAttachedToWindow) {
+            val stillMoving = updateWave()
+            invalidate()
+            if (isConnected || stillMoving) {
                 postDelayed(this, 16)
+            } else {
+                isAnimating = false
             }
         }
     }
@@ -47,23 +52,61 @@ class WaveView @JvmOverloads constructor(
         setLayerType(LAYER_TYPE_SOFTWARE, null) // For glow effect
     }
 
+    private fun scheduleAnimationIfNeeded() {
+        if (!isAnimating && isAttachedToWindow && isShown && windowVisibility == VISIBLE) {
+            if (isConnected || speedBuffer.any { it > 0.05f }) {
+                isAnimating = true
+                removeCallbacks(waveRunnable)
+                post(waveRunnable)
+            }
+        }
+    }
+
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        removeCallbacks(waveRunnable)
-        post(waveRunnable)
+        scheduleAnimationIfNeeded()
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        isAnimating = false
         removeCallbacks(waveRunnable)
     }
 
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
+        if (visibility == VISIBLE) {
+            scheduleAnimationIfNeeded()
+        } else {
+            isAnimating = false
+            removeCallbacks(waveRunnable)
+        }
+    }
+
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        if (visibility == VISIBLE) {
+            scheduleAnimationIfNeeded()
+        } else {
+            isAnimating = false
+            removeCallbacks(waveRunnable)
+        }
+    }
+
     fun setConnected(connected: Boolean) {
+        if (isConnected == connected) return
         isConnected = connected
+        if (connected) {
+            scheduleAnimationIfNeeded()
+        } else {
+            invalidate()
+            scheduleAnimationIfNeeded()
+        }
     }
 
     fun setAccentColor(@ColorInt color: Int) {
         accentColor = color
+        invalidate()
     }
 
     /**
@@ -73,19 +116,28 @@ class WaveView @JvmOverloads constructor(
         val safeSpeed = if (speedKB.isFinite() && speedKB >= 0f) speedKB else 0f
         System.arraycopy(speedBuffer, 1, speedBuffer, 0, speedBuffer.size - 1)
         speedBuffer[speedBuffer.size - 1] = safeSpeed
+        scheduleAnimationIfNeeded()
     }
 
-    private fun updateWave() {
+    private fun updateWave(): Boolean {
         val currentSpeedKB = speedBuffer.lastOrNull()?.coerceAtLeast(0f) ?: 0f
         // Flow speed increases dynamically with higher network speed
         val speedFactor = (log10(1f + currentSpeedKB) / 4f).coerceIn(0f, 1f)
         flowOffset += if (isConnected) (0.08f + speedFactor * 0.12f) else 0.03f
 
+        var hasResidual = false
         if (!isConnected) {
             for (i in speedBuffer.indices) {
-                speedBuffer[i] = (speedBuffer[i] * 0.92f).coerceAtLeast(0f)
+                val decayed = speedBuffer[i] * 0.85f
+                if (decayed > 0.05f) {
+                    speedBuffer[i] = decayed
+                    hasResidual = true
+                } else {
+                    speedBuffer[i] = 0f
+                }
             }
         }
+        return hasResidual
     }
 
     override fun onDraw(canvas: Canvas) {

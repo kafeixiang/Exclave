@@ -33,9 +33,9 @@
         <io.nekohasekai.sagernet.widget.WaveView
             android:id="@+id/wave_view"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="36dp"
             android:layout_gravity="bottom"
-            android:alpha="0.8" />
+            android:alpha="0.32" />
 
         <!-- Speed Display & Full Panel Latency Test Click Target -->
         <RelativeLayout
