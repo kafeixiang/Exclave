@@ -153,6 +153,16 @@ class RouteFragment : ToolbarFragment(R.layout.layout_route), Toolbar.OnMenuItem
         (requireActivity() as? MainActivity)?.onBackPressedCallback?.isEnabled = true
     }
 
+    override fun onDestroyView() {
+        if (::ruleAdapter.isInitialized) {
+            ProfileManager.removeListener(ruleAdapter)
+        }
+        if (::ruleListView.isInitialized) {
+            ruleListView.adapter = null
+        }
+        super.onDestroyView()
+    }
+
     override fun onDestroy() {
         if (::ruleAdapter.isInitialized) {
             ProfileManager.removeListener(ruleAdapter)

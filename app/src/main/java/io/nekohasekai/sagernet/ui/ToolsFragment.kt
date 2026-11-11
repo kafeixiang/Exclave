@@ -31,6 +31,9 @@ import io.nekohasekai.sagernet.databinding.LayoutToolsBinding
 
 class ToolsFragment : ToolbarFragment(R.layout.layout_tools) {
 
+    private var _binding: LayoutToolsBinding? = null
+    private var tabLayoutMediator: TabLayoutMediator? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -48,9 +51,10 @@ class ToolsFragment : ToolbarFragment(R.layout.layout_tools) {
         }
 
         val binding = LayoutToolsBinding.bind(view)
+        _binding = binding
         binding.toolsPager.adapter = ToolsAdapter()
 
-        TabLayoutMediator(binding.toolsTab, binding.toolsPager) { tab, position ->
+        tabLayoutMediator = TabLayoutMediator(binding.toolsTab, binding.toolsPager) { tab, position ->
             tab.text = when (position) {
                 0 -> getString(R.string.tools_network)
                 else -> getString(R.string.backup)
@@ -58,9 +62,17 @@ class ToolsFragment : ToolbarFragment(R.layout.layout_tools) {
             tab.view.setOnLongClickListener { // clear toast
                 true
             }
-        }.attach()
+        }.also { it.attach() }
 
         (requireActivity() as? MainActivity)?.onBackPressedCallback?.isEnabled = true
+    }
+
+    override fun onDestroyView() {
+        tabLayoutMediator?.detach()
+        tabLayoutMediator = null
+        _binding?.toolsPager?.adapter = null
+        _binding = null
+        super.onDestroyView()
     }
 
     inner class ToolsAdapter : FragmentStateAdapter(this) {
