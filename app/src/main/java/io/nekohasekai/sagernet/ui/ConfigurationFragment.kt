@@ -130,6 +130,8 @@ class ConfigurationFragment @JvmOverloads constructor(
     lateinit var tabLayout: TabLayout
     lateinit var groupPager: ViewPager2
     var searchView: SearchView? = null
+    private var tabLayoutMediator: TabLayoutMediator? = null
+    private var activeTestDialog: TestDialog? = null
     val selectedGroup
         get() = if (::adapter.isInitialized && adapter.groupList.size > 0) {
             val position = if (::groupPager.isInitialized) groupPager.currentItem else 0
@@ -233,7 +235,7 @@ class ConfigurationFragment @JvmOverloads constructor(
         }
         searchView?.let {
             // override onBackPressedCallback of MainActivity
-            (requireActivity() as? MainActivity)?.onBackPressedDispatcher?.addCallback(this, onBackPressedCallback)
+            (requireActivity() as? MainActivity)?.onBackPressedDispatcher?.addCallback(viewLifecycleOwner, onBackPressedCallback)
         }
 
         groupPager = view.findViewById(R.id.group_pager)
@@ -269,7 +271,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         })
 
-        TabLayoutMediator(tabLayout, groupPager) { tab, position ->
+        tabLayoutMediator = TabLayoutMediator(tabLayout, groupPager) { tab, position ->
             val ctx = context ?: return@TabLayoutMediator
             if (position == 0) {
                 tab.text = ctx.getString(R.string.nav_dashboard)
@@ -289,7 +291,7 @@ class ConfigurationFragment @JvmOverloads constructor(
                     }
                 }
             }
-        }.attach()
+        }.also { it.attach() }
         updateTabLayoutMode()
 
         toolbar.setOnClickListener {
@@ -362,6 +364,30 @@ class ConfigurationFragment @JvmOverloads constructor(
         } else {
             toolbar.setTitle(if (select) titleRes else R.string.menu_configuration)
         }
+    }
+
+    override fun onDestroyView() {
+        activeTestDialog?.let { test ->
+            UrlTestManager.unregisterListener(test)
+            test.close()
+            if (test.isDialogInitialized()) {
+                runCatching { test.dialog.dismiss() }
+            }
+        }
+        activeTestDialog = null
+        tabLayoutMediator?.detach()
+        tabLayoutMediator = null
+        if (::groupPager.isInitialized) {
+            groupPager.unregisterOnPageChangeCallback(updateSelectedCallback)
+            groupPager.adapter = null
+        }
+        if (::adapter.isInitialized) {
+            GroupManager.removeListener(adapter)
+            ProfileManager.removeListener(adapter)
+            adapter.groupFragments.clear()
+            adapter.dashboardFragment = null
+        }
+        super.onDestroyView()
     }
 
     override fun onDestroy() {
@@ -948,6 +974,9 @@ class ConfigurationFragment @JvmOverloads constructor(
                 .setOnDismissListener {
                     close()
                     UrlTestManager.unregisterListener(this)
+                    if (activeTestDialog === this) {
+                        activeTestDialog = null
+                    }
                 }
                 .create()
 
@@ -1040,12 +1069,14 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
         }
 
+        fun isDialogInitialized(): Boolean = ::dialog.isInitialized
+
         fun close() {
-            try {
-                scrollTimer.schedule(timerTask {
-                    scrollTimer.cancel()
-                }, 0)
-            } catch (_: Exception) {}
+            runCatching {
+                currentTask?.cancel()
+                currentTask = null
+                scrollTimer.cancel()
+            }
         }
 
         init {
@@ -1146,6 +1177,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             UrlTestManager.startTest(requireContext(), group.id)
         }
         val test = TestDialog(isResuming = UrlTestManager.isTesting)
+        activeTestDialog = test
         test.show()
     }
 
@@ -1260,9 +1292,11 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         override suspend fun groupAdd(group: ProxyGroup) {
             tabLayout.post {
+                if (!isAdded || view == null) return@post
                 groupList.add(group)
 
                 if (groupList.any { !it.ungrouped }) tabLayout.post {
+                    if (!isAdded || view == null) return@post
                     tabLayout.visibility = View.VISIBLE
                 }
 
@@ -1274,6 +1308,7 @@ class ConfigurationFragment @JvmOverloads constructor(
 
         override suspend fun groupRemoved(groupId: Long) {
             tabLayout.post {
+                if (!isAdded || view == null) return@post
                 val index = groupList.indexOfFirst { it.id == groupId }
                 if (index == -1) return@post
                 groupList.removeAt(index)
@@ -1287,6 +1322,7 @@ class ConfigurationFragment @JvmOverloads constructor(
             if (index == -1) return
 
             tabLayout.post {
+                if (!isAdded || view == null) return@post
                 tabLayout.getTabAt(index + 1)?.text = group.displayName()
                 updateTabLayoutMode()
             }
@@ -1611,6 +1647,22 @@ class ConfigurationFragment @JvmOverloads constructor(
             }
 
             setupItemTouchHelper()
+        }
+
+        override fun onDestroyView() {
+            if (::adapter.isInitialized) {
+                ProfileManager.removeListener(adapter)
+                GroupManager.removeListener(adapter)
+            }
+            if (::configurationListView.isInitialized) {
+                configurationListView.adapter = null
+            }
+            (parentFragment as? ConfigurationFragment)
+                ?.takeIf { it::adapter.isInitialized }
+                ?.adapter
+                ?.groupFragments
+                ?.remove(proxyGroup.id)
+            super.onDestroyView()
         }
 
         override fun onDestroy() {

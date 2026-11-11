@@ -392,6 +392,16 @@ class GroupFragment : ToolbarFragment(R.layout.layout_group),
 
     }
 
+    override fun onDestroyView() {
+        if (::groupAdapter.isInitialized) {
+            GroupManager.removeListener(groupAdapter)
+        }
+        if (::groupListView.isInitialized) {
+            groupListView.adapter = null
+        }
+        super.onDestroyView()
+    }
+
     override fun onDestroy() {
         if (::groupAdapter.isInitialized) {
             GroupManager.removeListener(groupAdapter)

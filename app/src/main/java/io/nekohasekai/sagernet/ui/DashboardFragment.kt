@@ -156,6 +156,8 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     private var hasPendingUpdate = false
     private var dbSnapshot = DashboardDbSnapshot()
     private var dbSnapshotJob: Job? = null
+    private var uptimeJob: Job? = null
+    private var touchHelper: ItemTouchHelper? = null
 
     private data class DashboardDbSnapshot(
         val profileId: Long = 0L,
@@ -284,8 +286,12 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
     override fun onDestroyView() {
         ProfileManager.removeListener(profileListener)
+        uptimeJob?.cancel()
+        uptimeJob = null
         dbSnapshotJob?.cancel()
         dbSnapshotJob = null
+        touchHelper?.attachToRecyclerView(null)
+        touchHelper = null
         activeConnectionsSheet = null
         activeSpeedStatsSheet = null
         recyclerView?.adapter = null
@@ -580,7 +586,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     }
 
     private fun setupTouchHelper() {
-        val touchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+        val helper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT, 0
         ) {
             override fun onMove(
@@ -620,11 +626,13 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 saveDashboardOrder()
             }
         })
-        touchHelper.attachToRecyclerView(recyclerView)
+        helper.attachToRecyclerView(recyclerView)
+        touchHelper = helper
     }
 
     private fun startUptimeTimer() {
-        lifecycleScope.launch(Dispatchers.Main) {
+        uptimeJob?.cancel()
+        uptimeJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
             while (isAdded) {
                 if (isDashboardVisible && isResumed) {
                     if (lastState == BaseService.State.Connected) {
@@ -705,8 +713,9 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             }
 
             if (!success) {
-                geoIpInfo.ip = getString(R.string.unavailable)
-                geoIpInfo.location = getString(R.string.unavailable)
+                val unavailableText = io.nekohasekai.sagernet.ktx.app.getString(R.string.unavailable)
+                geoIpInfo.ip = unavailableText
+                geoIpInfo.location = unavailableText
                 geoIpInfo.isp = ""
                 geoIpInfo.asn = ""
                 geoIpInfo.countryCode = ""
@@ -1021,6 +1030,20 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             super.onViewRecycled(holder)
         }
 
+        override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
+            if (holder is StatusViewHolder) {
+                holder.stopBreathing()
+            }
+            super.onViewDetachedFromWindow(holder)
+        }
+
+        override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
+            super.onViewAttachedToWindow(holder)
+            if (holder is StatusViewHolder) {
+                holder.syncBreathingState()
+            }
+        }
+
         override fun getItemCount(): Int = items.size
 
         fun updateItem(type: ItemType) {
@@ -1088,6 +1111,14 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 binding.statusIcon.alpha = 1.0f
                 binding.statusIcon.scaleX = 1.0f
                 binding.statusIcon.scaleY = 1.0f
+            }
+
+            fun syncBreathingState() {
+                if (lastState == BaseService.State.Connected) {
+                    startBreathing(binding.statusIcon)
+                } else {
+                    stopBreathing()
+                }
             }
 
             fun bind() {

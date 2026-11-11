@@ -48,6 +48,7 @@ class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
     private var _binding: LayoutTrafficBinding? = null
     val binding get() = _binding!!
     lateinit var adapter: TrafficAdapter
+    private var tabLayoutMediator: TabLayoutMediator? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -74,7 +75,7 @@ class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
         adapter = TrafficAdapter()
         binding.trafficPager.adapter = adapter
 
-        TabLayoutMediator(binding.trafficTab, binding.trafficPager) { tab, position ->
+        tabLayoutMediator = TabLayoutMediator(binding.trafficTab, binding.trafficPager) { tab, position ->
             tab.text = when (position) {
                 0 -> getString(R.string.traffic_active)
                 else -> getString(R.string.traffic_stats)
@@ -82,7 +83,7 @@ class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
             tab.view.setOnLongClickListener { // clear toast
                 true
             }
-        }.attach()
+        }.also { it.attach() }
 
         (activity as? MainActivity)?.connection?.trafficTimeout = 1500
 
@@ -134,6 +135,10 @@ class TrafficFragment : ToolbarFragment(R.layout.layout_traffic),
     }
 
     override fun onDestroyView() {
+        tabLayoutMediator?.detach()
+        tabLayoutMediator = null
+        _binding?.trafficPager?.adapter = null
+        listeners.clear()
         super.onDestroyView()
         _binding = null
     }
