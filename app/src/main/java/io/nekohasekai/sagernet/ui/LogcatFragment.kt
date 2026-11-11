@@ -60,7 +60,9 @@ class LogcatFragment : ToolbarFragment(R.layout.layout_logcat),
         super.onViewCreated(view, savedInstanceState)
         _binding = LayoutLogcatBinding.bind(view)
         if (!Theme.isCupertino()) {
-            binding.logsScrollView.setBackgroundColor(Theme.getClassicListBackgroundColor())
+            val classicBg = Theme.getClassicListBackgroundColor()
+            view.setBackgroundColor(classicBg)
+            binding.logsScrollView.setBackgroundColor(classicBg)
         }
         toolbar.setTitle(R.string.menu_log)
 
