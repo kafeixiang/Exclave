@@ -21,7 +21,6 @@
 package io.nekohasekai.sagernet.ui
 
 import android.annotation.SuppressLint
-import android.content.ClipData
 import android.graphics.Typeface
 import android.os.Bundle
 import android.view.MenuItem
@@ -29,23 +28,24 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.HorizontalScrollView
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.core.widget.NestedScrollView
 import androidx.core.widget.doAfterTextChanged
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.SagerNet
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.databinding.LayoutProbeCertBinding
-import io.nekohasekai.sagernet.ktx.Logs
 import io.nekohasekai.sagernet.ktx.app
+import io.nekohasekai.sagernet.ktx.applyGlassBlur
 import io.nekohasekai.sagernet.ktx.dp2px
 import io.nekohasekai.sagernet.ktx.onMainDispatcher
+import io.nekohasekai.sagernet.ktx.readableMessage
 import io.nekohasekai.sagernet.ktx.runOnDefaultDispatcher
-import io.nekohasekai.sagernet.ktx.runOnMainDispatcher
 import libexclavecore.Libexclavecore
 
 class ProbeCertActivity : ThemedActivity() {
@@ -59,6 +59,9 @@ class ProbeCertActivity : ThemedActivity() {
         binding = LayoutProbeCertBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        binding.probeCertCard.applyGlassBlur()
+        binding.certificateCard.applyGlassBlur()
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
             v.updatePadding(
@@ -66,7 +69,7 @@ class ProbeCertActivity : ThemedActivity() {
             )
             insets
         }
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_layout)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(binding.mainLayout) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
@@ -75,7 +78,7 @@ class ProbeCertActivity : ThemedActivity() {
             v.updatePadding(
                 left = bars.left,
                 right = bars.right,
-                bottom = if (ime.bottom > bars.bottom) 0 else bars.bottom - ime.bottom,
+                bottom = if (ime.bottom > bars.bottom) 0 else bars.bottom - ime.bottom + dp2px(16),
             )
             insets
         }
@@ -86,25 +89,29 @@ class ProbeCertActivity : ThemedActivity() {
             setHomeAsUpIndicator(R.drawable.ic_navigation_close)
         }
 
+        val initialProtocol = DataStore.certProberProtocol.coerceIn(0, 1)
+        val initialHashType = DataStore.certProberHashType.coerceIn(0, 2)
         binding.probeCertServer.setText(DataStore.certProberServerAddress)
         binding.probeCertServerPort.setText(DataStore.certProberServerPort.toString())
         binding.probeCertServerName.setText(DataStore.certProberSNI)
-        binding.probeCertProtocol.setSelection(DataStore.certProberProtocol)
+        binding.probeCertProtocol.setSelection(initialProtocol)
         binding.probeCertAlpn.setText(DataStore.certProberALPN)
-        binding.certHashType.setSelection(DataStore.certProberHashType)
+        binding.certHashType.setSelection(initialHashType)
 
         binding.probeCertServer.doAfterTextChanged { text ->
             binding.probeCertServerName.setText(text)
         }
+        var lastProtocolPosition = initialProtocol
         binding.probeCertProtocol.post {
             binding.probeCertProtocol.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(
                     parent: AdapterView<*>?, view: View?, position: Int, id: Long
                 ) {
+                    if (position == lastProtocolPosition) return
+                    lastProtocolPosition = position
                     when (position) {
                         0 -> binding.probeCertAlpn.setText("h2,http/1.1")
                         1 -> binding.probeCertAlpn.setText("h3")
-                        else -> error("unknown protocol")
                     }
                 }
                 override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -113,143 +120,172 @@ class ProbeCertActivity : ThemedActivity() {
         }
 
         binding.probeCert.setOnClickListener {
-            DataStore.certProberServerAddress = binding.probeCertServer.text.toString()
-            DataStore.certProberServerPort = binding.probeCertServerPort.text.toString().toInt()
-            DataStore.certProberSNI = binding.probeCertServerName.text.toString()
-            DataStore.certProberALPN = binding.probeCertAlpn.text.toString()
-            DataStore.certProberProtocol = binding.probeCertProtocol.selectedItemPosition
-            DataStore.certProberHashType = binding.certHashType.selectedItemPosition
             probeCert()
         }
 
         binding.certificate.doAfterTextChanged { text ->
-            try {
-                binding.certHash.text = when (binding.certHashType.selectedItemPosition) {
-                    0 -> Libexclavecore.calculatePEMCertSHA256Hash(text.toString())
-                    1 -> Libexclavecore.calculatePEMCertPublicKeySHA256Hash(text.toString())
-                    2 -> Libexclavecore.calculatePEMCertChainSHA256Hash(text.toString())
-                    else -> error("impossible")
-                }
-                binding.showCertInfo.isVisible = true
-            } catch (_: Exception) {
-                binding.certHash.text = ""
-                binding.showCertInfo.isVisible = false
-            }
+            updateCertificateHashAndInfo(
+                text?.toString().orEmpty(),
+                binding.certHashType.selectedItemPosition
+            )
         }
         binding.certHashType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>?, view: View?, position: Int, id: Long
             ) {
-                try {
-                    val certificate = binding.certificate.text.toString()
-                    val certHash = when (position) {
-                        0 -> Libexclavecore.calculatePEMCertSHA256Hash(certificate)
-                        1 -> Libexclavecore.calculatePEMCertPublicKeySHA256Hash(certificate)
-                        2 -> Libexclavecore.calculatePEMCertChainSHA256Hash(certificate)
-                        else -> error("impossible")
-                    }
-                    binding.certHash.text = certHash
-                } catch (_: Exception) {
-                    binding.certHash.text = ""
-                }
+                updateCertificateHashAndInfo(
+                    binding.certificate.text?.toString().orEmpty(),
+                    position
+                )
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {
             }
         }
         binding.certHash.setOnClickListener {
-            try {
-                val clipData = ClipData.newPlainText("hash", binding.certHash.text)
-                SagerNet.clipboard.setPrimaryClip(clipData)
-            } catch (e: Exception) {
-                Logs.w(e)
+            val hash = binding.certHash.text?.toString().orEmpty()
+            if (hash.isNotEmpty()) {
+                val success = SagerNet.trySetPrimaryClip(hash)
+                Snackbar.make(
+                    binding.mainLayout,
+                    if (success) R.string.copy_success else R.string.copy_failed,
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
         }
         binding.showCertInfo.text = "?"
         binding.showCertInfo.isVisible = false
         binding.showCertInfo.setOnClickListener {
-            try {
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.certificates)
-                    .setView(NestedScrollView(this).apply {
-                        layoutDirection = View.LAYOUT_DIRECTION_LTR
-                        setPadding(dp2px(16), dp2px(16), dp2px(16), 0)
-                        addView( HorizontalScrollView(this@ProbeCertActivity).apply {
-                            addView(TextView(this@ProbeCertActivity).apply {
-                                text = Libexclavecore.certificateToPrettyInfo(binding.certificate.text.toString())
-                                isSingleLine = false
-                                typeface = Typeface.MONOSPACE
-                                setTextIsSelectable(true)
-                                setHorizontallyScrolling(false)
-                            })
-                        })
-                    })
-                    .setPositiveButton(android.R.string.ok) { _, _ -> }
-                    .runCatching { show() }
-            } catch (e: Exception) {
-                AlertDialog.Builder(this@ProbeCertActivity)
-                    .setTitle(R.string.error_title)
-                    .setMessage(e.toString())
-                    .setPositiveButton(android.R.string.ok) { _, _ -> }
-                    .runCatching { show() }
-            }
+            showCertInfoDialog()
         }
     }
 
-    private fun probeCert() {
-        var port: Int
-        try {
-            port = binding.probeCertServerPort.text.toString().toInt()
-        } catch (e: NumberFormatException) {
-            binding.waitLayout.isVisible = false
-            binding.certificate.setText("")
-            runOnMainDispatcher {
-                AlertDialog.Builder(this@ProbeCertActivity)
-                    .setTitle(R.string.error_title)
-                    .setMessage(e.toString())
-                    .setPositiveButton(android.R.string.ok) { _, _ -> }
-                    .runCatching { show() }
-            }
+    private fun computeCertHash(certificate: String, hashType: Int): String {
+        return when (hashType) {
+            0 -> Libexclavecore.calculatePEMCertSHA256Hash(certificate)
+            1 -> Libexclavecore.calculatePEMCertPublicKeySHA256Hash(certificate)
+            2 -> Libexclavecore.calculatePEMCertChainSHA256Hash(certificate)
+            else -> throw IllegalArgumentException("Unsupported hash type: $hashType")
+        }
+    }
+
+    private fun updateCertificateHashAndInfo(certificate: String, hashType: Int) {
+        if (certificate.isBlank()) {
+            binding.certHash.text = ""
+            binding.showCertInfo.isVisible = false
             return
         }
-        binding.waitLayout.isVisible = true
+        try {
+            binding.certHash.text = computeCertHash(certificate, hashType)
+            binding.showCertInfo.isVisible = true
+        } catch (_: Exception) {
+            binding.certHash.text = ""
+            binding.showCertInfo.isVisible = false
+        }
+    }
+
+    private fun showCertInfoDialog() {
+        try {
+            val prettyInfo = Libexclavecore.certificateToPrettyInfo(
+                binding.certificate.text?.toString().orEmpty()
+            )
+            if (isFinishing || isDestroyed) return
+            val dialogView = NestedScrollView(this).apply {
+                layoutDirection = View.LAYOUT_DIRECTION_LTR
+                setPadding(dp2px(16), dp2px(16), dp2px(16), dp2px(16))
+                addView(HorizontalScrollView(this@ProbeCertActivity).apply {
+                    addView(TextView(this@ProbeCertActivity).apply {
+                        text = prettyInfo
+                        isSingleLine = false
+                        typeface = Typeface.MONOSPACE
+                        setTextIsSelectable(true)
+                        setHorizontallyScrolling(false)
+                    })
+                })
+            }
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.certificates)
+                .setView(dialogView)
+                .setPositiveButton(android.R.string.ok, null)
+                .create()
+                .apply { applyGlassBlur() }
+                .show()
+        } catch (e: Exception) {
+            showErrorDialog(e.readableMessage)
+        }
+    }
+
+    private fun showErrorDialog(message: String) {
+        if (isFinishing || isDestroyed) return
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.error_title)
+            .setMessage(message)
+            .setPositiveButton(android.R.string.ok, null)
+            .create()
+            .apply { applyGlassBlur() }
+            .show()
+    }
+
+    private fun setLoading(loading: Boolean) {
+        binding.waitLayout.isVisible = loading
+        binding.mainLayout.isVisible = !loading
+    }
+
+    private fun probeCert() {
+        val server = binding.probeCertServer.text?.toString()?.trim().orEmpty()
+        if (server.isEmpty()) {
+            setLoading(false)
+            binding.certificate.setText("")
+            showErrorDialog(getString(R.string.invalid_server))
+            return
+        }
+        val port = binding.probeCertServerPort.text?.toString()?.trim()?.toIntOrNull()
+        if (port == null || port !in 1..65535) {
+            setLoading(false)
+            binding.certificate.setText("")
+            showErrorDialog(NumberFormatException("Invalid port: ${binding.probeCertServerPort.text}").toString())
+            return
+        }
+        val serverName = binding.probeCertServerName.text?.toString()?.trim().orEmpty()
+        val alpn = binding.probeCertAlpn.text?.toString()?.trim().orEmpty()
+        val protocol = binding.probeCertProtocol.selectedItemPosition
+        val hashType = binding.certHashType.selectedItemPosition
+
+        DataStore.certProberServerAddress = server
+        DataStore.certProberServerPort = port
+        DataStore.certProberSNI = serverName
+        DataStore.certProberALPN = alpn
+        DataStore.certProberProtocol = protocol
+        DataStore.certProberHashType = hashType
+
+        setLoading(true)
         runOnDefaultDispatcher {
-            val certProber = Libexclavecore.newCertProber().apply {
-                if (SagerNet.started && DataStore.startedProfile > 0) {
-                    useUDS(app.cacheDir.toString() + "/ipc.sock")
+            val outcome = runCatching {
+                val certProber = Libexclavecore.newCertProber().apply {
+                    if (SagerNet.started && DataStore.startedProfile > 0) {
+                        useUDS(app.cacheDir.toString() + "/ipc.sock")
+                    }
+                }
+                when (protocol) {
+                    0 -> certProber.probeTLS(server, port, serverName, alpn)
+                    1 -> certProber.probeQUIC(server, port, serverName, alpn)
+                    else -> throw IllegalArgumentException("Unsupported protocol: $protocol")
                 }
             }
-            val result = when (binding.probeCertProtocol.selectedItemPosition) {
-                0 -> certProber.probeTLS(
-                    binding.probeCertServer.text.toString(),
-                    port,
-                    binding.probeCertServerName.text.toString(),
-                    binding.probeCertAlpn.text.toString(),
-                )
-                1 -> certProber.probeQUIC(
-                    binding.probeCertServer.text.toString(),
-                    port,
-                    binding.probeCertServerName.text.toString(),
-                    binding.probeCertAlpn.text.toString(),
-                )
-                else -> error("impossible")
-            }
             onMainDispatcher {
-                binding.waitLayout.isVisible = false
+                if (isFinishing || isDestroyed) return@onMainDispatcher
+                setLoading(false)
+                val result = outcome.getOrElse { error ->
+                    binding.certificate.setText("")
+                    showErrorDialog(error.readableMessage)
+                    return@onMainDispatcher
+                }
                 if (result.error.isNotEmpty()) {
                     binding.certificate.setText("")
-                    AlertDialog.Builder(this@ProbeCertActivity)
-                        .setTitle(R.string.error_title)
-                        .setMessage(result.error)
-                        .setPositiveButton(android.R.string.ok) { _, _ -> }
-                        .runCatching { show() }
+                    showErrorDialog(result.error)
                 } else {
                     binding.certificate.setText(result.cert)
                     if (result.verifyError.isNotEmpty()) {
-                        AlertDialog.Builder(this@ProbeCertActivity)
-                            .setTitle(R.string.error_title)
-                            .setMessage(result.verifyError)
-                            .setPositiveButton(android.R.string.ok) { _, _ -> }
-                            .runCatching { show() }
+                        showErrorDialog(result.verifyError)
                     }
                 }
             }
