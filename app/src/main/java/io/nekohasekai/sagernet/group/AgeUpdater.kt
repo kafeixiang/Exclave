@@ -232,7 +232,7 @@ object AgeUpdater : GroupUpdater() {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun parseRaw(text: String): List<AbstractBean>? {
+    suspend fun parseRaw(text: String): List<AbstractBean>? {
         try {
             // Mihomo config, share link collection and Base64-encoded share link collection only.
             // Mihomo only supports these. Do not extend its scope.
