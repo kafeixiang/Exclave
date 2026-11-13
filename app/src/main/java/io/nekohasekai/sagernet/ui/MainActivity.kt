@@ -571,7 +571,7 @@ class MainActivity : ThemedActivity(),
             hasActiveSheet -> 1000L
             fragment is TrafficFragment && fragment.isResumed -> 1500L
             fragment is ConfigurationFragment &&
-                fragment.adapter.dashboardFragment?.needsAppStatsUpdates() == true -> 1500L
+                fragment.needsAppStatsUpdates() -> 1500L
             else -> 0L
         }
         if (connection.trafficTimeout != desired) {
