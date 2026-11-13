@@ -1200,6 +1200,11 @@ class ConfigurationFragment @JvmOverloads constructor(
         adapter.dashboardFragment?.appStatsUpdated(stats)
     }
 
+    fun needsAppStatsUpdates(): Boolean {
+        if (!::adapter.isInitialized) return false
+        return adapter.dashboardFragment?.needsAppStatsUpdates() == true
+    }
+
     inner class GroupPagerAdapter : FragmentStateAdapter(this),
         ProfileManager.Listener,
         GroupManager.Listener {
