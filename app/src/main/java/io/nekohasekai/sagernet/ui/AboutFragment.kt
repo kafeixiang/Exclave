@@ -69,7 +69,7 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
 
         toolbar.setTitle(R.string.menu_about)
 
-        ViewCompat.setOnApplyWindowInsetsListener(view.findViewById(R.id.layout_about)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars()
                         or WindowInsetsCompat.Type.displayCutout()
@@ -77,26 +77,29 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
             v.updatePadding(
                 left = bars.left,
                 right = bars.right,
-                bottom = bars.bottom + dp2px(112),
             )
             insets
         }
 
-        parentFragmentManager.beginTransaction()
-            .replace(R.id.about_fragment_holder, AboutContent())
-            .commitAllowingStateLoss()
+        if (childFragmentManager.findFragmentById(R.id.about_fragment_holder) == null) {
+            childFragmentManager.beginTransaction()
+                .replace(R.id.about_fragment_holder, AboutContent())
+                .commitAllowingStateLoss()
+        }
 
         (requireActivity() as? MainActivity)?.onBackPressedCallback?.isEnabled = true
     }
 
     class AboutContent : MaterialAboutFragment() {
 
+        override fun shouldAnimate(): Boolean = false
+
         val requestIgnoreBatteryOptimizations = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
-        ) { (resultCode, _) ->
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.about_fragment_holder, AboutContent())
-                .commitAllowingStateLoss()
+        ) {
+            context?.let { ctx ->
+                setMaterialAboutList(getMaterialAboutList(ctx))
+            }
         }
 
         override fun getMaterialAboutList(activityContext: Context?): MaterialAboutList {
@@ -302,18 +305,27 @@ class AboutFragment : ToolbarFragment(R.layout.layout_about) {
 
             val recyclerView = view.findViewById<RecyclerView>(com.danielstone.materialaboutlibrary.R.id.mal_recyclerview)
             recyclerView.apply {
+                alpha = 1f
+                translationY = 0f
+                layoutManager = FixedLinearLayoutManager(this)
                 overScrollMode = RecyclerView.OVER_SCROLL_ALWAYS
-                setPadding(dp2px(20), dp2px(12), dp2px(20), dp2px(80))
                 clipToPadding = false
                 setBackgroundColor(Color.TRANSPARENT)
                 applyGlassBlur()
             }
 
-            (requireActivity() as? MainActivity)?.findViewById<ImageView>(R.id.global_bg_image)?.let { bg ->
-                bg.alpha = 0.5f 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    bg.setRenderEffect(RenderEffect.createBlurEffect(75f, 75f, Shader.TileMode.CLAMP))
-                }
+            ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
+                val bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars()
+                            or WindowInsetsCompat.Type.displayCutout()
+                )
+                v.updatePadding(
+                    left = dp2px(20),
+                    right = dp2px(20),
+                    top = dp2px(12),
+                    bottom = bars.bottom + dp2px(112),
+                )
+                insets
             }
         }
 
