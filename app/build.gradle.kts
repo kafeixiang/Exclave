@@ -62,7 +62,6 @@ dependencies {
     implementation(libs.bouncycastle)
     implementation(libs.zxing.core)
     implementation(libs.snakeyaml)
-    implementation(libs.material.about.library)
     implementation(libs.process.phoenix)
     implementation(libs.kryo)
     implementation(libs.jini.lib)
