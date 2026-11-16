@@ -37,7 +37,6 @@ bouncycastle = { module = "org.bouncycastle:bcpkix-jdk18on", version = "1.87" }
 zxing-core = { module = "com.google.zxing:core", version = "3.5.4" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version = "4.36.2" }
 snakeyaml = { module = "org.yaml:snakeyaml", version = "2.7" }
-material-about-library = { module = "com.github.daniel-stoneuk:material-about-library", version = "3.2.0-rc01" }
 process-phoenix = { module = "com.jakewharton:process-phoenix", version = "3.0.0" }
 kryo = { module = "com.esotericsoftware:kryo", version = "5.7.1" }
 jini-lib = { module = "com.sshtools:jini-lib", version = "0.6.14" }
