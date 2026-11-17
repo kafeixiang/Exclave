@@ -7,6 +7,8 @@ import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.HapticFeedbackConstants
@@ -17,8 +19,11 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
+import androidx.core.view.ViewCompat
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -158,6 +163,24 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     private var dbSnapshotJob: Job? = null
     private var uptimeJob: Job? = null
     private var touchHelper: ItemTouchHelper? = null
+
+    private val connect = registerForActivityResult(VpnRequestActivity.StartService()) {
+        if (it) (activity as? MainActivity)?.snackbar(R.string.vpn_permission_denied)?.show()
+    }
+
+    fun toggleVpn() {
+        val mainActivity = activity as? MainActivity
+        val currentState = mainActivity?.state ?: lastState
+        if (currentState.canStop) {
+            SagerNet.stopService()
+        } else {
+            if (DataStore.selectedProxy <= 0L && dbSnapshot.profileName == null) {
+                mainActivity?.snackbar(getString(R.string.group_status_empty))?.show()
+                return
+            }
+            connect.launch(null)
+        }
+    }
 
     private data class DashboardDbSnapshot(
         val profileId: Long = 0L,
@@ -373,7 +396,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 if (statusIndex != -1) {
                     val holder = recyclerView?.findViewHolderForAdapterPosition(statusIndex) as? DashboardAdapter.StatusViewHolder
                     if (lastState == BaseService.State.Connected) {
-                        holder?.binding?.statusIcon?.let { holder.startBreathing(it) }
+                        holder?.startBreathing()
                     }
                 }
             }
@@ -463,6 +486,26 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         val firstCodePoint = 0x1F1E6 + (firstChar - 'A')
         val secondCodePoint = 0x1F1E6 + (secondChar - 'A')
         return String(Character.toChars(firstCodePoint)) + String(Character.toChars(secondCodePoint))
+    }
+
+    private fun getCountryFlagDrawable(countryCode: String?): Int? {
+        if (countryCode.isNullOrEmpty()) return null
+        return when (countryCode.uppercase(Locale.ROOT)) {
+            "CN" -> R.drawable.ic_flag_cn
+            "HK" -> R.drawable.ic_flag_hk
+            "TW" -> R.drawable.ic_flag_tw
+            "US" -> R.drawable.ic_flag_us
+            "JP" -> R.drawable.ic_flag_jp
+            "SG" -> R.drawable.ic_flag_sg
+            "KR" -> R.drawable.ic_flag_kr
+            "GB", "UK" -> R.drawable.ic_flag_gb
+            "DE" -> R.drawable.ic_flag_de
+            "FR" -> R.drawable.ic_flag_fr
+            "RU" -> R.drawable.ic_flag_ru
+            "CA" -> R.drawable.ic_flag_ca
+            "AU" -> R.drawable.ic_flag_au
+            else -> null
+        }
     }
 
     @Deprecated("Deprecated in Java")
@@ -636,13 +679,14 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             while (isAdded) {
                 if (isDashboardVisible && isResumed) {
                     if (lastState == BaseService.State.Connected) {
+                        adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
                         adapter.updateItemWithPayload(ItemType.RUN_TIME, PAYLOAD_RUNTIME)
                     }
                     adapter.updateItemWithPayload(ItemType.MEMORY_INFO, PAYLOAD_MEMORY)
                 } else {
                     hasPendingUpdate = true
                 }
-                delay(2.seconds)
+                delay(1.seconds)
             }
         }
     }
@@ -653,18 +697,19 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         if (isFetchingGeoIP) return
         isFetchingGeoIP = true
 
-        geoIpInfo.ip = "获取中..."
-        geoIpInfo.location = "正在精准定位外网 IP 与地理位置..."
+        geoIpInfo.ip = ""
+        geoIpInfo.location = ""
         geoIpInfo.isp = ""
         geoIpInfo.asn = ""
         geoIpInfo.countryCode = ""
         adapter.updateItemWithPayload(ItemType.GEOIP, PAYLOAD_GEOIP)
+        adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
 
         lifecycleScope.launch(Dispatchers.IO) {
             var success = false
 
             try {
-                val url = URL("https://api.ip.sb/geoip")
+                val url = URL("https://ipwho.is/")
                 val connection = url.openConnection() as HttpURLConnection
                 connection.connectTimeout = 4000
                 connection.readTimeout = 4000
@@ -678,14 +723,43 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                         val country = json.optString("country", "")
                         val city = json.optString("city", "")
                         geoIpInfo.location = if (city.isNotEmpty()) "$country, $city" else country
-                        geoIpInfo.isp = json.optString("isp", "")
-                        val asn = json.optInt("asn", 0)
+                        val conn = json.optJSONObject("connection")
+                        val isp = conn?.optString("isp", "") ?: ""
+                        val org = conn?.optString("org", "") ?: ""
+                        geoIpInfo.isp = if (org.isNotEmpty()) org else isp
+                        val asn = conn?.optInt("asn", 0) ?: 0
                         geoIpInfo.asn = if (asn != 0) "AS$asn" else ""
                         geoIpInfo.countryCode = json.optString("country_code", "")
                         success = true
                     }
                 }
             } catch (_: Exception) {}
+
+            if (!success) {
+                try {
+                    val url = URL("https://api.ip.sb/geoip")
+                    val connection = url.openConnection() as HttpURLConnection
+                    connection.connectTimeout = 4000
+                    connection.readTimeout = 4000
+                    connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
+                    if (connection.responseCode == 200) {
+                        val response = connection.inputStream.bufferedReader().readText()
+                        val json = JSONObject(response)
+                        val ip = json.optString("ip", "")
+                        if (ip.isNotEmpty()) {
+                            geoIpInfo.ip = ip
+                            val country = json.optString("country", "")
+                            val city = json.optString("city", "")
+                            geoIpInfo.location = if (city.isNotEmpty()) "$country, $city" else country
+                            geoIpInfo.isp = json.optString("isp", "")
+                            val asn = json.optInt("asn", 0)
+                            geoIpInfo.asn = if (asn != 0) "AS$asn" else ""
+                            geoIpInfo.countryCode = json.optString("country_code", "")
+                            success = true
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
 
             if (!success) {
                 try {
@@ -726,6 +800,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 if (isAdded) {
                     if (isDashboardVisible && isResumed) {
                         adapter.updateItemWithPayload(ItemType.GEOIP, PAYLOAD_GEOIP)
+                        adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
                     } else {
                         hasPendingUpdate = true
                     }
@@ -1091,12 +1166,13 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
         inner class StatusViewHolder(val binding: ItemDashboardStatusBinding) : RecyclerView.ViewHolder(binding.root) {
             private var breathingAnimator: ObjectAnimator? = null
+            private var badgeRotateAnimator: ObjectAnimator? = null
 
-            fun startBreathing(view: View) {
+            fun startBreathing(view: View = binding.btnToggleService) {
                 if (breathingAnimator != null) return
-                val alphaAnim = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.72f, 1.0f)
-                val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 1.08f, 1.0f)
-                val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 1.08f, 1.0f)
+                val alphaAnim = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.85f, 1.0f)
+                val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 1.05f, 1.0f)
+                val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 1.05f, 1.0f)
                 breathingAnimator = ObjectAnimator.ofPropertyValuesHolder(view, alphaAnim, scaleX, scaleY).apply {
                     duration = 2000L
                     repeatCount = ValueAnimator.INFINITE
@@ -1108,51 +1184,270 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             fun stopBreathing() {
                 breathingAnimator?.cancel()
                 breathingAnimator = null
-                binding.statusIcon.alpha = 1.0f
-                binding.statusIcon.scaleX = 1.0f
-                binding.statusIcon.scaleY = 1.0f
+                binding.btnToggleService.alpha = 1.0f
+                binding.btnToggleService.scaleX = 1.0f
+                binding.btnToggleService.scaleY = 1.0f
             }
 
             fun syncBreathingState() {
                 if (lastState == BaseService.State.Connected) {
-                    startBreathing(binding.statusIcon)
+                    startBreathing()
                 } else {
                     stopBreathing()
                 }
             }
 
+            private fun startBadgeSpin() {
+                if (badgeRotateAnimator != null) return
+                badgeRotateAnimator = ObjectAnimator.ofFloat(binding.btnCountryBadge, View.ROTATION, 0f, 360f).apply {
+                    duration = 1200L
+                    repeatCount = ValueAnimator.INFINITE
+                    interpolator = LinearInterpolator()
+                    start()
+                }
+            }
+
+            private fun stopBadgeSpin() {
+                badgeRotateAnimator?.cancel()
+                badgeRotateAnimator = null
+                binding.btnCountryBadge.rotation = 0f
+            }
+
             fun bind() {
                 setupEditControls(ItemType.STATUS, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
+
+                binding.btnToggleService.applyCardPressAnimation()
+                binding.btnToggleService.setOnClickListener {
+                    binding.btnToggleService.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    toggleVpn()
+                }
+
+                binding.btnCountryBadge.applyCardPressAnimation()
+                binding.btnCountryBadge.setOnClickListener {
+                    binding.btnCountryBadge.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    fetchGeoIP()
+                }
+
+                binding.textOutboundIp.setOnClickListener {
+                    isGeoIpHidden = !isGeoIpHidden
+                    updatePartial()
+                }
+
+                binding.textOutboundIp.setOnLongClickListener {
+                    val ip = geoIpInfo.ip
+                    if (ip.isNotEmpty() && ip != getString(R.string.unavailable) && !isGeoIpHidden) {
+                        binding.textOutboundIp.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        SagerNet.trySetPrimaryClip(ip)
+                        (activity as? MainActivity)?.snackbar(getString(R.string.copied_ip))?.show()
+                        true
+                    } else {
+                        false
+                    }
+                }
+
                 updatePartial()
             }
 
             fun updatePartial() {
+                val context = itemView.context
+                val accentColor = Theme.getAccentColor(context)
                 val snapshot = dbSnapshot
-                val name = lastProfileName ?: snapshot.profileName ?: getString(R.string.group_status_empty)
-                val type = snapshot.profileType
-                binding.profileName.text = if (type.isNotEmpty()) "$name ($type)" else name
+                val profileName = lastProfileName ?: snapshot.profileName ?: getString(R.string.group_status_empty)
 
-                if (snapshot.profileName != null && snapshot.profileStatus > 0 && snapshot.profilePing > 0) {
-                    binding.currentPing.isVisible = true
-                    binding.currentPing.text = getString(R.string.available, snapshot.profilePing)
-                } else {
-                    binding.currentPing.isGone = true
-                }
-
+                // 1. Status Header & Chip
                 when (lastState) {
                     BaseService.State.Connected -> {
-                        binding.statusText.setText(R.string.connected)
-                        binding.statusIcon.setImageResource(R.drawable.ic_service_active)
+                        binding.chipStatus.setBackgroundResource(R.drawable.bg_dashboard_chip_ok)
+                        binding.chipStatusDot.isVisible = true
+                        binding.chipStatusDot.setBackgroundResource(R.drawable.bg_chip_dot_green)
+                        binding.chipStatusText.setText(R.string.status_running)
+                        binding.chipStatusText.setTextColor(ContextCompat.getColor(context, R.color.material_green_500))
+                        binding.statusHeaderGlyph.imageTintList = ColorStateList.valueOf(accentColor)
+                    }
+                    BaseService.State.Connecting -> {
+                        binding.chipStatus.setBackgroundResource(R.drawable.bg_dashboard_chip_warn)
+                        binding.chipStatusDot.isVisible = true
+                        binding.chipStatusDot.setBackgroundResource(R.drawable.bg_chip_dot_warn)
+                        binding.chipStatusText.setText(R.string.status_connecting)
+                        binding.chipStatusText.setTextColor(ContextCompat.getColor(context, R.color.material_orange_500))
+                        binding.statusHeaderGlyph.imageTintList = ColorStateList.valueOf(accentColor)
+                    }
+                    else -> {
+                        val secondaryColor = context.getColorAttr(android.R.attr.textColorSecondary)
+                        binding.chipStatus.setBackgroundResource(R.drawable.bg_dashboard_chip_idle)
+                        binding.chipStatusDot.isVisible = false
+                        binding.chipStatusText.setText(R.string.status_not_running)
+                        binding.chipStatusText.setTextColor(secondaryColor)
+                        binding.statusHeaderGlyph.imageTintList = ColorStateList.valueOf(secondaryColor)
+                    }
+                }
+
+                // 2. Exit Row: Country Badge
+                if (isFetchingGeoIP) {
+                    startBadgeSpin()
+                } else {
+                    stopBadgeSpin()
+                }
+
+                val countryCode = geoIpInfo.countryCode
+                val flagDrawable = getCountryFlagDrawable(countryCode)
+                if (flagDrawable != null) {
+                    binding.iconCountryBadge.setImageResource(flagDrawable)
+                    binding.iconCountryBadge.isVisible = true
+                    binding.iconCountryFallback.isVisible = false
+                    binding.textCountryCode.isVisible = false
+                } else {
+                    binding.iconCountryBadge.isVisible = false
+                    binding.iconCountryFallback.isVisible = true
+                    binding.textCountryCode.isVisible = false
+                }
+
+                // 3. Exit Row: Outbound IP / Node Headline
+                if (isGeoIpHidden) {
+                    binding.textOutboundIp.text = "* * * * * * * *"
+                } else if (geoIpInfo.ip.isNotEmpty() && geoIpInfo.ip != getString(R.string.unavailable)) {
+                    binding.textOutboundIp.text = geoIpInfo.ip
+                } else if (lastState == BaseService.State.Connected && profileName.isNotEmpty() && profileName != getString(R.string.group_status_empty)) {
+                    binding.textOutboundIp.text = profileName
+                } else {
+                    binding.textOutboundIp.text = "—"
+                }
+
+                // 4. Exit Row: IP Chips Row
+                val profileType = snapshot.profileType
+                if (profileType.isNotEmpty()) {
+                    binding.chipNodeType.text = profileType
+                    binding.chipNodeType.isVisible = true
+                } else if (geoIpInfo.isp.isNotEmpty()) {
+                    binding.chipNodeType.text = "出口节点"
+                    binding.chipNodeType.isVisible = true
+                } else {
+                    binding.chipNodeType.isVisible = false
+                }
+
+                if (snapshot.profilePing > 0) {
+                    binding.chipLatency.text = "${snapshot.profilePing} ms"
+                    binding.chipLatency.isVisible = true
+                    binding.chipLatency.setTextColor(accentColor)
+                } else if (lastState == BaseService.State.Connected) {
+                    binding.chipLatency.text = "优质连接"
+                    binding.chipLatency.isVisible = true
+                    binding.chipLatency.setTextColor(ContextCompat.getColor(context, R.color.material_green_500))
+                } else {
+                    binding.chipLatency.isVisible = false
+                }
+
+                val location = geoIpInfo.location
+                if (location.isNotEmpty() && !isFetchingGeoIP && location != getString(R.string.unavailable)) {
+                    binding.chipRouteMode.text = location
+                    binding.chipRouteMode.isVisible = true
+                } else {
+                    binding.chipRouteMode.setText(R.string.rule_mode_label)
+                    binding.chipRouteMode.isVisible = true
+                }
+
+                // 5. Bottom Cells: 运行时长 & 出口组织
+                if (lastState == BaseService.State.Connected && serviceConnectedTime > 0L) {
+                    val seconds = ((SystemClock.elapsedRealtime() - serviceConnectedTime) / 1000L).coerceAtLeast(0L)
+                    val hrs = seconds / 3600
+                    val mins = (seconds % 3600) / 60
+                    val secs = seconds % 60
+                    binding.textCellRuntime.text = String.format(Locale.US, "%02d:%02d:%02d", hrs, mins, secs)
+                } else {
+                    binding.textCellRuntime.text = "—"
+                }
+
+                val orgInfo = listOf(geoIpInfo.asn, geoIpInfo.isp).filter { it.isNotEmpty() }.joinToString(" - ")
+                if (orgInfo.isNotEmpty()) {
+                    binding.textCellOrg.text = orgInfo
+                } else if (lastState == BaseService.State.Connected) {
+                    binding.textCellOrg.text = profileName
+                } else {
+                    binding.textCellOrg.text = "—"
+                }
+
+                // 6. Right Start/Stop Toggle Button
+                when (lastState) {
+                    BaseService.State.Connected -> {
+                        binding.btnToggleProgress.isVisible = false
+                        binding.btnToggleIcon.isVisible = true
+                        binding.btnToggleIcon.setImageResource(R.drawable.ic_vpn_pause)
+                        binding.btnToggleIcon.imageTintList = ColorStateList.valueOf(Color.WHITE)
+
+                        binding.btnToggleService.setCardBackgroundColor(accentColor)
+                        binding.btnToggleService.strokeWidth = 0
+                        binding.btnToggleService.radius = dp2px(38).toFloat()
+
+                        binding.btnToggleGlow.isVisible = true
+                        ViewCompat.setBackgroundTintList(binding.btnToggleGlow, ColorStateList.valueOf(accentColor))
+
                         if (isDashboardVisible) {
-                            startBreathing(binding.statusIcon)
+                            startBreathing()
                         } else {
                             stopBreathing()
                         }
+
+                        binding.bgDecoration.imageTintList = ColorStateList.valueOf(accentColor)
+                        binding.bgDecoration.alpha = 0.12f
+                        binding.bgDecoration.animate()
+                            .rotation(30f)
+                            .scaleX(1.12f)
+                            .scaleY(1.12f)
+                            .setDuration(450)
+                            .start()
+                    }
+                    BaseService.State.Connecting -> {
+                        stopBreathing()
+                        binding.btnToggleProgress.isVisible = true
+                        binding.btnToggleIcon.isVisible = false
+
+                        val semiAccent = ColorUtils.setAlphaComponent(accentColor, 40)
+                        binding.btnToggleService.setCardBackgroundColor(semiAccent)
+                        binding.btnToggleService.strokeWidth = dp2px(1)
+                        binding.btnToggleService.strokeColor = accentColor
+                        binding.btnToggleService.radius = dp2px(38).toFloat()
+
+                        binding.btnToggleGlow.isVisible = false
+
+                        binding.bgDecoration.imageTintList = ColorStateList.valueOf(accentColor)
+                        binding.bgDecoration.alpha = 0.08f
+                        binding.bgDecoration.animate()
+                            .rotation(15f)
+                            .scaleX(1.05f)
+                            .scaleY(1.05f)
+                            .setDuration(300)
+                            .start()
                     }
                     else -> {
                         stopBreathing()
-                        binding.statusText.setText(R.string.disconnected)
-                        binding.statusIcon.setImageResource(R.drawable.ic_service_idle)
+                        binding.btnToggleProgress.isVisible = false
+                        binding.btnToggleIcon.isVisible = true
+                        binding.btnToggleIcon.setImageResource(R.drawable.ic_vpn_play)
+
+                        val hasProfile = profileName.isNotEmpty() && profileName != getString(R.string.group_status_empty)
+                        if (hasProfile) {
+                            binding.btnToggleService.setCardBackgroundColor(accentColor)
+                            binding.btnToggleIcon.imageTintList = ColorStateList.valueOf(Color.WHITE)
+                            binding.btnToggleService.strokeWidth = 0
+                        } else {
+                            binding.btnToggleService.setCardBackgroundColor(Theme.getCardBackgroundColor(context, false))
+                            binding.btnToggleIcon.imageTintList = ColorStateList.valueOf(accentColor)
+                            binding.btnToggleService.strokeWidth = context.resources.getDimensionPixelSize(R.dimen.card_stroke_width)
+                            binding.btnToggleService.strokeColor = Theme.getCardStrokeColor(context, false)
+                        }
+                        binding.btnToggleService.radius = dp2px(38).toFloat()
+
+                        binding.btnToggleGlow.isVisible = false
+
+                        val secondaryColor = context.getColorAttr(android.R.attr.textColorSecondary)
+                        binding.bgDecoration.imageTintList = ColorStateList.valueOf(secondaryColor)
+                        binding.bgDecoration.alpha = 0.05f
+                        binding.bgDecoration.animate()
+                            .rotation(0f)
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(300)
+                            .start()
                     }
                 }
             }
@@ -1297,6 +1592,10 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     binding.geoipLocation.text = "* * * * *"
                     binding.geoipIsp.text = "* * * * * * * *"
                     binding.geoipIsp.isVisible = true
+                } else if (isFetchingGeoIP && geoIpInfo.ip.isEmpty()) {
+                    binding.geoipIp.text = "获取中..."
+                    binding.geoipLocation.text = "定位中..."
+                    binding.geoipIsp.isVisible = false
                 } else {
                     binding.geoipIp.text = geoIpInfo.ip.ifEmpty { getString(R.string.unavailable) }
                     val flag = countryCodeToEmoji(geoIpInfo.countryCode)

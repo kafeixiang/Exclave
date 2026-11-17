@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <clip-path
+        android:pathData="M 12, 2 A 10, 10 0 1 0 12, 22 A 10, 10 0 1 0 12, 2 Z" />
+    <!-- White center -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 0,0 H 24 V 24 H 0 Z" />
+    <!-- Red left & right bands -->
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M 0,0 H 6 V 24 H 0 Z M 18,0 H 24 V 24 H 18 Z" />
+    <!-- Red stylized maple leaf -->
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M 12, 5.5 L 12.8, 8 L 14.5, 7.5 L 13.8, 9.5 L 15.5, 10.5 L 14.2, 11.8 L 14.8, 14 L 13, 13.2 L 12.4, 16.5 L 11.6, 16.5 L 11, 13.2 L 9.2, 14 L 9.8, 11.8 L 8.5, 10.5 L 10.2, 9.5 L 9.5, 7.5 L 11.2, 8 Z" />
+</vector>

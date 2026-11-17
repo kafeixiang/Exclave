@@ -1,0 +1,39 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <clip-path
+        android:pathData="M 12, 2 A 10, 10 0 1 0 12, 22 A 10, 10 0 1 0 12, 2 Z" />
+    <!-- Navy Blue field -->
+    <path
+        android:fillColor="#00008B"
+        android:pathData="M 0,0 H 24 V 24 H 0 Z" />
+    <!-- Union Jack in upper left canton -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M 0,0 L 12,12 M 12,0 L 0,12" />
+    <path
+        android:strokeColor="#FF0000"
+        android:strokeWidth="1.2"
+        android:pathData="M 0,0 L 12,12 M 12,0 L 0,12" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 4.5,0 H 7.5 V 12 H 4.5 Z M 0,4.5 H 12 V 7.5 H 0 Z" />
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M 5.2,0 H 6.8 V 12 H 5.2 Z M 0,5.2 H 12 V 6.8 H 0 Z" />
+    <!-- White Commonwealth star -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 6, 15 A 1.8, 1.8 0 1 0 6, 18.6 A 1.8, 1.8 0 1 0 6, 15 Z" />
+    <!-- Southern Cross stars on right -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 17, 5 A 0.8, 0.8 0 1 0 17, 6.6 A 0.8, 0.8 0 1 0 17, 5 Z
+                          M 20, 9 A 0.8, 0.8 0 1 0 20, 10.6 A 0.8, 0.8 0 1 0 20, 9 Z
+                          M 19, 15 A 0.8, 0.8 0 1 0 19, 16.6 A 0.8, 0.8 0 1 0 19, 15 Z
+                          M 15, 12 A 0.8, 0.8 0 1 0 15, 13.6 A 0.8, 0.8 0 1 0 15, 12 Z
+                          M 17.5, 12 A 0.5, 0.5 0 1 0 17.5, 13 A 0.5, 0.5 0 1 0 17.5, 12 Z" />
+</vector>
