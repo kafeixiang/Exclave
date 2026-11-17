@@ -1186,23 +1186,36 @@ class ConfigurationFragment @JvmOverloads constructor(
     }
 
     fun stateChanged(state: BaseService.State, profileName: String?) {
-        if (!::adapter.isInitialized) return
-        adapter.dashboardFragment?.stateChanged(state, profileName)
+        if (::adapter.isInitialized) {
+            adapter.dashboardFragment?.stateChanged(state, profileName)
+        }
+        childFragmentManager.fragments.filterIsInstance<DashboardFragment>().forEach {
+            it.stateChanged(state, profileName)
+        }
     }
 
     fun trafficUpdated(stats: TrafficStats) {
-        if (!::adapter.isInitialized) return
-        adapter.dashboardFragment?.trafficUpdated(stats)
+        if (::adapter.isInitialized) {
+            adapter.dashboardFragment?.trafficUpdated(stats)
+        }
+        childFragmentManager.fragments.filterIsInstance<DashboardFragment>().forEach {
+            it.trafficUpdated(stats)
+        }
     }
 
     fun appStatsUpdated(stats: List<AppStats>) {
-        if (!::adapter.isInitialized) return
-        adapter.dashboardFragment?.appStatsUpdated(stats)
+        if (::adapter.isInitialized) {
+            adapter.dashboardFragment?.appStatsUpdated(stats)
+        }
+        childFragmentManager.fragments.filterIsInstance<DashboardFragment>().forEach {
+            it.appStatsUpdated(stats)
+        }
     }
 
     fun needsAppStatsUpdates(): Boolean {
         if (!::adapter.isInitialized) return false
-        return adapter.dashboardFragment?.needsAppStatsUpdates() == true
+        val df = adapter.dashboardFragment ?: childFragmentManager.fragments.filterIsInstance<DashboardFragment>().firstOrNull()
+        return df?.needsAppStatsUpdates() == true
     }
 
     inner class GroupPagerAdapter : FragmentStateAdapter(this),
@@ -1249,7 +1262,8 @@ class ConfigurationFragment @JvmOverloads constructor(
                         if (!isAdded || view == null) return@Runnable
                         groupList = newGroupList
                         notifyDataSetChanged()
-                        if (set) groupPager.setCurrentItem(selectedGroupIndex + 1, false)
+                        val currentPos = groupPager.currentItem
+                        if (currentPos != 0 && set) groupPager.setCurrentItem(selectedGroupIndex + 1, false)
                         val hideTab = (groupList.size + 1) < 2
                         tabLayout.isGone = hideTab
                         toolbar.elevation = if (hideTab) 0F else dp2px(4).toFloat()

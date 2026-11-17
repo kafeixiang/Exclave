@@ -145,7 +145,11 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     private var geoIpInfo = GeoIpData()
     private var latencyMap = mutableMapOf<String, Int>()
     private var serviceConnectedTime = 0L
-    private var isGeoIpHidden = false
+    private var isGeoIpHidden: Boolean
+        get() = DataStore.hideOutboundIp
+        set(value) {
+            DataStore.hideOutboundIp = value
+        }
     private val speedHistory = mutableListOf<Long>()
     private var lastAppStatsList: List<AppStats> = emptyList()
     private var activeConnectionsSheet: ConnectionsBottomSheet? = null
@@ -214,7 +218,18 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         var location: String = "",
         var isp: String = "",
         var asn: String = "",
-        var countryCode: String = ""
+        var countryCode: String = "",
+        var ipType: String = "",
+        var qualityLevel: String = "",
+        var riskScore: Int = 0,
+        var isVpn: Boolean = false,
+        var isProxy: Boolean = false,
+        var isTor: Boolean = false,
+        var isDatacenter: Boolean = false,
+        var isMobile: Boolean = false,
+        var isAbuser: Boolean = false,
+        var organization: String = "",
+        var source: String = "ipquery.io"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -296,6 +311,13 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
     override fun onResume() {
         super.onResume()
+        val mainActivity = activity as? MainActivity
+        if (mainActivity != null) {
+            val currentState = mainActivity.state
+            if (lastState != currentState) {
+                stateChanged(currentState, lastProfileName)
+            }
+        }
         refreshDbSnapshot()
         val parentPager = (parentFragment as? ConfigurationFragment)?.groupPager
         val isVisibleInPager = parentPager?.currentItem == 0
@@ -387,6 +409,13 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         isDashboardVisible = visible
         (activity as? MainActivity)?.updateTrafficTimeout()
         if (visible) {
+            val mainActivity = activity as? MainActivity
+            if (mainActivity != null) {
+                val currentState = mainActivity.state
+                if (lastState != currentState) {
+                    stateChanged(currentState, lastProfileName)
+                }
+            }
             refreshDbSnapshot()
             if (hasPendingUpdate && ::adapter.isInitialized) {
                 hasPendingUpdate = false
@@ -702,43 +731,85 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         geoIpInfo.isp = ""
         geoIpInfo.asn = ""
         geoIpInfo.countryCode = ""
+        geoIpInfo.ipType = ""
+        geoIpInfo.qualityLevel = ""
         adapter.updateItemWithPayload(ItemType.GEOIP, PAYLOAD_GEOIP)
         adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
 
         lifecycleScope.launch(Dispatchers.IO) {
             var success = false
 
+            val proxy = if (lastState == BaseService.State.Connected && SagerNet.started) {
+                if (DataStore.requireSocks && DataStore.socksPort > 0) {
+                    Proxy(Proxy.Type.SOCKS, InetSocketAddress("127.0.0.1", DataStore.socksPort))
+                } else if (DataStore.requireHttp && DataStore.httpPort > 0) {
+                    Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", DataStore.httpPort))
+                } else null
+            } else null
+
+            // Wave 1: ipquery.io (Comprehensive IP quality, risk, datacenter detection)
             try {
-                val url = URL("https://ipwho.is/")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.connectTimeout = 4000
-                connection.readTimeout = 4000
-                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
-                if (connection.responseCode == 200) {
-                    val response = connection.inputStream.bufferedReader().readText()
-                    val json = JSONObject(response)
+                val ipUrl = URL("https://api.ipquery.io/?format=json")
+                val ipConn = (if (proxy != null) ipUrl.openConnection(proxy) else ipUrl.openConnection()) as HttpURLConnection
+                ipConn.connectTimeout = 4000
+                ipConn.readTimeout = 4000
+                ipConn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
+                if (ipConn.responseCode == 200) {
+                    val body = ipConn.inputStream.bufferedReader().readText()
+                    val json = JSONObject(body)
                     val ip = json.optString("ip", "")
                     if (ip.isNotEmpty()) {
                         geoIpInfo.ip = ip
-                        val country = json.optString("country", "")
-                        val city = json.optString("city", "")
+
+                        val locObj = json.optJSONObject("location")
+                        val country = locObj?.optString("country", "") ?: ""
+                        val city = locObj?.optString("city", "") ?: ""
                         geoIpInfo.location = if (city.isNotEmpty()) "$country, $city" else country
-                        val conn = json.optJSONObject("connection")
-                        val isp = conn?.optString("isp", "") ?: ""
-                        val org = conn?.optString("org", "") ?: ""
+                        geoIpInfo.countryCode = locObj?.optString("country_code", "") ?: ""
+
+                        val ispObj = json.optJSONObject("isp")
+                        val org = ispObj?.optString("org", "") ?: ""
+                        val isp = ispObj?.optString("isp", "") ?: ""
+                        geoIpInfo.organization = org
                         geoIpInfo.isp = if (org.isNotEmpty()) org else isp
-                        val asn = conn?.optInt("asn", 0) ?: 0
-                        geoIpInfo.asn = if (asn != 0) "AS$asn" else ""
-                        geoIpInfo.countryCode = json.optString("country_code", "")
+                        val asn = ispObj?.optString("asn", "") ?: ""
+                        geoIpInfo.asn = asn
+
+                        val riskObj = json.optJSONObject("risk")
+                        if (riskObj != null) {
+                            geoIpInfo.isDatacenter = riskObj.optBoolean("is_datacenter", false)
+                            geoIpInfo.isMobile = riskObj.optBoolean("is_mobile", false)
+                            geoIpInfo.isVpn = riskObj.optBoolean("is_vpn", false)
+                            geoIpInfo.isProxy = riskObj.optBoolean("is_proxy", false)
+                            geoIpInfo.isTor = riskObj.optBoolean("is_tor", false)
+                            geoIpInfo.riskScore = riskObj.optInt("risk_score", 0)
+                            geoIpInfo.isAbuser = geoIpInfo.riskScore >= 50
+                        }
+
+                        val appCtx = io.nekohasekai.sagernet.ktx.app
+                        geoIpInfo.ipType = when {
+                            geoIpInfo.isDatacenter -> appCtx.getString(R.string.ip_type_hosting)
+                            geoIpInfo.isMobile -> appCtx.getString(R.string.ip_type_mobile)
+                            else -> appCtx.getString(R.string.ip_type_residential)
+                        }
+
+                        geoIpInfo.qualityLevel = when {
+                            geoIpInfo.isTor || geoIpInfo.isProxy || geoIpInfo.isVpn || geoIpInfo.riskScore >= 60 -> appCtx.getString(R.string.ip_quality_risky)
+                            geoIpInfo.riskScore >= 25 -> appCtx.getString(R.string.ip_quality_normal)
+                            else -> appCtx.getString(R.string.ip_quality_good)
+                        }
+
+                        geoIpInfo.source = "ipquery.io"
                         success = true
                     }
                 }
             } catch (_: Exception) {}
 
+            // Wave 2: ipwho.is (Reliable worldwide geolocation)
             if (!success) {
                 try {
-                    val url = URL("https://api.ip.sb/geoip")
-                    val connection = url.openConnection() as HttpURLConnection
+                    val url = URL("https://ipwho.is/")
+                    val connection = (if (proxy != null) url.openConnection(proxy) else url.openConnection()) as HttpURLConnection
                     connection.connectTimeout = 4000
                     connection.readTimeout = 4000
                     connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
@@ -751,35 +822,58 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                             val country = json.optString("country", "")
                             val city = json.optString("city", "")
                             geoIpInfo.location = if (city.isNotEmpty()) "$country, $city" else country
-                            geoIpInfo.isp = json.optString("isp", "")
-                            val asn = json.optInt("asn", 0)
+                            val conn = json.optJSONObject("connection")
+                            val isp = conn?.optString("isp", "") ?: ""
+                            val org = conn?.optString("org", "") ?: ""
+                            geoIpInfo.organization = org
+                            geoIpInfo.isp = if (org.isNotEmpty()) org else isp
+                            val asn = conn?.optInt("asn", 0) ?: 0
                             geoIpInfo.asn = if (asn != 0) "AS$asn" else ""
                             geoIpInfo.countryCode = json.optString("country_code", "")
+
+                            val isHosting = org.contains("cloud", ignoreCase = true) ||
+                                            org.contains("server", ignoreCase = true) ||
+                                            org.contains("hosting", ignoreCase = true) ||
+                                            org.contains("datacenter", ignoreCase = true) ||
+                                            isp.contains("cloud", ignoreCase = true)
+                            geoIpInfo.isDatacenter = isHosting
+                            val appCtx = io.nekohasekai.sagernet.ktx.app
+                            geoIpInfo.ipType = if (isHosting) appCtx.getString(R.string.ip_type_hosting) else appCtx.getString(R.string.ip_type_residential)
+                            geoIpInfo.qualityLevel = appCtx.getString(R.string.ip_quality_good)
+                            geoIpInfo.source = "ipwho.is"
                             success = true
                         }
                     }
                 } catch (_: Exception) {}
             }
 
+            // Wave 3: api.ip.sb
             if (!success) {
                 try {
-                    val url = URL("http://ip-api.com/json")
-                    val connection = url.openConnection() as HttpURLConnection
+                    val url = URL("https://api.ip.sb/geoip")
+                    val connection = (if (proxy != null) url.openConnection(proxy) else url.openConnection()) as HttpURLConnection
                     connection.connectTimeout = 4000
                     connection.readTimeout = 4000
                     connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
                     if (connection.responseCode == 200) {
                         val response = connection.inputStream.bufferedReader().readText()
                         val json = JSONObject(response)
-                        val ip = json.optString("query", "")
+                        val ip = json.optString("ip", "")
                         if (ip.isNotEmpty()) {
                             geoIpInfo.ip = ip
                             val country = json.optString("country", "")
                             val city = json.optString("city", "")
                             geoIpInfo.location = if (city.isNotEmpty()) "$country, $city" else country
-                            geoIpInfo.isp = json.optString("isp", "")
-                            geoIpInfo.asn = json.optString("as", "")
-                            geoIpInfo.countryCode = json.optString("countryCode", "")
+                            val isp = json.optString("isp", "")
+                            geoIpInfo.isp = isp
+                            geoIpInfo.organization = json.optString("organization", isp)
+                            val asn = json.optInt("asn", 0)
+                            geoIpInfo.asn = if (asn != 0) "AS$asn" else ""
+                            geoIpInfo.countryCode = json.optString("country_code", "")
+                            val appCtx = io.nekohasekai.sagernet.ktx.app
+                            geoIpInfo.ipType = appCtx.getString(R.string.ip_type_hosting)
+                            geoIpInfo.qualityLevel = appCtx.getString(R.string.ip_quality_good)
+                            geoIpInfo.source = "ip.sb"
                             success = true
                         }
                     }
@@ -793,6 +887,8 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                 geoIpInfo.isp = ""
                 geoIpInfo.asn = ""
                 geoIpInfo.countryCode = ""
+                geoIpInfo.ipType = ""
+                geoIpInfo.qualityLevel = ""
             }
 
             isFetchingGeoIP = false
@@ -804,6 +900,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     } else {
                         hasPendingUpdate = true
                     }
+                    (parentFragmentManager.findFragmentByTag("IpQualitySheet") as? IpQualityBottomSheet)?.updateData(geoIpInfo)
                 }
             }
         }
@@ -1168,7 +1265,7 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             private var breathingAnimator: ObjectAnimator? = null
             private var badgeRotateAnimator: ObjectAnimator? = null
 
-            fun startBreathing(view: View = binding.btnToggleService) {
+            fun startBreathing(view: View = binding.btnMorphToggle) {
                 if (breathingAnimator != null) return
                 val alphaAnim = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.85f, 1.0f)
                 val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 1.05f, 1.0f)
@@ -1184,9 +1281,9 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             fun stopBreathing() {
                 breathingAnimator?.cancel()
                 breathingAnimator = null
-                binding.btnToggleService.alpha = 1.0f
-                binding.btnToggleService.scaleX = 1.0f
-                binding.btnToggleService.scaleY = 1.0f
+                binding.btnMorphToggle.alpha = 1.0f
+                binding.btnMorphToggle.scaleX = 1.0f
+                binding.btnMorphToggle.scaleY = 1.0f
             }
 
             fun syncBreathingState() {
@@ -1216,9 +1313,8 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             fun bind() {
                 setupEditControls(ItemType.STATUS, itemView, binding.cardEditControls, binding.btnCardResize, binding.btnCardDelete)
 
-                binding.btnToggleService.applyCardPressAnimation()
-                binding.btnToggleService.setOnClickListener {
-                    binding.btnToggleService.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                binding.btnMorphToggle.setOnClickListener {
+                    binding.btnMorphToggle.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     toggleVpn()
                 }
 
@@ -1228,14 +1324,43 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     fetchGeoIP()
                 }
 
+                val showQualitySheet = {
+                    if (parentFragmentManager.findFragmentByTag("IpQualitySheet") == null) {
+                        val sheet = IpQualityBottomSheet(
+                            geoIpInfo = geoIpInfo,
+                            isIpMasked = isGeoIpHidden,
+                            onHideIpChanged = { masked ->
+                                isGeoIpHidden = masked
+                                updatePartial()
+                            },
+                            onRefreshRequested = {
+                                fetchGeoIP()
+                            }
+                        )
+                        sheet.show(parentFragmentManager, "IpQualitySheet")
+                    }
+                }
+
                 binding.textOutboundIp.setOnClickListener {
-                    isGeoIpHidden = !isGeoIpHidden
-                    updatePartial()
+                    binding.textOutboundIp.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    showQualitySheet()
+                }
+
+                binding.exitRow.setOnClickListener {
+                    binding.exitRow.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    showQualitySheet()
+                }
+
+                if (!isEditMode) {
+                    binding.root.setOnClickListener {
+                        binding.root.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        showQualitySheet()
+                    }
                 }
 
                 binding.textOutboundIp.setOnLongClickListener {
                     val ip = geoIpInfo.ip
-                    if (ip.isNotEmpty() && ip != getString(R.string.unavailable) && !isGeoIpHidden) {
+                    if (ip.isNotEmpty() && ip != getString(R.string.unavailable)) {
                         binding.textOutboundIp.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                         SagerNet.trySetPrimaryClip(ip)
                         (activity as? MainActivity)?.snackbar(getString(R.string.copied_ip))?.show()
@@ -1304,46 +1429,48 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
                 // 3. Exit Row: Outbound IP / Node Headline
                 if (isGeoIpHidden) {
-                    binding.textOutboundIp.text = "* * * * * * * *"
+                    binding.textOutboundIp.text = "•••.•••.•••.•••"
                 } else if (geoIpInfo.ip.isNotEmpty() && geoIpInfo.ip != getString(R.string.unavailable)) {
                     binding.textOutboundIp.text = geoIpInfo.ip
-                } else if (lastState == BaseService.State.Connected && profileName.isNotEmpty() && profileName != getString(R.string.group_status_empty)) {
-                    binding.textOutboundIp.text = profileName
+                } else if (isFetchingGeoIP) {
+                    binding.textOutboundIp.setText(R.string.querying)
+                } else if (lastState == BaseService.State.Connected) {
+                    binding.textOutboundIp.setText(R.string.service_failed)
                 } else {
                     binding.textOutboundIp.text = "—"
                 }
 
-                // 4. Exit Row: IP Chips Row
-                val profileType = snapshot.profileType
-                if (profileType.isNotEmpty()) {
-                    binding.chipNodeType.text = profileType
-                    binding.chipNodeType.isVisible = true
-                } else if (geoIpInfo.isp.isNotEmpty()) {
-                    binding.chipNodeType.text = "出口节点"
-                    binding.chipNodeType.isVisible = true
-                } else {
+                // 4. Exit Row: IP Chips Row (Type + Quality)
+                val isFailed = lastState == BaseService.State.Connected &&
+                        !isFetchingGeoIP &&
+                        (geoIpInfo.ip.isEmpty() || geoIpInfo.ip == getString(R.string.unavailable))
+
+                if (isFailed) {
                     binding.chipNodeType.isVisible = false
-                }
-
-                if (snapshot.profilePing > 0) {
-                    binding.chipLatency.text = "${snapshot.profilePing} ms"
+                    binding.chipLatency.setText(R.string.tap_icon_to_retry)
+                    binding.chipLatency.setTextColor(context.getColorAttr(android.R.attr.textColorSecondary))
                     binding.chipLatency.isVisible = true
-                    binding.chipLatency.setTextColor(accentColor)
-                } else if (lastState == BaseService.State.Connected) {
-                    binding.chipLatency.text = "优质连接"
-                    binding.chipLatency.isVisible = true
-                    binding.chipLatency.setTextColor(ContextCompat.getColor(context, R.color.material_green_500))
                 } else {
-                    binding.chipLatency.isVisible = false
-                }
+                    val resolvedType = geoIpInfo.ipType.ifEmpty {
+                        if (snapshot.profileType.isNotEmpty()) snapshot.profileType else if (lastState == BaseService.State.Connected) "机房" else "住宅"
+                    }
+                    binding.chipNodeType.text = resolvedType
+                    binding.chipNodeType.isVisible = true
 
-                val location = geoIpInfo.location
-                if (location.isNotEmpty() && !isFetchingGeoIP && location != getString(R.string.unavailable)) {
-                    binding.chipRouteMode.text = location
-                    binding.chipRouteMode.isVisible = true
-                } else {
-                    binding.chipRouteMode.setText(R.string.rule_mode_label)
-                    binding.chipRouteMode.isVisible = true
+                    val level = geoIpInfo.qualityLevel.ifEmpty { "良好" }
+                    binding.chipLatency.text = "质量 $level"
+                    binding.chipLatency.isVisible = true
+                    when (level) {
+                        "高风险", getString(R.string.ip_quality_risky) -> {
+                            binding.chipLatency.setTextColor(0xFFFF3B30.toInt())
+                        }
+                        "良好", getString(R.string.ip_quality_good) -> {
+                            binding.chipLatency.setTextColor(0xFF34C759.toInt())
+                        }
+                        else -> {
+                            binding.chipLatency.setTextColor(accentColor)
+                        }
+                    }
                 }
 
                 // 5. Bottom Cells: 运行时长 & 出口组织
@@ -1357,98 +1484,43 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     binding.textCellRuntime.text = "—"
                 }
 
-                val orgInfo = listOf(geoIpInfo.asn, geoIpInfo.isp).filter { it.isNotEmpty() }.joinToString(" - ")
+                val orgInfo = geoIpInfo.organization.ifEmpty { geoIpInfo.isp }
                 if (orgInfo.isNotEmpty()) {
-                    binding.textCellOrg.text = orgInfo
+                    val fullOrg = if (geoIpInfo.asn.isNotEmpty()) {
+                        val asnPrefix = if (geoIpInfo.asn.startsWith("AS", ignoreCase = true)) geoIpInfo.asn else "AS${geoIpInfo.asn}"
+                        "$orgInfo ($asnPrefix)"
+                    } else {
+                        orgInfo
+                    }
+                    binding.textCellOrg.text = fullOrg
                 } else if (lastState == BaseService.State.Connected) {
                     binding.textCellOrg.text = profileName
                 } else {
                     binding.textCellOrg.text = "—"
                 }
 
-                // 6. Right Start/Stop Toggle Button
-                when (lastState) {
-                    BaseService.State.Connected -> {
-                        binding.btnToggleProgress.isVisible = false
-                        binding.btnToggleIcon.isVisible = true
-                        binding.btnToggleIcon.setImageResource(R.drawable.ic_vpn_pause)
-                        binding.btnToggleIcon.imageTintList = ColorStateList.valueOf(Color.WHITE)
+                // 6. Right Start/Stop Toggle Button (FlClash morph: Circle -> cookie9Sided)
+                val isConnected = lastState == BaseService.State.Connected
+                val isConnecting = lastState == BaseService.State.Connecting
+                val hasProfile = profileName.isNotEmpty() && profileName != getString(R.string.group_status_empty)
 
-                        binding.btnToggleService.setCardBackgroundColor(accentColor)
-                        binding.btnToggleService.strokeWidth = 0
-                        binding.btnToggleService.radius = dp2px(38).toFloat()
+                binding.btnMorphToggle.setServiceEnabled(hasProfile)
+                binding.btnMorphToggle.setRunning(isConnected)
+                binding.btnToggleProgress.isVisible = isConnecting
 
-                        binding.btnToggleGlow.isVisible = true
-                        ViewCompat.setBackgroundTintList(binding.btnToggleGlow, ColorStateList.valueOf(accentColor))
+                binding.bgCookieView.setRunning(isConnected)
 
-                        if (isDashboardVisible) {
-                            startBreathing()
-                        } else {
-                            stopBreathing()
-                        }
-
-                        binding.bgDecoration.imageTintList = ColorStateList.valueOf(accentColor)
-                        binding.bgDecoration.alpha = 0.12f
-                        binding.bgDecoration.animate()
-                            .rotation(30f)
-                            .scaleX(1.12f)
-                            .scaleY(1.12f)
-                            .setDuration(450)
-                            .start()
-                    }
-                    BaseService.State.Connecting -> {
+                if (isConnected) {
+                    binding.btnToggleGlow.isVisible = true
+                    ViewCompat.setBackgroundTintList(binding.btnToggleGlow, ColorStateList.valueOf(accentColor))
+                    if (isDashboardVisible) {
+                        startBreathing()
+                    } else {
                         stopBreathing()
-                        binding.btnToggleProgress.isVisible = true
-                        binding.btnToggleIcon.isVisible = false
-
-                        val semiAccent = ColorUtils.setAlphaComponent(accentColor, 40)
-                        binding.btnToggleService.setCardBackgroundColor(semiAccent)
-                        binding.btnToggleService.strokeWidth = dp2px(1)
-                        binding.btnToggleService.strokeColor = accentColor
-                        binding.btnToggleService.radius = dp2px(38).toFloat()
-
-                        binding.btnToggleGlow.isVisible = false
-
-                        binding.bgDecoration.imageTintList = ColorStateList.valueOf(accentColor)
-                        binding.bgDecoration.alpha = 0.08f
-                        binding.bgDecoration.animate()
-                            .rotation(15f)
-                            .scaleX(1.05f)
-                            .scaleY(1.05f)
-                            .setDuration(300)
-                            .start()
                     }
-                    else -> {
-                        stopBreathing()
-                        binding.btnToggleProgress.isVisible = false
-                        binding.btnToggleIcon.isVisible = true
-                        binding.btnToggleIcon.setImageResource(R.drawable.ic_vpn_play)
-
-                        val hasProfile = profileName.isNotEmpty() && profileName != getString(R.string.group_status_empty)
-                        if (hasProfile) {
-                            binding.btnToggleService.setCardBackgroundColor(accentColor)
-                            binding.btnToggleIcon.imageTintList = ColorStateList.valueOf(Color.WHITE)
-                            binding.btnToggleService.strokeWidth = 0
-                        } else {
-                            binding.btnToggleService.setCardBackgroundColor(Theme.getCardBackgroundColor(context, false))
-                            binding.btnToggleIcon.imageTintList = ColorStateList.valueOf(accentColor)
-                            binding.btnToggleService.strokeWidth = context.resources.getDimensionPixelSize(R.dimen.card_stroke_width)
-                            binding.btnToggleService.strokeColor = Theme.getCardStrokeColor(context, false)
-                        }
-                        binding.btnToggleService.radius = dp2px(38).toFloat()
-
-                        binding.btnToggleGlow.isVisible = false
-
-                        val secondaryColor = context.getColorAttr(android.R.attr.textColorSecondary)
-                        binding.bgDecoration.imageTintList = ColorStateList.valueOf(secondaryColor)
-                        binding.bgDecoration.alpha = 0.05f
-                        binding.bgDecoration.animate()
-                            .rotation(0f)
-                            .scaleX(1.0f)
-                            .scaleY(1.0f)
-                            .setDuration(300)
-                            .start()
-                    }
+                } else {
+                    stopBreathing()
+                    binding.btnToggleGlow.isVisible = false
                 }
             }
         }
