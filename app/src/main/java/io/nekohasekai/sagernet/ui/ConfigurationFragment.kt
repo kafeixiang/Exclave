@@ -1665,11 +1665,13 @@ class ConfigurationFragment @JvmOverloads constructor(
             if (::configurationListView.isInitialized) {
                 configurationListView.adapter = null
             }
-            (parentFragment as? ConfigurationFragment)
-                ?.takeIf { it::adapter.isInitialized }
-                ?.adapter
-                ?.groupFragments
-                ?.remove(proxyGroup.id)
+            if (::proxyGroup.isInitialized) {
+                (parentFragment as? ConfigurationFragment)
+                    ?.takeIf { it::adapter.isInitialized }
+                    ?.adapter
+                    ?.groupFragments
+                    ?.remove(proxyGroup.id)
+            }
             super.onDestroyView()
         }
 

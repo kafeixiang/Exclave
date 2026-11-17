@@ -807,4 +807,11 @@
     <string name="disable_tasker_integration">Disable Tasker integration</string>
     <string name="kill_and_restart">Kill and restart the app to take effect</string>
     <string name="heartbeat_interval">Heartbeat interval (s)</string>
+    <string name="status_running">Running</string>
+    <string name="status_not_running">Not Running</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="dashboard_runtime_label">Uptime</string>
+    <string name="dashboard_outbound_org_label">Outbound Org</string>
+    <string name="dashboard_status_header">Status</string>
+    <string name="rule_mode_label">Rule Mode</string>
 </resources>

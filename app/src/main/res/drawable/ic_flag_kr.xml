@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <clip-path
+        android:pathData="M 12, 2 A 10, 10 0 1 0 12, 22 A 10, 10 0 1 0 12, 2 Z" />
+    <!-- White field -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 0,0 H 24 V 24 H 0 Z" />
+    <!-- Blue lower half of Taegeuk -->
+    <path
+        android:fillColor="#0047A0"
+        android:pathData="M 12, 7 A 5, 5 0 0 0 12, 17 A 2.5, 2.5 0 0 0 12, 12 A 2.5, 2.5 0 0 1 12, 7 Z" />
+    <!-- Red upper half of Taegeuk -->
+    <path
+        android:fillColor="#CD2E3A"
+        android:pathData="M 12, 7 A 5, 5 0 0 1 12, 17 A 2.5, 2.5 0 0 1 12, 12 A 2.5, 2.5 0 0 0 12, 7 Z" />
+    <!-- 4 Black Trigrams (simplified lines) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M 4, 5 L 6, 7 L 5, 8 L 3, 6 Z
+                          M 18, 5 L 20, 7 L 19, 8 L 17, 6 Z
+                          M 4, 19 L 6, 17 L 5, 16 L 3, 18 Z
+                          M 18, 19 L 20, 17 L 19, 16 L 17, 18 Z" />
+</vector>
