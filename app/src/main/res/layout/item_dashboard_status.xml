@@ -17,17 +17,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- Background Ambient Shape / Cookie Flower Decoration (FlClash _decoration) -->
-        <ImageView
-            android:id="@+id/bg_decoration"
+        <!-- Background Ambient Shape / Cookie Flower Decoration (FlClash MaterialShapes.cookie12Sided) -->
+        <io.nekohasekai.sagernet.ui.widget.CookieDecorationView
+            android:id="@+id/bg_cookie_view"
             android:layout_width="190dp"
             android:layout_height="190dp"
             android:layout_gravity="end|top"
             android:layout_marginEnd="-40dp"
-            android:layout_marginTop="-40dp"
-            android:alpha="0.08"
-            android:src="@drawable/bg_cookie_decoration"
-            app:tint="?attr/colorAccent" />
+            android:layout_marginTop="-40dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -110,6 +107,9 @@
                     android:id="@+id/exit_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -166,6 +166,9 @@
                             android:id="@+id/text_outbound_ip"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackground"
                             android:ellipsize="marquee"
                             android:marqueeRepeatLimit="marquee_forever"
                             android:singleLine="true"
@@ -217,30 +220,12 @@
                                 android:maxLines="1"
                                 android:singleLine="true"
                                 android:ellipsize="end"
-                                android:maxWidth="95dp"
+                                android:maxWidth="130dp"
                                 android:text="@string/unavailable"
-                                tools:text="42 ms"
+                                tools:text="质量 良好"
                                 android:textSize="10sp"
                                 android:textStyle="bold"
                                 android:textColor="?attr/colorAccent" />
-
-                            <!-- Chip 3: Location / Route Mode -->
-                            <TextView
-                                android:id="@+id/chip_route_mode"
-                                android:layout_width="wrap_content"
-                                android:layout_height="20dp"
-                                android:background="@drawable/bg_segmented_pill"
-                                android:backgroundTint="@color/glass_window_tint"
-                                android:gravity="center"
-                                android:paddingHorizontal="7dp"
-                                android:maxLines="1"
-                                android:singleLine="true"
-                                android:ellipsize="end"
-                                android:maxWidth="95dp"
-                                android:text="@string/rule_mode_label"
-                                android:textSize="10sp"
-                                android:textStyle="bold"
-                                android:textColor="?android:attr/textColorSecondary" />
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
@@ -330,43 +315,22 @@
                     android:visibility="gone"
                     tools:visibility="visible" />
 
-                <!-- Morph Toggle Button Card -->
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/btn_toggle_service"
+                <!-- Morph Toggle Button (FlClash MaterialShapes.circle -> cookie9Sided) -->
+                <io.nekohasekai.sagernet.ui.widget.MorphToggleButton
+                    android:id="@+id/btn_morph_toggle"
                     android:layout_width="76dp"
                     android:layout_height="76dp"
+                    android:layout_gravity="center" />
+
+                <!-- Connecting Progress Indicator -->
+                <ProgressBar
+                    android:id="@+id/btn_toggle_progress"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
                     android:layout_gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardCornerRadius="38dp"
-                    app:cardElevation="0dp"
-                    app:strokeWidth="1.5dp"
-                    app:strokeColor="@color/card_stroke">
-
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent">
-
-                        <!-- Center Play / Pause Icon -->
-                        <ImageView
-                            android:id="@+id/btn_toggle_icon"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_vpn_play"
-                            app:tint="?attr/colorAccent" />
-
-                        <!-- Connecting Progress Indicator -->
-                        <ProgressBar
-                            android:id="@+id/btn_toggle_progress"
-                            android:layout_width="34dp"
-                            android:layout_height="34dp"
-                            android:layout_gravity="center"
-                            android:indeterminate="true"
-                            android:indeterminateTint="?attr/colorAccent"
-                            android:visibility="gone" />
-                    </FrameLayout>
-                </com.google.android.material.card.MaterialCardView>
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/white"
+                    android:visibility="gone" />
             </FrameLayout>
         </LinearLayout>
 
