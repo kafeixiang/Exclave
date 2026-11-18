@@ -7,10 +7,8 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.View
 import android.view.animation.OvershootInterpolator
-import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.graphics.ColorUtils
 import androidx.graphics.shapes.CornerRounding
@@ -70,15 +68,6 @@ class CookieDecorationView @JvmOverloads constructor(
         activeColor = ColorUtils.setAlphaComponent(accent, (255 * 0.15f).toInt())
         paint.color = ColorUtils.blendARGB(baseColor, activeColor, progress.coerceIn(0f, 1f))
         invalidate()
-    }
-
-    private fun resolveColor(context: Context, @AttrRes attr: Int): Int {
-        val tv = TypedValue()
-        return if (context.theme.resolveAttribute(attr, tv, true)) {
-            tv.data
-        } else {
-            0xFF007AFF.toInt()
-        }
     }
 
     fun setRunning(running: Boolean, animate: Boolean = true) {

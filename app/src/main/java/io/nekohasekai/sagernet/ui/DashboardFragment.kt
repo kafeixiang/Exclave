@@ -63,6 +63,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import libexclavecore.Libexclavecore
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.InetSocketAddress
@@ -98,6 +100,8 @@ data class ServiceTarget(
 class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
     companion object {
+        private var hasStartedOnce = false
+
         val SERVICE_TARGETS = listOf(
             ServiceTarget("google", R.string.dashboard_google, "Google", R.drawable.ic_service_google, "https://www.google.com/generate_204"),
             ServiceTarget("youtube", R.string.dashboard_youtube, "YouTube", R.drawable.ic_service_youtube, "https://www.youtube.com"),
@@ -298,8 +302,10 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
             lastState = mainActivity.state
             if (lastState == BaseService.State.Connected) {
                 if (serviceConnectedTime == 0L) serviceConnectedTime = SystemClock.elapsedRealtime()
-                fetchGeoIP()
+                fetchGeoIP(force = true)
                 testLatency()
+            } else if (geoIpInfo.ip.isEmpty()) {
+                fetchGeoIP(force = false)
             }
         }
 
@@ -335,6 +341,8 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
         uptimeJob = null
         dbSnapshotJob?.cancel()
         dbSnapshotJob = null
+        geoIpJob?.cancel()
+        geoIpJob = null
         touchHelper?.attachToRecyclerView(null)
         touchHelper = null
         activeConnectionsSheet = null
@@ -721,174 +729,260 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     }
 
     private var isFetchingGeoIP = false
+    private var geoIpJob: Job? = null
 
-    fun fetchGeoIP() {
-        if (isFetchingGeoIP) return
+    private suspend fun httpGetViaCore(urlStr: String, useProxyUds: Boolean, timeoutMs: Long = 5000L): String? {
+        return withTimeoutOrNull(timeoutMs) {
+            withContext(Dispatchers.IO) {
+                val client = Libexclavecore.newHttpClient()
+                try {
+                    if (useProxyUds) {
+                        val udsPath = SagerNet.deviceStorage.noBackupFilesDir.toString() + "/ipc.sock"
+                        client.useUDS(udsPath)
+                    }
+                    val req = client.newRequest().apply {
+                        setURL(urlStr)
+                        setUserAgent("Mozilla/5.0 (Android; Mobile) Exclave")
+                    }
+                    val resp = req.execute()
+                    resp.contentString?.takeIf { it.isNotBlank() }
+                } catch (_: Exception) {
+                    null
+                } finally {
+                    runCatching { client.close() }
+                }
+            }
+        }
+    }
+
+    private fun parseIpQueryJson(body: String, target: GeoIpData): Boolean {
+        return try {
+            val json = JSONObject(body)
+            val ip = json.optString("ip", "")
+            if (ip.isEmpty()) return false
+
+            target.ip = ip
+            val locObj = json.optJSONObject("location")
+            val country = locObj?.optString("country", "") ?: ""
+            val city = locObj?.optString("city", "") ?: ""
+            if (country.isNotEmpty() || city.isNotEmpty()) {
+                target.location = if (city.isNotEmpty() && country.isNotEmpty()) "$country, $city" else country.ifEmpty { city }
+            }
+            val cc = locObj?.optString("country_code", "") ?: ""
+            if (cc.isNotEmpty()) target.countryCode = cc
+
+            val ispObj = json.optJSONObject("isp")
+            val org = ispObj?.optString("org", "") ?: ""
+            val isp = ispObj?.optString("isp", "") ?: ""
+            if (org.isNotEmpty()) target.organization = org
+            if (org.isNotEmpty() || isp.isNotEmpty()) target.isp = org.ifEmpty { isp }
+            val asn = ispObj?.optString("asn", "") ?: ""
+            if (asn.isNotEmpty()) target.asn = asn
+
+            val riskObj = json.optJSONObject("risk")
+            if (riskObj != null) {
+                target.isDatacenter = riskObj.optBoolean("is_datacenter", false)
+                target.isMobile = riskObj.optBoolean("is_mobile", false)
+                target.isVpn = riskObj.optBoolean("is_vpn", false)
+                target.isProxy = riskObj.optBoolean("is_proxy", false)
+                target.isTor = riskObj.optBoolean("is_tor", false)
+                target.riskScore = riskObj.optInt("risk_score", 0)
+                target.isAbuser = target.riskScore >= 50
+            }
+
+            val appCtx = io.nekohasekai.sagernet.ktx.app
+            target.ipType = when {
+                target.isDatacenter -> appCtx.getString(R.string.ip_type_hosting)
+                target.isMobile -> appCtx.getString(R.string.ip_type_mobile)
+                else -> appCtx.getString(R.string.ip_type_residential)
+            }
+            target.qualityLevel = when {
+                target.isTor || target.isProxy || target.isVpn || target.riskScore >= 60 -> appCtx.getString(R.string.ip_quality_risky)
+                target.riskScore >= 25 -> appCtx.getString(R.string.ip_quality_normal)
+                else -> appCtx.getString(R.string.ip_quality_good)
+            }
+            target.source = "ipquery.io"
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun fetchGeoIP(force: Boolean = true) {
+        if (isFetchingGeoIP && !force) return
+        geoIpJob?.cancel()
         isFetchingGeoIP = true
 
         geoIpInfo.ip = ""
         geoIpInfo.location = ""
         geoIpInfo.isp = ""
+        geoIpInfo.organization = ""
         geoIpInfo.asn = ""
         geoIpInfo.countryCode = ""
         geoIpInfo.ipType = ""
         geoIpInfo.qualityLevel = ""
-        adapter.updateItemWithPayload(ItemType.GEOIP, PAYLOAD_GEOIP)
-        adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
+        geoIpInfo.riskScore = 0
+        geoIpInfo.isVpn = false
+        geoIpInfo.isProxy = false
+        geoIpInfo.isTor = false
+        geoIpInfo.isDatacenter = false
+        geoIpInfo.isMobile = false
+        geoIpInfo.isAbuser = false
+        geoIpInfo.source = ""
 
-        lifecycleScope.launch(Dispatchers.IO) {
+        if (::adapter.isInitialized) {
+            adapter.updateItemWithPayload(ItemType.GEOIP, PAYLOAD_GEOIP)
+            adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
+        }
+
+        val useProxyUds = lastState == BaseService.State.Connected && SagerNet.started
+        geoIpJob = lifecycleScope.launch(Dispatchers.IO) {
+            val result = GeoIpData()
             var success = false
+            var hasRichQuality = false
+            val appCtx = io.nekohasekai.sagernet.ktx.app
 
-            val proxy = if (lastState == BaseService.State.Connected && SagerNet.started) {
-                if (DataStore.requireSocks && DataStore.socksPort > 0) {
-                    Proxy(Proxy.Type.SOCKS, InetSocketAddress("127.0.0.1", DataStore.socksPort))
-                } else if (DataStore.requireHttp && DataStore.httpPort > 0) {
-                    Proxy(Proxy.Type.HTTP, InetSocketAddress("127.0.0.1", DataStore.httpPort))
-                } else null
-            } else null
+            // Wave 1: ipquery.io (Single-shot IP + Geo + ASN + full risk/datacenter quality)
+            val w1 = httpGetViaCore("https://api.ipquery.io/?format=json", useProxyUds, 5000L)
+            if (w1 != null && parseIpQueryJson(w1, result)) {
+                success = true
+                hasRichQuality = true
+            }
 
-            // Wave 1: ipquery.io (Comprehensive IP quality, risk, datacenter detection)
-            try {
-                val ipUrl = URL("https://api.ipquery.io/?format=json")
-                val ipConn = (if (proxy != null) ipUrl.openConnection(proxy) else ipUrl.openConnection()) as HttpURLConnection
-                ipConn.connectTimeout = 4000
-                ipConn.readTimeout = 4000
-                ipConn.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
-                if (ipConn.responseCode == 200) {
-                    val body = ipConn.inputStream.bufferedReader().readText()
-                    val json = JSONObject(body)
-                    val ip = json.optString("ip", "")
-                    if (ip.isNotEmpty()) {
-                        geoIpInfo.ip = ip
-
-                        val locObj = json.optJSONObject("location")
-                        val country = locObj?.optString("country", "") ?: ""
-                        val city = locObj?.optString("city", "") ?: ""
-                        geoIpInfo.location = if (city.isNotEmpty()) "$country, $city" else country
-                        geoIpInfo.countryCode = locObj?.optString("country_code", "") ?: ""
-
-                        val ispObj = json.optJSONObject("isp")
-                        val org = ispObj?.optString("org", "") ?: ""
-                        val isp = ispObj?.optString("isp", "") ?: ""
-                        geoIpInfo.organization = org
-                        geoIpInfo.isp = if (org.isNotEmpty()) org else isp
-                        val asn = ispObj?.optString("asn", "") ?: ""
-                        geoIpInfo.asn = asn
-
-                        val riskObj = json.optJSONObject("risk")
-                        if (riskObj != null) {
-                            geoIpInfo.isDatacenter = riskObj.optBoolean("is_datacenter", false)
-                            geoIpInfo.isMobile = riskObj.optBoolean("is_mobile", false)
-                            geoIpInfo.isVpn = riskObj.optBoolean("is_vpn", false)
-                            geoIpInfo.isProxy = riskObj.optBoolean("is_proxy", false)
-                            geoIpInfo.isTor = riskObj.optBoolean("is_tor", false)
-                            geoIpInfo.riskScore = riskObj.optInt("risk_score", 0)
-                            geoIpInfo.isAbuser = geoIpInfo.riskScore >= 50
-                        }
-
-                        val appCtx = io.nekohasekai.sagernet.ktx.app
-                        geoIpInfo.ipType = when {
-                            geoIpInfo.isDatacenter -> appCtx.getString(R.string.ip_type_hosting)
-                            geoIpInfo.isMobile -> appCtx.getString(R.string.ip_type_mobile)
-                            else -> appCtx.getString(R.string.ip_type_residential)
-                        }
-
-                        geoIpInfo.qualityLevel = when {
-                            geoIpInfo.isTor || geoIpInfo.isProxy || geoIpInfo.isVpn || geoIpInfo.riskScore >= 60 -> appCtx.getString(R.string.ip_quality_risky)
-                            geoIpInfo.riskScore >= 25 -> appCtx.getString(R.string.ip_quality_normal)
-                            else -> appCtx.getString(R.string.ip_quality_good)
-                        }
-
-                        geoIpInfo.source = "ipquery.io"
-                        success = true
-                    }
-                }
-            } catch (_: Exception) {}
-
-            // Wave 2: ipwho.is (Reliable worldwide geolocation)
-            if (!success) {
-                try {
-                    val url = URL("https://ipwho.is/")
-                    val connection = (if (proxy != null) url.openConnection(proxy) else url.openConnection()) as HttpURLConnection
-                    connection.connectTimeout = 4000
-                    connection.readTimeout = 4000
-                    connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
-                    if (connection.responseCode == 200) {
-                        val response = connection.inputStream.bufferedReader().readText()
-                        val json = JSONObject(response)
+            // Wave 2: ipwho.is
+            if (!success && isActive) {
+                val w2 = httpGetViaCore("https://ipwho.is/", useProxyUds, 5000L)
+                if (w2 != null) {
+                    try {
+                        val json = JSONObject(w2)
                         val ip = json.optString("ip", "")
                         if (ip.isNotEmpty()) {
-                            geoIpInfo.ip = ip
+                            result.ip = ip
                             val country = json.optString("country", "")
                             val city = json.optString("city", "")
-                            geoIpInfo.location = if (city.isNotEmpty()) "$country, $city" else country
+                            result.location = if (city.isNotEmpty()) "$country, $city" else country
                             val conn = json.optJSONObject("connection")
                             val isp = conn?.optString("isp", "") ?: ""
                             val org = conn?.optString("org", "") ?: ""
-                            geoIpInfo.organization = org
-                            geoIpInfo.isp = if (org.isNotEmpty()) org else isp
+                            result.organization = org
+                            result.isp = org.ifEmpty { isp }
                             val asn = conn?.optInt("asn", 0) ?: 0
-                            geoIpInfo.asn = if (asn != 0) "AS$asn" else ""
-                            geoIpInfo.countryCode = json.optString("country_code", "")
-
+                            result.asn = if (asn != 0) "AS$asn" else ""
+                            result.countryCode = json.optString("country_code", "")
                             val isHosting = org.contains("cloud", ignoreCase = true) ||
-                                            org.contains("server", ignoreCase = true) ||
-                                            org.contains("hosting", ignoreCase = true) ||
-                                            org.contains("datacenter", ignoreCase = true) ||
-                                            isp.contains("cloud", ignoreCase = true)
-                            geoIpInfo.isDatacenter = isHosting
-                            val appCtx = io.nekohasekai.sagernet.ktx.app
-                            geoIpInfo.ipType = if (isHosting) appCtx.getString(R.string.ip_type_hosting) else appCtx.getString(R.string.ip_type_residential)
-                            geoIpInfo.qualityLevel = appCtx.getString(R.string.ip_quality_good)
-                            geoIpInfo.source = "ipwho.is"
+                                org.contains("server", ignoreCase = true) ||
+                                org.contains("hosting", ignoreCase = true) ||
+                                org.contains("datacenter", ignoreCase = true) ||
+                                isp.contains("cloud", ignoreCase = true)
+                            result.isDatacenter = isHosting
+                            result.ipType = if (isHosting) appCtx.getString(R.string.ip_type_hosting) else appCtx.getString(R.string.ip_type_residential)
+                            result.qualityLevel = appCtx.getString(R.string.ip_quality_good)
+                            result.source = "ipwho.is"
                             success = true
                         }
-                    }
-                } catch (_: Exception) {}
+                    } catch (_: Exception) {}
+                }
             }
 
             // Wave 3: api.ip.sb
-            if (!success) {
-                try {
-                    val url = URL("https://api.ip.sb/geoip")
-                    val connection = (if (proxy != null) url.openConnection(proxy) else url.openConnection()) as HttpURLConnection
-                    connection.connectTimeout = 4000
-                    connection.readTimeout = 4000
-                    connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Android; Mobile)")
-                    if (connection.responseCode == 200) {
-                        val response = connection.inputStream.bufferedReader().readText()
-                        val json = JSONObject(response)
+            if (!success && isActive) {
+                val w3 = httpGetViaCore("https://api.ip.sb/geoip", useProxyUds, 5000L)
+                if (w3 != null) {
+                    try {
+                        val json = JSONObject(w3)
                         val ip = json.optString("ip", "")
                         if (ip.isNotEmpty()) {
-                            geoIpInfo.ip = ip
+                            result.ip = ip
                             val country = json.optString("country", "")
                             val city = json.optString("city", "")
-                            geoIpInfo.location = if (city.isNotEmpty()) "$country, $city" else country
+                            result.location = if (city.isNotEmpty()) "$country, $city" else country
                             val isp = json.optString("isp", "")
-                            geoIpInfo.isp = isp
-                            geoIpInfo.organization = json.optString("organization", isp)
+                            result.isp = isp
+                            result.organization = json.optString("organization", isp)
                             val asn = json.optInt("asn", 0)
-                            geoIpInfo.asn = if (asn != 0) "AS$asn" else ""
-                            geoIpInfo.countryCode = json.optString("country_code", "")
-                            val appCtx = io.nekohasekai.sagernet.ktx.app
-                            geoIpInfo.ipType = appCtx.getString(R.string.ip_type_hosting)
-                            geoIpInfo.qualityLevel = appCtx.getString(R.string.ip_quality_good)
-                            geoIpInfo.source = "ip.sb"
+                            result.asn = if (asn != 0) "AS$asn" else ""
+                            result.countryCode = json.optString("country_code", "")
+                            result.ipType = appCtx.getString(R.string.ip_type_hosting)
+                            result.qualityLevel = appCtx.getString(R.string.ip_quality_good)
+                            result.source = "ip.sb"
                             success = true
                         }
-                    }
-                } catch (_: Exception) {}
+                    } catch (_: Exception) {}
+                }
             }
 
-            if (!success) {
-                val unavailableText = io.nekohasekai.sagernet.ktx.app.getString(R.string.unavailable)
-                geoIpInfo.ip = unavailableText
-                geoIpInfo.location = unavailableText
-                geoIpInfo.isp = ""
-                geoIpInfo.asn = ""
-                geoIpInfo.countryCode = ""
-                geoIpInfo.ipType = ""
-                geoIpInfo.qualityLevel = ""
+            // Wave 4: ipinfo.io
+            if (!success && isActive) {
+                val w4 = httpGetViaCore("https://ipinfo.io/json", useProxyUds, 5000L)
+                if (w4 != null) {
+                    try {
+                        val json = JSONObject(w4)
+                        val ip = json.optString("ip", "")
+                        if (ip.isNotEmpty()) {
+                            result.ip = ip
+                            val country = json.optString("country", "")
+                            val city = json.optString("city", "")
+                            result.countryCode = country
+                            result.location = if (city.isNotEmpty() && country.isNotEmpty()) "$country, $city" else country.ifEmpty { city }
+                            val orgRaw = json.optString("org", "")
+                            if (orgRaw.startsWith("AS", ignoreCase = true) && orgRaw.contains(" ")) {
+                                result.asn = orgRaw.substringBefore(" ")
+                                result.organization = orgRaw.substringAfter(" ")
+                                result.isp = result.organization
+                            } else {
+                                result.organization = orgRaw
+                                result.isp = orgRaw
+                            }
+                            result.ipType = appCtx.getString(R.string.ip_type_hosting)
+                            result.qualityLevel = appCtx.getString(R.string.ip_quality_good)
+                            result.source = "ipinfo.io"
+                            success = true
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
+
+            // Wave 5: Cloudflare trace (ultra-reliable fallback)
+            if (!success && isActive) {
+                val w5 = httpGetViaCore("https://www.cloudflare.com/cdn-cgi/trace", useProxyUds, 5000L)
+                if (w5 != null) {
+                    val map = w5.lineSequence()
+                        .mapNotNull { line ->
+                            val idx = line.indexOf('=')
+                            if (idx > 0) line.substring(0, idx) to line.substring(idx + 1).trim() else null
+                        }.toMap()
+                    val ip = map["ip"].orEmpty()
+                    if (ip.isNotEmpty()) {
+                        result.ip = ip
+                        result.countryCode = map["loc"].orEmpty()
+                        result.location = map["loc"].orEmpty()
+                        result.ipType = appCtx.getString(R.string.ip_type_hosting)
+                        result.qualityLevel = appCtx.getString(R.string.ip_quality_good)
+                        result.source = "cloudflare"
+                        success = true
+                    }
+                }
+            }
+
+            // Quality enrichment pass: if we got the exit IP from a basic source, enrich full quality via ipquery.io
+            if (success && !hasRichQuality && result.ip.isNotEmpty() && isActive) {
+                val enrichBody = httpGetViaCore("https://api.ipquery.io/${result.ip}?format=json", useProxyUds, 4000L)
+                    ?: httpGetViaCore("https://api.ipquery.io/${result.ip}?format=json", false, 4000L)
+                if (enrichBody != null) {
+                    parseIpQueryJson(enrichBody, result)
+                }
+            }
+
+            if (!isActive) return@launch
+
+            if (success) {
+                geoIpInfo = result
+            } else {
+                val unavailableText = appCtx.getString(R.string.unavailable)
+                geoIpInfo = GeoIpData(
+                    ip = unavailableText,
+                    location = unavailableText,
+                )
             }
 
             isFetchingGeoIP = false
@@ -958,17 +1052,23 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
     fun stateChanged(state: BaseService.State, profileName: String?) {
         runOnMainDispatcher {
             if (!isAdded) return@runOnMainDispatcher
+            val prevState = lastState
             lastState = state
             lastProfileName = profileName
             if (state == BaseService.State.Connected) {
                 if (serviceConnectedTime == 0L) serviceConnectedTime = SystemClock.elapsedRealtime()
                 lifecycleScope.launch {
-                    delay(1.seconds)
-                    fetchGeoIP()
+                    delay(800L)
+                    if (isAdded && lastState == BaseService.State.Connected) {
+                        fetchGeoIP(force = true)
+                    }
                 }
                 testLatency()
             } else {
                 serviceConnectedTime = 0L
+                if (state == BaseService.State.Stopped && prevState == BaseService.State.Connected) {
+                    fetchGeoIP(force = true)
+                }
             }
             if (isDashboardVisible && isResumed) {
                 adapter.updateItemWithPayload(ItemType.STATUS, PAYLOAD_STATUS)
@@ -1267,10 +1367,9 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
             fun startBreathing(view: View = binding.btnMorphToggle) {
                 if (breathingAnimator != null) return
-                val alphaAnim = PropertyValuesHolder.ofFloat(View.ALPHA, 1.0f, 0.85f, 1.0f)
-                val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 1.05f, 1.0f)
-                val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 1.05f, 1.0f)
-                breathingAnimator = ObjectAnimator.ofPropertyValuesHolder(view, alphaAnim, scaleX, scaleY).apply {
+                val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1.0f, 1.03f, 1.0f)
+                val scaleY = PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.0f, 1.03f, 1.0f)
+                breathingAnimator = ObjectAnimator.ofPropertyValuesHolder(view, scaleX, scaleY).apply {
                     duration = 2000L
                     repeatCount = ValueAnimator.INFINITE
                     interpolator = AccelerateDecelerateInterpolator()
@@ -1499,20 +1598,27 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     binding.textCellOrg.text = "—"
                 }
 
-                // 6. Right Start/Stop Toggle Button (FlClash morph: Circle -> cookie9Sided)
+                // 6. Right Start/Stop Toggle Button (Initial Liquid Glass -> Theme Accent Circle / cookie9Sided)
                 val isConnected = lastState == BaseService.State.Connected
                 val isConnecting = lastState == BaseService.State.Connecting
-                val hasProfile = profileName.isNotEmpty() && profileName != getString(R.string.group_status_empty)
+                if (isConnected || isConnecting) {
+                    hasStartedOnce = true
+                }
+                val useAccentFill = hasStartedOnce
 
-                binding.btnMorphToggle.setServiceEnabled(hasProfile)
+                binding.btnMorphToggle.updateThemeColors()
+                binding.btnMorphToggle.setUseAccentFill(useAccentFill)
+                binding.btnMorphToggle.setConnecting(isConnecting)
                 binding.btnMorphToggle.setRunning(isConnected)
                 binding.btnToggleProgress.isVisible = isConnecting
+                binding.btnToggleProgress.indeterminateTintList = ColorStateList.valueOf(
+                    if (useAccentFill) Color.WHITE else accentColor
+                )
 
+                binding.bgCookieView.updateColors()
                 binding.bgCookieView.setRunning(isConnected)
 
                 if (isConnected) {
-                    binding.btnToggleGlow.isVisible = true
-                    ViewCompat.setBackgroundTintList(binding.btnToggleGlow, ColorStateList.valueOf(accentColor))
                     if (isDashboardVisible) {
                         startBreathing()
                     } else {
@@ -1520,7 +1626,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
                     }
                 } else {
                     stopBreathing()
-                    binding.btnToggleGlow.isVisible = false
                 }
             }
         }
