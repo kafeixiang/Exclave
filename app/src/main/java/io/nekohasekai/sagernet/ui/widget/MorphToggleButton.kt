@@ -3,6 +3,7 @@ package io.nekohasekai.sagernet.ui.widget
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
@@ -10,12 +11,10 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.OvershootInterpolator
-import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.graphics.ColorUtils
 import androidx.graphics.shapes.CornerRounding
@@ -25,11 +24,17 @@ import androidx.graphics.shapes.circle
 import androidx.graphics.shapes.star
 import androidx.graphics.shapes.toPath
 import androidx.graphics.shapes.transformed
+import io.nekohasekai.sagernet.R
+import io.nekohasekai.sagernet.utils.Theme
 import kotlin.math.min
 
 /**
- * Material 3 Expressive start/stop toggle button matching FlClash `_StartToggle`.
- * Morphs between a circle (stopped) and a 9-sided cookie (running), rotating by 40 degrees.
+ * Material 3 Expressive start/stop toggle button matching FlClash `_StartToggle`
+ * combined with Exclave's Liquid Glass idle aesthetic:
+ * - Stopped: translucent frosted glass circle with specular rim & accent play triangle.
+ * - Connecting: accent-tinted translucent glass circle (center glyph hidden for spinner).
+ * - Running: morphs into a 9-sided scalloped cookie (`cookie9Sided`) rotated 40 degrees,
+ *   filled with theme accent color, white pause bars, and a matching cookie-shaped soft shadow.
  */
 class MorphToggleButton @JvmOverloads constructor(
     context: Context,
@@ -64,6 +69,7 @@ class MorphToggleButton @JvmOverloads constructor(
 
     private val shapePath = Path()
     private val transformedShapePath = Path()
+    private val shadowPath = Path()
     private val transformMatrix = Matrix()
 
     private val playPath = Path()
@@ -74,13 +80,16 @@ class MorphToggleButton @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
 
+    private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+    }
+
     private val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
     }
 
     private val glyphPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.WHITE
     }
 
     private var progress: Float = 0f
@@ -88,13 +97,20 @@ class MorphToggleButton @JvmOverloads constructor(
     private var pressScale: Float = 1f
 
     private var isRunningState: Boolean = false
-    private var isServiceEnabled: Boolean = true
+    private var isConnectingState: Boolean = false
+    private var useAccentFill: Boolean = false
 
     @ColorInt
     private var primaryColor: Int = 0
 
     @ColorInt
-    private var disabledColor: Int = 0
+    private var glassBgColor: Int = 0
+
+    @ColorInt
+    private var glassStrokeColor: Int = 0
+
+    private var glassStrokeWidth: Float = 0f
+    private val density: Float = resources.displayMetrics.density
 
     init {
         isClickable = true
@@ -103,20 +119,18 @@ class MorphToggleButton @JvmOverloads constructor(
     }
 
     fun updateThemeColors() {
-        primaryColor = io.nekohasekai.sagernet.utils.Theme.getAccentColor(context)
-        val surfaceTone = resolveColor(context, com.google.android.material.R.attr.colorSurfaceVariant)
-        disabledColor = ColorUtils.setAlphaComponent(surfaceTone, 180)
-        shadowPaint.color = ColorUtils.setAlphaComponent(primaryColor, 76)
-        invalidate()
-    }
-
-    private fun resolveColor(context: Context, @AttrRes attr: Int): Int {
-        val tv = TypedValue()
-        return if (context.theme.resolveAttribute(attr, tv, true)) {
-            tv.data
-        } else {
-            0xFF007AFF.toInt()
+        primaryColor = Theme.getAccentColor(context)
+        glassBgColor = Theme.getCardBackgroundColor(context, false)
+        glassStrokeColor = Theme.getCardStrokeColor(context, false)
+        glassStrokeWidth = try {
+            resources.getDimension(R.dimen.card_stroke_width)
+        } catch (_: Exception) {
+            1.5f * density
         }
+        strokePaint.strokeWidth = glassStrokeWidth
+        shadowPaint.color = ColorUtils.setAlphaComponent(primaryColor, 64)
+        shadowPaint.maskFilter = BlurMaskFilter(4.5f * density, BlurMaskFilter.Blur.NORMAL)
+        invalidate()
     }
 
     fun setRunning(running: Boolean, animate: Boolean = true) {
@@ -142,16 +156,23 @@ class MorphToggleButton @JvmOverloads constructor(
         }
     }
 
-    fun setServiceEnabled(enabled: Boolean) {
-        if (isServiceEnabled != enabled) {
-            isServiceEnabled = enabled
+    fun setConnecting(connecting: Boolean) {
+        if (isConnectingState != connecting) {
+            isConnectingState = connecting
+            invalidate()
+        }
+    }
+
+    fun setUseAccentFill(useAccent: Boolean) {
+        if (useAccentFill != useAccent) {
+            useAccentFill = useAccent
             invalidate()
         }
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (!isEnabled || !isServiceEnabled) return super.onTouchEvent(event)
+        if (!isEnabled) return super.onTouchEvent(event)
 
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
@@ -186,15 +207,10 @@ class MorphToggleButton @JvmOverloads constructor(
 
         val cx = w / 2f
         val cy = h / 2f
-        val baseRadius = min(w, h) / 2f * 0.88f * pressScale
+        val baseRadius = min(w, h) / 2f * 0.84f * pressScale
+        val t = progress.coerceIn(0f, 1f)
 
-        // 1. Shadow for running state
-        if (progress > 0.05f && isServiceEnabled) {
-            shadowPaint.alpha = (76 * progress).toInt().coerceIn(0, 255)
-            canvas.drawCircle(cx, cy + baseRadius * 0.08f, baseRadius * 0.98f, shadowPaint)
-        }
-
-        // 2. Morph Shape Path
+        // 1. Build Morph Shape Path (circle at 0f -> cookie9Sided at 1f)
         shapePath.reset()
         morph.toPath(progress, shapePath)
 
@@ -209,19 +225,49 @@ class MorphToggleButton @JvmOverloads constructor(
         transformedShapePath.reset()
         shapePath.transform(transformMatrix, transformedShapePath)
 
-        // 3. Draw Morph Background
-        bgPaint.color = if (isServiceEnabled) primaryColor else disabledColor
+        // 2. Soft drop shadow conforming strictly to the morphed cookie path (NEVER a circle)
+        if (t > 0.05f && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            shadowPaint.color = ColorUtils.setAlphaComponent(primaryColor, (64 * t).toInt().coerceIn(0, 255))
+            shadowPath.set(transformedShapePath)
+            shadowPath.offset(0f, 2.5f * density)
+            canvas.drawPath(shadowPath, shadowPaint)
+        }
+
+        // 3. Draw Background Fill
+        // Initial cold-start stopped state: transparent frosted glass.
+        // Once started (and for all subsequent states): solid theme accent color.
+        val idleFill = when {
+            useAccentFill -> primaryColor
+            isConnectingState -> ColorUtils.compositeColors(
+                ColorUtils.setAlphaComponent(primaryColor, 40),
+                glassBgColor
+            )
+            else -> glassBgColor
+        }
+        bgPaint.color = ColorUtils.blendARGB(idleFill, primaryColor, t)
         canvas.drawPath(transformedShapePath, bgPaint)
 
-        // 4. Draw Center Glyph (Play triangle when stopped, Pause bars when running)
+        // 4. Draw Glass Rim Stroke (only for initial transparent glass state)
+        val strokeAlphaFactor = if (useAccentFill) 0f else (1f - t)
+        if (strokeAlphaFactor > 0.01f) {
+            val baseStrokeColor = if (isConnectingState) primaryColor else glassStrokeColor
+            val targetAlpha = (Color.alpha(baseStrokeColor) * strokeAlphaFactor).toInt().coerceIn(0, 255)
+            strokePaint.color = ColorUtils.setAlphaComponent(baseStrokeColor, targetAlpha)
+            canvas.drawPath(transformedShapePath, strokePaint)
+        }
+
+        // 5. Draw Center Glyph (hidden while connecting spinner is shown)
+        if (isConnectingState) return
+
         val glyphSize = baseRadius * 0.38f
         canvas.save()
         canvas.translate(cx, cy)
 
         if (progress < 0.5f) {
-            // Stopped state: Play Triangle pointing right
+            // Stopped state: Accent-colored Play Triangle on transparent glass, or White on solid accent
             val alpha = ((1f - progress * 2f) * 255).toInt().coerceIn(0, 255)
-            glyphPaint.alpha = alpha
+            val playColor = if (useAccentFill) Color.WHITE else primaryColor
+            glyphPaint.color = ColorUtils.setAlphaComponent(playColor, alpha)
 
             // Slightly offset triangle to the right for optical centering
             val offsetX = glyphSize * 0.12f
@@ -233,9 +279,9 @@ class MorphToggleButton @JvmOverloads constructor(
 
             canvas.drawPath(playPath, glyphPaint)
         } else {
-            // Running state: Two Pause Bars
+            // Running state: White Pause Bars on accent cookie
             val alpha = (((progress - 0.5f) * 2f) * 255).toInt().coerceIn(0, 255)
-            glyphPaint.alpha = alpha
+            glyphPaint.color = ColorUtils.setAlphaComponent(Color.WHITE, alpha)
 
             val barW = glyphSize * 0.32f
             val barH = glyphSize * 1.3f

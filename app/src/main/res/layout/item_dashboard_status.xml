@@ -303,23 +303,15 @@
             <FrameLayout
                 android:layout_width="88dp"
                 android:layout_height="match_parent"
-                android:layout_gravity="center_vertical">
-
-                <!-- Soft Glowing Shadow for running state -->
-                <View
-                    android:id="@+id/btn_toggle_glow"
-                    android:layout_width="76dp"
-                    android:layout_height="76dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_glow_accent"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
+                android:layout_gravity="center_vertical"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
                 <!-- Morph Toggle Button (FlClash MaterialShapes.circle -> cookie9Sided) -->
                 <io.nekohasekai.sagernet.ui.widget.MorphToggleButton
                     android:id="@+id/btn_morph_toggle"
-                    android:layout_width="76dp"
-                    android:layout_height="76dp"
+                    android:layout_width="86dp"
+                    android:layout_height="86dp"
                     android:layout_gravity="center" />
 
                 <!-- Connecting Progress Indicator -->
@@ -329,7 +321,7 @@
                     android:layout_height="34dp"
                     android:layout_gravity="center"
                     android:indeterminate="true"
-                    android:indeterminateTint="@color/white"
+                    android:indeterminateTint="?attr/colorAccent"
                     android:visibility="gone" />
             </FrameLayout>
         </LinearLayout>
