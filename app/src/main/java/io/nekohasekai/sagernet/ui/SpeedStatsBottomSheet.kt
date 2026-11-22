@@ -22,6 +22,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.card.MaterialCardView
@@ -64,6 +65,16 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
             }
             if (b.sheetRecycler.isVisible == isEmpty) {
                 b.sheetRecycler.isVisible = !isEmpty
+            }
+            val targetHeight = when {
+                isEmpty -> dp2px(140)
+                sortedList.size <= 4 -> ViewGroup.LayoutParams.WRAP_CONTENT
+                else -> dp2px(360)
+            }
+            if (b.recyclerContainer.layoutParams.height != targetHeight) {
+                b.recyclerContainer.layoutParams = b.recyclerContainer.layoutParams.apply {
+                    height = targetHeight
+                }
             }
             val context = context ?: return@AppStatsListUpdater
             val totalUp = sortedList.sumOf { it.uplinkTotal }
@@ -122,6 +133,21 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
             bottomSheet.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
             androidx.core.view.ViewCompat.setBackground(bottomSheet, null)
             androidx.core.view.ViewCompat.setBackgroundTintList(bottomSheet, ColorStateList.valueOf(Color.TRANSPARENT))
+
+            // Configure BottomSheetBehavior to prevent expanding to a full-screen void
+            val behavior = BottomSheetBehavior.from(bottomSheet)
+            behavior.isFitToContents = true
+            behavior.skipCollapsed = true
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+            // Constrain max height to 72% of screen height so sheet can NEVER pull to full screen
+            val maxH = (resources.displayMetrics.heightPixels * 0.72f).toInt()
+            behavior.maxHeight = maxH
+
+            // Ensure design_bottom_sheet does not stretch to MATCH_PARENT
+            bottomSheet.layoutParams = bottomSheet.layoutParams.apply {
+                height = ViewGroup.LayoutParams.WRAP_CONTENT
+            }
         }
         (view?.parent as? View)?.let { parent ->
             parent.background = null
@@ -169,15 +195,19 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         }
         b.root.clipToOutline = true
 
-        // Keep background container height strictly synchronized with root height
-        b.root.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
+        // Keep background container height strictly synchronized with content container height
+        b.sheetContentContainer.addOnLayoutChangeListener { _, _, top, _, bottom, _, oldTop, _, oldBottom ->
             val h = bottom - top
-            if (h > 0 && b.sheetBackgroundContainer.height != h) {
-                val lp = b.sheetBackgroundContainer.layoutParams
-                if (lp.height != h) {
-                    lp.height = h
-                    b.sheetBackgroundContainer.layoutParams = lp
+            if (h > 0 && b.sheetBackgroundContainer.layoutParams.height != h) {
+                b.sheetBackgroundContainer.layoutParams = b.sheetBackgroundContainer.layoutParams.apply {
+                    height = h
                 }
+            }
+        }
+        val currentContentH = b.sheetContentContainer.height
+        if (currentContentH > 0 && b.sheetBackgroundContainer.layoutParams.height != currentContentH) {
+            b.sheetBackgroundContainer.layoutParams = b.sheetBackgroundContainer.layoutParams.apply {
+                height = currentContentH
             }
         }
 

@@ -10,7 +10,7 @@
     <FrameLayout
         android:id="@+id/sheet_background_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp">
 
         <ImageView
             android:id="@+id/sheet_bg_mesh"
@@ -284,9 +284,11 @@
 
     <!-- Recycler & Empty State -->
     <FrameLayout
+        android:id="@+id/recycler_container"
         android:layout_width="match_parent"
-        android:layout_height="380dp"
-        android:layout_marginTop="6dp">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:minHeight="140dp">
 
         <TextView
             android:id="@+id/empty_text"
@@ -294,6 +296,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
+            android:paddingVertical="32dp"
             android:text="@string/no_statistics"
             android:textAppearance="?attr/textAppearanceBody1"
             android:alpha="0.6"
@@ -302,7 +305,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/sheet_recycler"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:clipToPadding="true"
             android:clipChildren="true"
             android:paddingTop="2dp"
