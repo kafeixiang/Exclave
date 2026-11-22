@@ -1636,10 +1636,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
-                        if (!DataStore.appTrafficStatistics) {
-                            (activity as? MainActivity)?.snackbar(getString(R.string.app_statistics_disabled))?.show()
-                            return@setOnClickListener
-                        }
                         if (parentFragmentManager.findFragmentByTag("SpeedStatsSheet") != null) return@setOnClickListener
                         val sheet = SpeedStatsBottomSheet()
                         activeSpeedStatsSheet = sheet
@@ -2018,10 +2014,6 @@ class DashboardFragment : Fragment(R.layout.layout_dashboard) {
 
                 if (!isEditMode) {
                     binding.root.setOnClickListener {
-                        if (!DataStore.appTrafficStatistics) {
-                            (activity as? MainActivity)?.snackbar(getString(R.string.app_statistics_disabled))?.show()
-                            return@setOnClickListener
-                        }
                         if (parentFragmentManager.findFragmentByTag("ConnectionsSheet") != null) return@setOnClickListener
                         val sheet = ConnectionsBottomSheet()
                         activeConnectionsSheet = sheet

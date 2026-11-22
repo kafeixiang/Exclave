@@ -227,6 +227,24 @@
         <item name="android:backgroundDimAmount">0.0</item>
     </style>
 
+    <style name="ThemeOverlay.SagerNet.BottomSheetDialog.Transparent" parent="ThemeOverlay.SagerNet.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.SagerNet.BottomSheet.Transparent</item>
+    </style>
+
+    <style name="Widget.SagerNet.BottomSheet.Transparent" parent="Widget.MaterialComponents.BottomSheet.Modal">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.SagerNet.BottomSheet.Transparent</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.SagerNet.BottomSheet.Transparent" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">28dp</item>
+        <item name="cornerSizeTopRight">28dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
     <style name="ShapeAppearanceOverlay.SagerNet.Button" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">@dimen/button_corner_radius</item>

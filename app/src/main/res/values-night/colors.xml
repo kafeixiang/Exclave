@@ -14,6 +14,12 @@
     <color name="cupertino_window_bg">#000000</color>
     <color name="card_stroke">#54FFFFFF</color>
 
+    <!-- Cupertino Inset-Grouped Bottom Sheet Colors -->
+    <color name="cupertino_sheet_bg">#18181B</color>
+    <color name="cupertino_sheet_card_bg">#232328</color>
+    <color name="cupertino_sheet_card_stroke">#29FFFFFF</color>
+    <color name="cupertino_segment_bg">#2A2A2E</color>
+
     <color name="popup_glass_bg">#E61E1E20</color>
     <color name="popup_glass_stroke">#33FFFFFF</color>
     <color name="popup_item_highlight">#1FFFFFFF</color>

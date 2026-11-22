@@ -1,72 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="10dp">
-
-    <ImageView
-        android:id="@+id/app_icon"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:src="@drawable/ic_baseline_compare_arrows_24"
-        android:contentDescription="@string/dashboard_card_connections" />
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="4dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="1dp">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_weight="1"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/app_name"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:textStyle="bold"
-            tools:text="Chrome" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="14dp"
+            android:paddingTop="11dp"
+            android:paddingBottom="9dp">
 
-        <TextView
-            android:id="@+id/connection_details"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:textAppearance="?attr/textAppearanceCaption"
-            android:alpha="0.7"
-            tools:text="TCP: 4 · UDP: 2" />
+            <ImageView
+                android:id="@+id/app_icon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:clipToOutline="true"
+                android:background="@drawable/bg_app_icon_squircle"
+                android:src="@drawable/ic_baseline_compare_arrows_24"
+                android:contentDescription="@string/dashboard_card_connections" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/app_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:textAppearance="?attr/textAppearanceBody2"
+                    android:textStyle="bold"
+                    tools:text="哔哩哔哩" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/badge_tcp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_badge_tcp"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="1.5dp"
+                        android:textAppearance="?attr/textAppearanceCaption"
+                        android:textSize="10.5sp"
+                        android:textColor="@color/cupertino_blue"
+                        android:textStyle="bold"
+                        tools:text="TCP 26" />
+
+                    <TextView
+                        android:id="@+id/badge_udp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:background="@drawable/bg_badge_udp"
+                        android:paddingHorizontal="6dp"
+                        android:paddingVertical="1.5dp"
+                        android:textAppearance="?attr/textAppearanceCaption"
+                        android:textSize="10.5sp"
+                        android:textColor="@color/cupertino_purple"
+                        android:textStyle="bold"
+                        tools:text="UDP 11" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/upload_speed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="@color/cupertino_orange"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    tools:text="↑ 31.4 kB/s" />
+
+                <TextView
+                    android:id="@+id/download_speed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:textAppearance="?attr/textAppearanceCaption"
+                    android:textColor="@color/cupertino_blue"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    tools:text="↓ 1.8 MB/s" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Micro Bandwidth Activity Indicator -->
+        <ProgressBar
+            android:id="@+id/traffic_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="2.5dp"
+            android:layout_marginHorizontal="14dp"
+            android:layout_marginBottom="4dp"
+            android:progressDrawable="@drawable/progress_bandwidth"
+            android:max="100"
+            tools:progress="65" />
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="end"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/upload_speed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceCaption"
-            android:textColor="@color/cupertino_orange"
-            android:textStyle="bold"
-            tools:text="⬆ 1.2 MB/s" />
-
-        <TextView
-            android:id="@+id/download_speed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:textAppearance="?attr/textAppearanceCaption"
-            android:textColor="@color/cupertino_blue"
-            android:textStyle="bold"
-            tools:text="⬇ 4.5 MB/s" />
-
-    </LinearLayout>
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

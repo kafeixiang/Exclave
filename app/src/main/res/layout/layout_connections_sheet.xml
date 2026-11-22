@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_dialog_window"
+    android:background="@drawable/bg_bottom_sheet_cupertino"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:paddingTop="12dp"
+    android:paddingBottom="16dp">
 
-    <!-- Handle -->
+    <!-- Drag Handle -->
     <View
         android:layout_width="36dp"
         android:layout_height="4dp"
@@ -17,44 +19,266 @@
         android:backgroundTint="?android:attr/textColorSecondary"
         android:alpha="0.4" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/dashboard_card_connections"
-        android:textAppearance="?attr/textAppearanceHeadline6"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="@string/dashboard_card_connections_desc"
-        android:textAppearance="?attr/textAppearanceCaption"
-        android:alpha="0.7" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginVertical="12dp"
-        android:background="@color/card_stroke"
-        android:alpha="0.5" />
-
-    <TextView
-        android:id="@+id/empty_text"
+    <!-- Header Title & Active Count -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginVertical="24dp"
-        android:gravity="center"
-        android:text="@string/no_statistics"
-        android:textAppearance="?attr/textAppearanceBody1"
-        android:alpha="0.6"
-        android:visibility="gone" />
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/sheet_recycler"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/sheet_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dashboard_card_connections"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/badge_active_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_badge_count_pill"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:textAppearance="?attr/textAppearanceCaption"
+                android:textColor="@color/cupertino_blue"
+                android:textStyle="bold"
+                tools:text="8 活跃" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/sheet_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/dashboard_card_connections_desc"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:alpha="0.7" />
+
+    </LinearLayout>
+
+    <!-- Top Summary HUD (Dual Inset-Grouped Capsule Cards) -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="360dp"
-        android:overScrollMode="never"
-        tools:listitem="@layout/item_connection_row" />
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <!-- Total Up Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_hud_up"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <FrameLayout
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_circle_hud_orange">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_traffic_arrow_up"
+                        app:tint="@color/cupertino_orange"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_hud_up"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="总上行"
+                        android:textAppearance="?attr/textAppearanceCaption"
+                        android:textSize="11sp"
+                        android:alpha="0.6" />
+
+                    <TextView
+                        android:id="@+id/text_hud_up"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:textAppearance="?attr/textAppearanceBody2"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="108 kB/s" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Total Down Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_hud_down"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <FrameLayout
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_circle_hud_blue">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_traffic_arrow_down"
+                        app:tint="@color/cupertino_blue"
+                        android:contentDescription="@null" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/label_hud_down"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="总下行"
+                        android:textAppearance="?attr/textAppearanceCaption"
+                        android:textSize="11sp"
+                        android:alpha="0.6" />
+
+                    <TextView
+                        android:id="@+id/text_hud_down"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:textAppearance="?attr/textAppearanceBody2"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="2.4 MB/s" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+    <!-- Segmented Filter Control -->
+    <LinearLayout
+        android:id="@+id/layout_filter_segment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_segmented_control"
+        android:orientation="horizontal"
+        android:padding="3dp">
+
+        <TextView
+            android:id="@+id/btn_filter_all"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="全部应用"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_segment_tab_selected"
+            android:textColor="?attr/colorOnSurface" />
+
+        <TextView
+            android:id="@+id/btn_filter_conns"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="按连接数"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:textSize="12sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:background="@drawable/bg_segment_tab_unselected" />
+
+        <TextView
+            android:id="@+id/btn_filter_speed"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="按流量排序"
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:textSize="12sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:background="@drawable/bg_segment_tab_unselected" />
+
+    </LinearLayout>
+
+    <!-- Recycler & Empty State -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="380dp"
+        android:layout_marginTop="6dp">
+
+        <TextView
+            android:id="@+id/empty_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/no_statistics"
+            android:textAppearance="?attr/textAppearanceBody1"
+            android:alpha="0.6"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/sheet_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="true"
+            android:clipChildren="true"
+            android:paddingTop="2dp"
+            android:paddingBottom="12dp"
+            android:overScrollMode="never"
+            tools:listitem="@layout/item_connection_row" />
+
+    </FrameLayout>
 
 </LinearLayout>

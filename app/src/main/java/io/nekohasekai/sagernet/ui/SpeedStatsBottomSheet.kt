@@ -1,30 +1,41 @@
 package io.nekohasekai.sagernet.ui
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.SimpleItemAnimator
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.card.MaterialCardView
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.aidl.AppStats
 import io.nekohasekai.sagernet.database.DataStore
-import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.databinding.ItemSpeedStatRowBinding
 import io.nekohasekai.sagernet.databinding.LayoutSpeedStatsSheetBinding
-import io.nekohasekai.sagernet.ktx.applyGlassBlur
-import io.nekohasekai.sagernet.ktx.applyItemEntryAnimation
+import io.nekohasekai.sagernet.ktx.dp2px
+import io.nekohasekai.sagernet.ktx.getColorAttr
 import io.nekohasekai.sagernet.ktx.runOnMainDispatcher
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.utils.PackageCache
+import io.nekohasekai.sagernet.utils.Theme
 
 class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
+
+    enum class SortOption {
+        ALL, SPEED, CONNS
+    }
 
     private var _binding: LayoutSpeedStatsSheetBinding? = null
     private val binding get() = _binding!!
@@ -33,6 +44,8 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
     }
     private val adapter = SpeedStatsAdapter(lifecycleOwnerOrNull)
     private var rawStatsList: List<AppStats> = emptyList()
+    private var currentSort = SortOption.ALL
+
     private val statsUpdater = AppStatsListUpdater(
         lifecycleOwnerProvider = lifecycleOwnerOrNull,
         currentDataProvider = { adapter.data },
@@ -45,9 +58,20 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
             if (b.sheetRecycler.isVisible == isEmpty) {
                 b.sheetRecycler.isVisible = !isEmpty
             }
-            adapter.updateData(sortedList, diffResult)
+            val context = context ?: return@AppStatsListUpdater
+            val totalUp = sortedList.sumOf { it.uplinkTotal }
+            val totalDown = sortedList.sumOf { it.downlinkTotal }
+            val maxTraffic = sortedList.maxOfOrNull { it.uplinkTotal + it.downlinkTotal } ?: 0L
+
+            b.badgeActiveCount.text = "${sortedList.size} 应用"
+            b.textHudUp.text = FormatFileSizeCompat.formatFileSize(context, totalUp, DataStore.useIECUnit)
+            b.textHudDown.text = FormatFileSizeCompat.formatFileSize(context, totalDown, DataStore.useIECUnit)
+
+            adapter.updateData(sortedList, maxTraffic, diffResult)
         }
     )
+
+    override fun getTheme(): Int = R.style.ThemeOverlay_SagerNet_BottomSheetDialog_Transparent
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -60,10 +84,17 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.root.applyGlassBlur()
+
+        applyThemeStyles()
+
+        binding.btnFilterAll.setOnClickListener { setSort(SortOption.ALL) }
+        binding.btnFilterSpeed.setOnClickListener { setSort(SortOption.SPEED) }
+        binding.btnFilterConns.setOnClickListener { setSort(SortOption.CONNS) }
+        updateFilterTabStyles()
 
         binding.sheetRecycler.layoutManager = LinearLayoutManager(context)
-        (binding.sheetRecycler.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        // Disabling item animator prevents card overlapping during real-time 1s diff updates
+        binding.sheetRecycler.itemAnimator = null
         binding.sheetRecycler.adapter = adapter
 
         processAndDisplayStats(rawStatsList)
@@ -71,6 +102,22 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onStart() {
         super.onStart()
+        // Eliminate sharp right angles by clearing any backgrounds on the container frame and window
+        dialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        (dialog as? BottomSheetDialog)?.findViewById<FrameLayout>(
+            com.google.android.material.R.id.design_bottom_sheet
+        )?.let { bottomSheet ->
+            bottomSheet.background = null
+            bottomSheet.setBackgroundColor(Color.TRANSPARENT)
+            bottomSheet.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            androidx.core.view.ViewCompat.setBackground(bottomSheet, null)
+            androidx.core.view.ViewCompat.setBackgroundTintList(bottomSheet, ColorStateList.valueOf(Color.TRANSPARENT))
+        }
+        (view?.parent as? View)?.let { parent ->
+            parent.background = null
+            parent.setBackgroundColor(Color.TRANSPARENT)
+        }
+
         (activity as? MainActivity)?.updateTrafficTimeout()
     }
 
@@ -88,34 +135,132 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
+    private fun setSort(option: SortOption) {
+        if (currentSort == option) return
+        currentSort = option
+        updateFilterTabStyles()
+        processAndDisplayStats(rawStatsList)
+    }
+
+    private fun applyThemeStyles() {
+        val b = _binding ?: return
+        val context = context ?: return
+        val isCupertino = Theme.isCupertino()
+
+        // 1. Bottom Sheet Background (Cupertino vs Classic List Background)
+        val sheetBgColor = if (isCupertino) {
+            ContextCompat.getColor(context, R.color.cupertino_sheet_bg)
+        } else {
+            Theme.getClassicListBackgroundColor()
+        }
+        val topRadius = dp2px(28).toFloat()
+        b.root.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadii = floatArrayOf(
+                topRadius, topRadius, // top-left
+                topRadius, topRadius, // top-right
+                0f, 0f,               // bottom-right
+                0f, 0f                // bottom-left
+            )
+            setColor(sheetBgColor)
+        }
+
+        // 2. HUD Cards
+        applyCardThemeStyle(b.cardHudUp)
+        applyCardThemeStyle(b.cardHudDown)
+
+        // 3. Segmented control background
+        val segmentBgColor = if (isCupertino) {
+            ContextCompat.getColor(context, R.color.cupertino_segment_bg)
+        } else {
+            if (Theme.usingNightMode()) Color.rgb(36, 36, 40) else Color.rgb(230, 230, 235)
+        }
+        b.layoutFilterSegment.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp2px(11).toFloat()
+            setColor(segmentBgColor)
+        }
+    }
+
+    private fun updateFilterTabStyles() {
+        val b = _binding ?: return
+        val context = context ?: return
+        val isCupertino = Theme.isCupertino()
+
+        fun makeSelectedTabDrawable(): GradientDrawable {
+            return GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp2px(9).toFloat()
+                if (isCupertino) {
+                    setColor(ContextCompat.getColor(context, R.color.cupertino_sheet_card_bg))
+                    setStroke(dp2px(1), ContextCompat.getColor(context, R.color.cupertino_sheet_card_stroke))
+                } else {
+                    setColor(Theme.getCardBackgroundColor(context, false))
+                    setStroke(dp2px(1), Theme.getCardStrokeColor(context, false))
+                }
+            }
+        }
+
+        fun makeUnselectedTabDrawable(): GradientDrawable {
+            return GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp2px(9).toFloat()
+                setColor(Color.TRANSPARENT)
+            }
+        }
+
+        val textColorPrimary = context.getColorAttr(android.R.attr.textColorPrimary)
+        val textColorSecondary = context.getColorAttr(android.R.attr.textColorSecondary)
+
+        b.btnFilterAll.background = if (currentSort == SortOption.ALL) makeSelectedTabDrawable() else makeUnselectedTabDrawable()
+        b.btnFilterAll.setTextColor(if (currentSort == SortOption.ALL) textColorPrimary else textColorSecondary)
+
+        b.btnFilterSpeed.background = if (currentSort == SortOption.SPEED) makeSelectedTabDrawable() else makeUnselectedTabDrawable()
+        b.btnFilterSpeed.setTextColor(if (currentSort == SortOption.SPEED) textColorPrimary else textColorSecondary)
+
+        b.btnFilterConns.background = if (currentSort == SortOption.CONNS) makeSelectedTabDrawable() else makeUnselectedTabDrawable()
+        b.btnFilterConns.setTextColor(if (currentSort == SortOption.CONNS) textColorPrimary else textColorSecondary)
+    }
+
     private fun processAndDisplayStats(statsList: List<AppStats>) {
         val snapshot = statsList.toList()
         statsUpdater.submit(
             computeList = {
-                val map = snapshot.associate { it.uid to it.copy() }.toMutableMap()
-
-                val dbStatsList = try {
-                    SagerDatabase.statsDao.all()
-                } catch (_: Exception) {
-                    emptyList()
-                }
-
-                for (s in dbStatsList) {
-                    if (map.containsKey(s.uid)) {
-                        map[s.uid]!! += s
+                val merged = LinkedHashMap<Int, AppStats>(snapshot.size)
+                for (entry in snapshot) {
+                    val existing = merged[entry.uid]
+                    if (existing != null) {
+                        existing.tcpConnections += entry.tcpConnections
+                        existing.udpConnections += entry.udpConnections
+                        existing.uplink += entry.uplink
+                        existing.downlink += entry.downlink
+                        existing.uplinkTotal += entry.uplinkTotal
+                        existing.downlinkTotal += entry.downlinkTotal
                     } else {
-                        map[s.uid] = s.toStats()
+                        merged[entry.uid] = entry.copy()
                     }
                 }
-
-                for (s in map.values) {
-                    s.tcpConnectionsTotal += s.tcpConnections
-                    s.udpConnectionsTotal += s.udpConnections
-                    s.uplinkTotal += s.uplink
-                    s.downlinkTotal += s.downlink
+                when (currentSort) {
+                    SortOption.ALL -> {
+                        merged.values.sortedWith(
+                            compareByDescending<AppStats> { it.uplinkTotal + it.downlinkTotal }
+                                .thenByDescending { it.tcpConnections + it.udpConnections }
+                                .thenBy { it.uid }
+                        )
+                    }
+                    SortOption.SPEED -> {
+                        merged.values.sortedWith(
+                            compareByDescending<AppStats> { it.uplinkTotal + it.downlinkTotal }
+                                .thenBy { it.uid }
+                        )
+                    }
+                    SortOption.CONNS -> {
+                        merged.values.sortedWith(
+                            compareByDescending<AppStats> { it.tcpConnections + it.udpConnections }
+                                .thenBy { it.uid }
+                        )
+                    }
                 }
-
-                map.values.sortedByDescending { it.uplinkTotal + it.downlinkTotal }
             },
             diffCallbackFactory = { oldList, newList -> SpeedStatsDiffCallback(oldList, newList) }
         )
@@ -135,14 +280,16 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
             val old = oldList[oldItemPosition]
             val new = newList[newItemPosition]
-            return old.tcpConnectionsTotal == new.tcpConnectionsTotal &&
-                    old.udpConnectionsTotal == new.udpConnectionsTotal &&
+            return old.tcpConnections == new.tcpConnections &&
+                    old.udpConnections == new.udpConnections &&
+                    old.uplink == new.uplink &&
+                    old.downlink == new.downlink &&
                     old.uplinkTotal == new.uplinkTotal &&
                     old.downlinkTotal == new.downlinkTotal
         }
 
         override fun getChangePayload(oldItemPosition: Int, newItemPosition: Int): Any {
-            return PAYLOAD_STATS_CHANGE
+            return PAYLOAD_SPEED_CHANGE
         }
     }
 
@@ -150,8 +297,9 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         private val lifecycleOwnerProvider: () -> LifecycleOwner?
     ) : RecyclerView.Adapter<SpeedStatsAdapter.ViewHolder>() {
 
-        private val animatedUids = hashSetOf<Int>()
         var data: List<AppStats> = emptyList()
+            private set
+        var maxTraffic: Long = 0L
             private set
 
         init {
@@ -162,8 +310,9 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
             return data.getOrNull(position)?.uid?.toLong() ?: RecyclerView.NO_ID
         }
 
-        fun updateData(newList: List<AppStats>, diffResult: DiffUtil.DiffResult?) {
+        fun updateData(newList: List<AppStats>, newMaxTraffic: Long, diffResult: DiffUtil.DiffResult?) {
             data = newList
+            maxTraffic = newMaxTraffic
             if (diffResult != null) {
                 diffResult.dispatchUpdatesTo(this)
             } else {
@@ -174,23 +323,26 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val inflater = LayoutInflater.from(parent.context)
             val binding = ItemSpeedStatRowBinding.inflate(inflater, parent, false)
+            applyCardThemeStyle(binding.root as MaterialCardView)
             return ViewHolder(binding, lifecycleOwnerProvider)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
             if (payloads.isNotEmpty()) {
-                holder.updateStatsOnly(data[position])
+                holder.updateStatsOnly(data[position], maxTraffic)
             } else {
                 super.onBindViewHolder(holder, position, payloads)
             }
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            // Cancel any residual animations and reset transforms to guarantee zero card overlap
+            holder.itemView.animate().cancel()
+            holder.itemView.translationY = 0f
+            holder.itemView.alpha = 1f
+
             val stats = data[position]
-            if (animatedUids.add(stats.uid)) {
-                holder.itemView.applyItemEntryAnimation(position)
-            }
-            holder.bind(stats)
+            holder.bind(stats, maxTraffic)
         }
 
         override fun getItemCount(): Int = data.size
@@ -200,7 +352,7 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
             private val lifecycleOwnerProvider: () -> LifecycleOwner?,
         ) : RecyclerView.ViewHolder(binding.root) {
 
-            fun bind(stats: AppStats) {
+            fun bind(stats: AppStats, maxTraffic: Long) {
                 val packageName = PackageCache.resolvePackageName(stats.uid)
                 val label = if (packageName != null) PackageCache.loadLabel(packageName) else "UID ${stats.uid}"
 
@@ -209,24 +361,32 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
                     lifecycleOwnerProvider = lifecycleOwnerProvider,
                     uid = stats.uid,
                     packageName = packageName,
-                    fallbackRes = R.drawable.ic_baseline_speed_24,
+                    fallbackRes = R.drawable.ic_baseline_compare_arrows_24,
                     fallbackTintRes = R.color.material_grey_500,
                 )
 
-                updateStatsOnly(stats)
+                updateStatsOnly(stats, maxTraffic)
             }
 
             @SuppressLint("SetTextI18n")
-            fun updateStatsOnly(stats: AppStats) {
+            fun updateStatsOnly(stats: AppStats, maxTraffic: Long) {
                 val context = itemView.context
-                val tcpTotal = stats.tcpConnectionsTotal
-                val udpTotal = stats.udpConnectionsTotal
-                binding.connectionCount.text = "TCP: $tcpTotal · UDP: $udpTotal"
+                val upTotal = FormatFileSizeCompat.formatFileSize(context, stats.uplinkTotal, DataStore.useIECUnit)
+                val downTotal = FormatFileSizeCompat.formatFileSize(context, stats.downlinkTotal, DataStore.useIECUnit)
+                binding.uploadTotal.text = "↑ $upTotal"
+                binding.downloadTotal.text = "↓ $downTotal"
 
-                val upStr = FormatFileSizeCompat.formatFileSize(context, stats.uplinkTotal, DataStore.useIECUnit)
-                val downStr = FormatFileSizeCompat.formatFileSize(context, stats.downlinkTotal, DataStore.useIECUnit)
-                binding.uploadTotal.text = "⬆ $upStr"
-                binding.downloadTotal.text = "⬇ $downStr"
+                binding.badgeTcp.text = "TCP ${stats.tcpConnections}"
+                binding.badgeUdp.text = "UDP ${stats.udpConnections}"
+
+                val totalTraffic = stats.uplinkTotal + stats.downlinkTotal
+                if (maxTraffic > 0 && totalTraffic > 0) {
+                    val pct = ((totalTraffic * 100) / maxTraffic).toInt().coerceIn(1, 100)
+                    binding.trafficProgress.progress = pct
+                    binding.trafficProgress.isVisible = true
+                } else {
+                    binding.trafficProgress.isVisible = false
+                }
             }
         }
     }
@@ -239,6 +399,25 @@ class SpeedStatsBottomSheet : BottomSheetDialogFragment() {
     }
 
     companion object {
-        private const val PAYLOAD_STATS_CHANGE = "payload_stats_change"
+        private const val PAYLOAD_SPEED_CHANGE = "payload_speed_change"
+
+        fun applyCardThemeStyle(card: MaterialCardView) {
+            val ctx = card.context
+            val isCupertino = Theme.isCupertino()
+            if (isCupertino) {
+                card.setCardBackgroundColor(ContextCompat.getColor(ctx, R.color.cupertino_sheet_card_bg))
+                card.strokeColor = ContextCompat.getColor(ctx, R.color.cupertino_sheet_card_stroke)
+                card.strokeWidth = dp2px(1)
+            } else {
+                card.setCardBackgroundColor(Theme.getCardBackgroundColor(ctx, false))
+                card.strokeColor = Theme.getCardStrokeColor(ctx, false)
+                card.strokeWidth = dp2px(1)
+            }
+            card.radius = dp2px(16).toFloat()
+            card.cardElevation = 0f
+            card.maxCardElevation = 0f
+            card.preventCornerOverlap = false
+            card.useCompatPadding = false
+        }
     }
 }

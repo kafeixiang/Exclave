@@ -176,9 +176,6 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         findPreference<ListPreference>(Key.NIGHT_THEME)!!.setOnPreferenceChangeListener { _, newValue ->
             Theme.currentNightMode = (newValue as String).toInt()
             Theme.applyNightTheme()
-            requireActivity().apply {
-                ActivityCompat.recreate(this)
-            }
             true
         }
 

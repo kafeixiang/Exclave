@@ -239,6 +239,14 @@ abstract class ThemedActivity : AppCompatActivity {
         themeResId = resId
     }
 
+    private var isRecreating = false
+
+    override fun recreate() {
+        if (isRecreating) return
+        isRecreating = true
+        super.recreate()
+    }
+
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
@@ -249,7 +257,10 @@ abstract class ThemedActivity : AppCompatActivity {
                 Theme.apply(this)
             }
 
-            ActivityCompat.recreate(this)
+            if (!isRecreating) {
+                isRecreating = true
+                ActivityCompat.recreate(this)
+            }
         }
     }
 

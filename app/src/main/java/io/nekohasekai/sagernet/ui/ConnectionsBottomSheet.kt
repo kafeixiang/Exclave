@@ -1,29 +1,41 @@
 package io.nekohasekai.sagernet.ui
 
 import android.annotation.SuppressLint
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.SimpleItemAnimator
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.card.MaterialCardView
 import io.nekohasekai.sagernet.R
 import io.nekohasekai.sagernet.aidl.AppStats
 import io.nekohasekai.sagernet.database.DataStore
 import io.nekohasekai.sagernet.databinding.ItemConnectionRowBinding
 import io.nekohasekai.sagernet.databinding.LayoutConnectionsSheetBinding
-import io.nekohasekai.sagernet.ktx.applyGlassBlur
-import io.nekohasekai.sagernet.ktx.applyItemEntryAnimation
+import io.nekohasekai.sagernet.ktx.dp2px
+import io.nekohasekai.sagernet.ktx.getColorAttr
 import io.nekohasekai.sagernet.ktx.runOnMainDispatcher
 import io.nekohasekai.sagernet.utils.FormatFileSizeCompat
 import io.nekohasekai.sagernet.utils.PackageCache
+import io.nekohasekai.sagernet.utils.Theme
 
 class ConnectionsBottomSheet : BottomSheetDialogFragment() {
+
+    enum class SortOption {
+        ALL, CONNS, TRAFFIC
+    }
 
     private var _binding: LayoutConnectionsSheetBinding? = null
     private val binding get() = _binding!!
@@ -32,6 +44,8 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
     }
     private val adapter = ConnectionsAdapter(lifecycleOwnerOrNull)
     private var rawStatsList: List<AppStats> = emptyList()
+    private var currentSort = SortOption.ALL
+
     private val statsUpdater = AppStatsListUpdater(
         lifecycleOwnerProvider = lifecycleOwnerOrNull,
         currentDataProvider = { adapter.data },
@@ -44,9 +58,20 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
             if (b.sheetRecycler.isVisible == isEmpty) {
                 b.sheetRecycler.isVisible = !isEmpty
             }
-            adapter.updateData(sortedList, diffResult)
+            val context = context ?: return@AppStatsListUpdater
+            val totalUp = sortedList.sumOf { it.uplink }
+            val totalDown = sortedList.sumOf { it.downlink }
+            val maxTraffic = sortedList.maxOfOrNull { it.uplink + it.downlink } ?: 0L
+
+            b.badgeActiveCount.text = "${sortedList.size} 活跃"
+            b.textHudUp.text = FormatFileSizeCompat.formatFileSize(context, totalUp, DataStore.useIECUnit) + "/s"
+            b.textHudDown.text = FormatFileSizeCompat.formatFileSize(context, totalDown, DataStore.useIECUnit) + "/s"
+
+            adapter.updateData(sortedList, maxTraffic, diffResult)
         }
     )
+
+    override fun getTheme(): Int = R.style.ThemeOverlay_SagerNet_BottomSheetDialog_Transparent
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,10 +84,17 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.root.applyGlassBlur()
+
+        applyThemeStyles()
+
+        binding.btnFilterAll.setOnClickListener { setSort(SortOption.ALL) }
+        binding.btnFilterConns.setOnClickListener { setSort(SortOption.CONNS) }
+        binding.btnFilterSpeed.setOnClickListener { setSort(SortOption.TRAFFIC) }
+        updateFilterTabStyles()
 
         binding.sheetRecycler.layoutManager = LinearLayoutManager(context)
-        (binding.sheetRecycler.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+        // Disabling item animator prevents card overlapping during real-time 1s diff updates
+        binding.sheetRecycler.itemAnimator = null
         binding.sheetRecycler.adapter = adapter
 
         processAndDisplayStats(rawStatsList)
@@ -70,6 +102,22 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
 
     override fun onStart() {
         super.onStart()
+        // Eliminate sharp right angles by clearing any backgrounds on the container frame and window
+        dialog?.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        (dialog as? BottomSheetDialog)?.findViewById<FrameLayout>(
+            com.google.android.material.R.id.design_bottom_sheet
+        )?.let { bottomSheet ->
+            bottomSheet.background = null
+            bottomSheet.setBackgroundColor(Color.TRANSPARENT)
+            bottomSheet.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            androidx.core.view.ViewCompat.setBackground(bottomSheet, null)
+            androidx.core.view.ViewCompat.setBackgroundTintList(bottomSheet, ColorStateList.valueOf(Color.TRANSPARENT))
+        }
+        (view?.parent as? View)?.let { parent ->
+            parent.background = null
+            parent.setBackgroundColor(Color.TRANSPARENT)
+        }
+
         (activity as? MainActivity)?.updateTrafficTimeout()
     }
 
@@ -85,6 +133,93 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
                 processAndDisplayStats(statsList)
             }
         }
+    }
+
+    private fun setSort(option: SortOption) {
+        if (currentSort == option) return
+        currentSort = option
+        updateFilterTabStyles()
+        processAndDisplayStats(rawStatsList)
+    }
+
+    private fun applyThemeStyles() {
+        val b = _binding ?: return
+        val context = context ?: return
+        val isCupertino = Theme.isCupertino()
+
+        // 1. Bottom Sheet Background (Cupertino vs Classic List Background)
+        val sheetBgColor = if (isCupertino) {
+            ContextCompat.getColor(context, R.color.cupertino_sheet_bg)
+        } else {
+            Theme.getClassicListBackgroundColor()
+        }
+        val topRadius = dp2px(28).toFloat()
+        b.root.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadii = floatArrayOf(
+                topRadius, topRadius, // top-left
+                topRadius, topRadius, // top-right
+                0f, 0f,               // bottom-right
+                0f, 0f                // bottom-left
+            )
+            setColor(sheetBgColor)
+        }
+
+        // 2. HUD Cards
+        applyCardThemeStyle(b.cardHudUp)
+        applyCardThemeStyle(b.cardHudDown)
+
+        // 3. Segmented control background
+        val segmentBgColor = if (isCupertino) {
+            ContextCompat.getColor(context, R.color.cupertino_segment_bg)
+        } else {
+            if (Theme.usingNightMode()) Color.rgb(36, 36, 40) else Color.rgb(230, 230, 235)
+        }
+        b.layoutFilterSegment.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp2px(11).toFloat()
+            setColor(segmentBgColor)
+        }
+    }
+
+    private fun updateFilterTabStyles() {
+        val b = _binding ?: return
+        val context = context ?: return
+        val isCupertino = Theme.isCupertino()
+
+        fun makeSelectedTabDrawable(): GradientDrawable {
+            return GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp2px(9).toFloat()
+                if (isCupertino) {
+                    setColor(ContextCompat.getColor(context, R.color.cupertino_sheet_card_bg))
+                    setStroke(dp2px(1), ContextCompat.getColor(context, R.color.cupertino_sheet_card_stroke))
+                } else {
+                    setColor(Theme.getCardBackgroundColor(context, false))
+                    setStroke(dp2px(1), Theme.getCardStrokeColor(context, false))
+                }
+            }
+        }
+
+        fun makeUnselectedTabDrawable(): GradientDrawable {
+            return GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp2px(9).toFloat()
+                setColor(Color.TRANSPARENT)
+            }
+        }
+
+        val textColorPrimary = context.getColorAttr(android.R.attr.textColorPrimary)
+        val textColorSecondary = context.getColorAttr(android.R.attr.textColorSecondary)
+
+        b.btnFilterAll.background = if (currentSort == SortOption.ALL) makeSelectedTabDrawable() else makeUnselectedTabDrawable()
+        b.btnFilterAll.setTextColor(if (currentSort == SortOption.ALL) textColorPrimary else textColorSecondary)
+
+        b.btnFilterConns.background = if (currentSort == SortOption.CONNS) makeSelectedTabDrawable() else makeUnselectedTabDrawable()
+        b.btnFilterConns.setTextColor(if (currentSort == SortOption.CONNS) textColorPrimary else textColorSecondary)
+
+        b.btnFilterSpeed.background = if (currentSort == SortOption.TRAFFIC) makeSelectedTabDrawable() else makeUnselectedTabDrawable()
+        b.btnFilterSpeed.setTextColor(if (currentSort == SortOption.TRAFFIC) textColorPrimary else textColorSecondary)
     }
 
     private fun processAndDisplayStats(statsList: List<AppStats>) {
@@ -103,11 +238,28 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
                         merged[entry.uid] = entry.copy()
                     }
                 }
-                merged.values.sortedWith(
-                    compareByDescending<AppStats> { it.tcpConnections + it.udpConnections }
-                        .thenByDescending { it.uplink + it.downlink }
-                        .thenBy { it.uid }
-                )
+                when (currentSort) {
+                    SortOption.ALL -> {
+                        merged.values.sortedWith(
+                            compareByDescending<AppStats> { it.tcpConnections + it.udpConnections }
+                                .thenByDescending { it.uplink + it.downlink }
+                                .thenBy { it.uid }
+                        )
+                    }
+                    SortOption.CONNS -> {
+                        merged.values.sortedWith(
+                            compareByDescending<AppStats> { it.tcpConnections + it.udpConnections }
+                                .thenBy { it.uid }
+                        )
+                    }
+                    SortOption.TRAFFIC -> {
+                        merged.values.sortedWith(
+                            compareByDescending<AppStats> { it.uplink + it.downlink }
+                                .thenByDescending { it.tcpConnections + it.udpConnections }
+                                .thenBy { it.uid }
+                        )
+                    }
+                }
             },
             diffCallbackFactory = { oldList, newList -> ConnectionsDiffCallback(oldList, newList) }
         )
@@ -142,8 +294,9 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
         private val lifecycleOwnerProvider: () -> LifecycleOwner?
     ) : RecyclerView.Adapter<ConnectionsAdapter.ViewHolder>() {
 
-        private val animatedUids = hashSetOf<Int>()
         var data: List<AppStats> = emptyList()
+            private set
+        var maxTraffic: Long = 0L
             private set
 
         init {
@@ -154,8 +307,9 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
             return data.getOrNull(position)?.uid?.toLong() ?: RecyclerView.NO_ID
         }
 
-        fun updateData(newList: List<AppStats>, diffResult: DiffUtil.DiffResult?) {
+        fun updateData(newList: List<AppStats>, newMaxTraffic: Long, diffResult: DiffUtil.DiffResult?) {
             data = newList
+            maxTraffic = newMaxTraffic
             if (diffResult != null) {
                 diffResult.dispatchUpdatesTo(this)
             } else {
@@ -166,23 +320,26 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val inflater = LayoutInflater.from(parent.context)
             val binding = ItemConnectionRowBinding.inflate(inflater, parent, false)
+            applyCardThemeStyle(binding.root as MaterialCardView)
             return ViewHolder(binding, lifecycleOwnerProvider)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
             if (payloads.isNotEmpty()) {
-                holder.updateStatsOnly(data[position])
+                holder.updateStatsOnly(data[position], maxTraffic)
             } else {
                 super.onBindViewHolder(holder, position, payloads)
             }
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            // Cancel any residual animations and reset transforms to guarantee zero card overlap
+            holder.itemView.animate().cancel()
+            holder.itemView.translationY = 0f
+            holder.itemView.alpha = 1f
+
             val stats = data[position]
-            if (animatedUids.add(stats.uid)) {
-                holder.itemView.applyItemEntryAnimation(position)
-            }
-            holder.bind(stats)
+            holder.bind(stats, maxTraffic)
         }
 
         override fun getItemCount(): Int = data.size
@@ -192,7 +349,7 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
             private val lifecycleOwnerProvider: () -> LifecycleOwner?,
         ) : RecyclerView.ViewHolder(binding.root) {
 
-            fun bind(stats: AppStats) {
+            fun bind(stats: AppStats, maxTraffic: Long) {
                 val packageName = PackageCache.resolvePackageName(stats.uid)
                 val label = if (packageName != null) PackageCache.loadLabel(packageName) else "UID ${stats.uid}"
 
@@ -205,20 +362,30 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
                     fallbackTintRes = R.color.material_grey_500,
                 )
 
-                updateStatsOnly(stats)
+                updateStatsOnly(stats, maxTraffic)
             }
 
             @SuppressLint("SetTextI18n")
-            fun updateStatsOnly(stats: AppStats) {
+            fun updateStatsOnly(stats: AppStats, maxTraffic: Long) {
                 val context = itemView.context
                 val tcp = stats.tcpConnections
                 val udp = stats.udpConnections
-                binding.connectionDetails.text = "TCP: $tcp · UDP: $udp"
+                binding.badgeTcp.text = "TCP $tcp"
+                binding.badgeUdp.text = "UDP $udp"
 
                 val up = FormatFileSizeCompat.formatFileSize(context, stats.uplink, DataStore.useIECUnit)
                 val down = FormatFileSizeCompat.formatFileSize(context, stats.downlink, DataStore.useIECUnit)
-                binding.uploadSpeed.text = "⬆ $up"
-                binding.downloadSpeed.text = "⬇ $down"
+                binding.uploadSpeed.text = "↑ $up/s"
+                binding.downloadSpeed.text = "↓ $down/s"
+
+                val currentTraffic = stats.uplink + stats.downlink
+                if (maxTraffic > 0 && currentTraffic > 0) {
+                    val pct = ((currentTraffic * 100) / maxTraffic).toInt().coerceIn(1, 100)
+                    binding.trafficProgress.progress = pct
+                    binding.trafficProgress.isVisible = true
+                } else {
+                    binding.trafficProgress.isVisible = false
+                }
             }
         }
     }
@@ -232,5 +399,24 @@ class ConnectionsBottomSheet : BottomSheetDialogFragment() {
 
     companion object {
         private const val PAYLOAD_CONNECTIONS_CHANGE = "payload_connections_change"
+
+        fun applyCardThemeStyle(card: MaterialCardView) {
+            val ctx = card.context
+            val isCupertino = Theme.isCupertino()
+            if (isCupertino) {
+                card.setCardBackgroundColor(ContextCompat.getColor(ctx, R.color.cupertino_sheet_card_bg))
+                card.strokeColor = ContextCompat.getColor(ctx, R.color.cupertino_sheet_card_stroke)
+                card.strokeWidth = dp2px(1)
+            } else {
+                card.setCardBackgroundColor(Theme.getCardBackgroundColor(ctx, false))
+                card.strokeColor = Theme.getCardStrokeColor(ctx, false)
+                card.strokeWidth = dp2px(1)
+            }
+            card.radius = dp2px(16).toFloat()
+            card.cardElevation = 0f
+            card.maxCardElevation = 0f
+            card.preventCornerOverlap = false
+            card.useCompatPadding = false
+        }
     }
 }
