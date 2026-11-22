@@ -1,13 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sheet_root"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@drawable/bg_bottom_sheet_cupertino"
-    android:orientation="vertical"
-    android:paddingTop="12dp"
-    android:paddingBottom="16dp">
+    android:layout_height="wrap_content">
+
+    <!-- Cupertino / Dynamic Theme Background Layer -->
+    <FrameLayout
+        android:id="@+id/sheet_background_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/sheet_bg_mesh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="@null" />
+
+        <View
+            android:id="@+id/sheet_ambient_glow"
+            android:layout_width="match_parent"
+            android:layout_height="380dp"
+            android:layout_gravity="top|center_horizontal"
+            android:background="@drawable/bg_ambient_glow" />
+
+        <View
+            android:id="@+id/sheet_frosted_tint"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/sheet_content_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="12dp"
+        android:paddingBottom="16dp">
 
     <!-- Drag Handle -->
     <View
@@ -281,4 +312,6 @@
 
     </FrameLayout>
 
-</LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>
